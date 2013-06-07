@@ -274,7 +274,7 @@
 #include "speaker.h"
 #include "softlist.h"
 
-#define CPU_CLOCK (200000000)
+#define CPU_CLOCK (75000000)
 
 READ64_MEMBER(dc_cons_state::dcus_idle_skip_r )
 {

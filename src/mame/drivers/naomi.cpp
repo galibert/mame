@@ -1596,8 +1596,7 @@ Premier Eleven
 #include "screen.h"
 #include "speaker.h"
 
-
-#define CPU_CLOCK (200000000)
+#define CPU_CLOCK (75000000)
 
 READ16_MEMBER(naomi_state::naomi_g2bus_r )
 {
