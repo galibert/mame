@@ -1471,3 +1471,14 @@ if (SOUNDS["UPD934G"]~=null) then
 		MAME_DIR .. "src/devices/sound/upd934g.h",
 	}
 end
+
+-- LA32
+--@src/emu/sound/la32.h,SOUNDS += LA32
+---------------------------------------------------
+
+if (SOUNDS["LA32"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/sound/la32.cpp",
+		MAME_DIR .. "src/devices/sound/la32.h",
+	}
+end

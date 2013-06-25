@@ -86,7 +86,7 @@ Notes: (All IC's listed for completeness)
       *3     - R15229863 HG61H20R36F (QFP100, stamped 'BOSS')
       PCM54HP- Burr-Brown PCM54HP 16-Bit Monolithic Digital-to-Analog Converter (DIP28)
       & Various logic ICs - 4051, 74HC27, 74HC00, 74HC02, 74HC04, 74LS05
-
+      
       ROMs -  Filename          Device Type
               ------------------------------------------------------------------------
               ROM.IC26.106      Mitsubishi M5M27C256 (labeled 1.0.6)   read as 27C256
@@ -94,7 +94,7 @@ Notes: (All IC's listed for completeness)
               ROM.IC13.200      Mitsubishi M5M27C128 (labeled 2.0.0)   read as 27C128
               ROM.IC21          Toshiba TC532000P (-7471)              read as TC572000
               ROM.IC22          Toshiba TC532000P (-7472)              read as TC572000
-
+                  
 
 
 Newer version
@@ -151,7 +151,7 @@ Notes: (All IC's listed for completeness)
       *3     - R15229863 HG61H20R36F (QFP100, stamped 'BOSS')
       PCM54HP- Burr-Brown PCM54HP 16-Bit Monolithic Digital-to-Analog Converter (DIP28)
       & Various logic ICs - 4051, 74HC27, 74HC00, 74HC02, 74HC04, 74LS05
-
+      
       ROMs -  Filename     Device Type
               ----------------------------------------------------
               ROM.IC26     Hitachi HN623258PH26   read as 27C256
@@ -162,6 +162,7 @@ Notes: (All IC's listed for completeness)
 
 #include "emu.h"
 #include "cpu/mcs96/i8x9x.h"
+#include "sound/la32.h"
 #include "machine/ram.h"
 #include "machine/timer.h"
 #include "video/sed1200.h"
@@ -184,6 +185,10 @@ static INPUT_PORTS_START( mt32 )
 	PORT_BIT(0x10, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Master volume") PORT_CODE(KEYCODE_M)
 	PORT_BIT(0xe0, IP_ACTIVE_LOW, IPT_UNUSED)
 
+	PORT_START("Z")
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_OTHER) PORT_NAME("Test Z") PORT_CODE(KEYCODE_Z)
+	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_OTHER) PORT_NAME("Test X") PORT_CODE(KEYCODE_X)
+
 	PORT_START("A7")
 	PORT_BIT(0x03ff, 0x0000, IPT_DIAL) PORT_NAME("Knob") PORT_SENSITIVITY(50) PORT_KEYDELTA(8) PORT_CODE_DEC(KEYCODE_DOWN) PORT_CODE_INC(KEYCODE_UP)
 INPUT_PORTS_END
@@ -195,6 +200,7 @@ public:
 	required_device<ram_device> ram;
 	optional_device<sed1200d0a_device> lcd;
 	required_device<timer_device> midi_timer;
+	required_device<la32_device> la32;
 
 	mt32_state(const machine_config &mconfig, device_type type, const char *tag);
 
@@ -212,9 +218,12 @@ public:
 	DECLARE_WRITE8_MEMBER(lcd_ctrl_w);
 	DECLARE_WRITE8_MEMBER(lcd_data_w);
 	DECLARE_READ16_MEMBER(port0_r);
+	DECLARE_READ16_MEMBER(port2_r);
 
 	TIMER_DEVICE_CALLBACK_MEMBER(midi_timer_cb);
-	TIMER_DEVICE_CALLBACK_MEMBER(samples_timer_cb);
+
+	DECLARE_WRITE_LINE_MEMBER(la32_irq_w);
+	DECLARE_WRITE_LINE_MEMBER(sample_line_w);
 
 	void mt32(machine_config &config);
 	void mt32_io(address_map &map);
@@ -224,7 +233,7 @@ private:
 	int lcd_data_buffer_pos;
 	uint8_t midi;
 	int midi_pos;
-	uint8_t port0;
+	uint8_t port0, port2;
 };
 
 mt32_state::mt32_state(const machine_config &mconfig, device_type type, const char *tag) :
@@ -232,7 +241,8 @@ mt32_state::mt32_state(const machine_config &mconfig, device_type type, const ch
 	cpu(*this, "maincpu"),
 	ram(*this, "ram"),
 	lcd(*this, "lcd"),
-	midi_timer(*this, "midi_timer")
+	midi_timer(*this, "midi_timer"),
+	la32(*this, "la32")
 {
 }
 
@@ -247,6 +257,12 @@ uint32_t mt32_state::screen_update(screen_device &screen, bitmap_ind16 &bitmap, 
 			for(int x=0; x<5; x++)
 				bitmap.pix16(y == 7 ? 8 : y, c*6+x) = v & (0x10 >> x) ? 1 : 0;
 		}
+
+	uint8_t cp = ioport("Z")->read();
+	if(cp & 1) {
+		midi_timer->adjust(attotime::from_hz(1));
+		midi_pos = 0;
+	}
 	return 0;
 }
 
@@ -261,9 +277,10 @@ void mt32_state::machine_start()
 
 void mt32_state::machine_reset()
 {
-	midi_timer->adjust(attotime::from_hz(1));
+	//	midi_timer->adjust(attotime::from_hz(1));
 	midi_pos = 0;
 	port0 = 0;
+	port2 = 0;
 }
 
 WRITE8_MEMBER(mt32_state::lcd_ctrl_w)
@@ -305,14 +322,26 @@ TIMER_DEVICE_CALLBACK_MEMBER(mt32_state::midi_timer_cb)
 		midi_timer->adjust(attotime::from_hz(1250));
 }
 
+WRITE_LINE_MEMBER(mt32_state::sample_line_w)
+{
+	port0 = (port0 & ~0x10) | (state ? 0x10 : 0);
+}
+
+WRITE_LINE_MEMBER(mt32_state::la32_irq_w)
+{
+	logerror("la32_irq_w(%d)\n", state);
+	port2 = (port2 & ~4) | (state ? 4 : 0);
+	cpu->set_input_line(mcs96_device::EXINT_LINE, state);	
+}
+
 READ16_MEMBER(mt32_state::port0_r)
 {
 	return port0;
 }
 
-TIMER_DEVICE_CALLBACK_MEMBER(mt32_state::samples_timer_cb)
+READ16_MEMBER(mt32_state::port2_r)
 {
-	port0 ^= 0x10;
+	return port2;
 }
 
 WRITE8_MEMBER(mt32_state::so_w)
@@ -323,7 +352,7 @@ WRITE8_MEMBER(mt32_state::so_w)
 	// bit 5   = boss x1
 	// bit 6   = lcd cs, also handled internally by the gate array
 	// bit 7   = lcd clk, also handled internally by the gate array
-	//  logerror("so: x1=%d bank=%d led=%d\n", (data >> 5) & 1, (data >> 1) & 3, data & 1);
+	//	logerror("so: x1=%d bank=%d led=%d\n", (data >> 5) & 1, (data >> 1) & 3, data & 1);
 }
 
 PALETTE_INIT_MEMBER(mt32_state, mt32)
@@ -340,6 +369,7 @@ void mt32_state::mt32_map(address_map &map)
 	map(0x021c, 0x021c).portr("SC1");
 	map(0x0300, 0x0300).w(this, FUNC(mt32_state::lcd_data_w));
 	map(0x0380, 0x0380).rw(this, FUNC(mt32_state::lcd_ctrl_r), FUNC(mt32_state::lcd_ctrl_w));
+	map(0x0400, 0x0fff).rw("la32", FUNC(la32_device::read), FUNC(la32_device::write));
 	map(0x1000, 0x7fff).rom().region("maincpu", 0x1000);
 	map(0x8000, 0xbfff).bankrw("bank");
 	map(0xc000, 0xffff).bankrw("fixed");
@@ -350,6 +380,7 @@ void mt32_state::mt32_io(address_map &map)
 	map(i8x9x_device::A7, i8x9x_device::A7).portr("A7");
 	map(i8x9x_device::SERIAL, i8x9x_device::SERIAL).w(this, FUNC(mt32_state::midi_w));
 	map(i8x9x_device::P0, i8x9x_device::P0).r(this, FUNC(mt32_state::port0_r));
+	map(i8x9x_device::P2, i8x9x_device::P2).r(this, FUNC(mt32_state::port2_r));
 }
 
 MACHINE_CONFIG_START(mt32_state::mt32)
@@ -363,7 +394,7 @@ MACHINE_CONFIG_START(mt32_state::mt32)
 	MCFG_SCREEN_ADD( "screen", LCD )
 	MCFG_SCREEN_REFRESH_RATE(50)
 	MCFG_SCREEN_UPDATE_DRIVER(mt32_state, screen_update)
-//  MCFG_SCREEN_SIZE(20*6-1, 9)
+//	MCFG_SCREEN_SIZE(20*6-1, 9)
 	MCFG_SCREEN_SIZE(20*6-1, (20*6-1)*3/4)
 	MCFG_SCREEN_VISIBLE_AREA(0, 20*6-2, 0, (20*6-1)*3/4-1)
 	MCFG_SCREEN_PALETTE("palette")
@@ -375,7 +406,9 @@ MACHINE_CONFIG_START(mt32_state::mt32)
 
 	MCFG_TIMER_DRIVER_ADD( "midi_timer", mt32_state, midi_timer_cb )
 
-	MCFG_TIMER_DRIVER_ADD_PERIODIC( "samples_timer", mt32_state, samples_timer_cb, attotime::from_hz(32000*2) )
+	MCFG_LA32_ADD( "la32" )
+	MCFG_LA32_IRQ_CALLBACK( WRITELINE(mt32_state, la32_irq_w) )
+	MCFG_LA32_SAMPLE_CALLBACK( WRITELINE(mt32_state, sample_line_w) )
 MACHINE_CONFIG_END
 
 ROM_START( mt32 )
