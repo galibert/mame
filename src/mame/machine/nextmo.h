@@ -56,6 +56,13 @@ private:
 	void check_dma_end();
 	void check_ecc();
 	void compute_ecc();
+
+	static const uint32_t t_rem[256];
+	static const uint8_t t_exp[768], t_log[256];
+
+	static uint32_t ecc_block(const uint8_t *s, int ss);
+	void compute_one_ecc(int off, int step);
+	int fix_one_ecc(int off, int step);
 };
 
 DECLARE_DEVICE_TYPE(NEXTMO, nextmo_device)
