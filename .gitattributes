@@ -35,6 +35,7 @@ src/osd/sdl/shader/*.fsh svneol=native#text/plain
 *.js svneol=native#text/javascript
 readme svneol=native#text/plain
 README svneol=native#text/plain
+hash/pt68k2.xml svneol=native#text/plain
 hash/softwarelist.dtd -text
 src/mame/drivers/mgames.c svneol=native#text/xml
 src/mame/layout/allied.lay svneol=native#text/plain
