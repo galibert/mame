@@ -47,6 +47,7 @@ src/mame/layout/inder.lay svneol=native#text/plain
 src/mame/layout/jeutel.lay svneol=native#text/plain
 src/mame/layout/jp.lay svneol=native#text/plain
 src/mame/layout/ltd.lay svneol=native#text/plain
+src/mame/layout/micropin.lay svneol=native#text/plain
 src/mame/layout/st_mp100.lay svneol=native#text/plain
 src/mame/layout/st_mp200.lay svneol=native#text/plain
 src/mame/layout/taito.lay svneol=native#text/plain
