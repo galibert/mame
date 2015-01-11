@@ -287,31 +287,37 @@ WRITE16_MEMBER(mu100_state::snd_w)
 {
 	int chan = (offset >> 6) & 0x3f;
 	int slot = offset & 0x3f;
+	if(slot == 0x38 && (data == 0xffff || data == 0xff00 || data == 0x00ff))
+		return;
+	if(slot == 0x39 && (data == 0x08ff || data == 0x20ff || data == 0xffff))
+		return;
+	if(slot == 0x3a && data == 0xffff)
+		return;
 	logerror("snd_w %02x.%02x, %04x (%06x)\n", chan, slot, data, m_maincpu->pc());
 }
 
 READ16_MEMBER(mu100_state::adc0_r)
 {
-	logerror("adc0_r\n");
+	//	logerror("adc0_r\n");
 	return 0;
 }
 
 READ16_MEMBER(mu100_state::adc2_r)
 {
-	logerror("adc2_r\n");
+	//	logerror("adc2_r\n");
 	return 0;
 }
 
 // Put the host switch to pure midi
 READ16_MEMBER(mu100_state::adc4_r)
 {
-	return 0;
+	return 0x3ff;
 }
 
 // Battery level
 READ16_MEMBER(mu100_state::adc6_r)
 {
-	logerror("adc6_r\n");
+	//	logerror("adc6_r\n");
 	return 0x3ff;
 }
 
@@ -390,7 +396,7 @@ WRITE16_MEMBER(mu100_state::p6_w)
 
 READ16_MEMBER(mu100_state::p6_r)
 {
-	logerror("plug in detect read\n");
+	//	logerror("plug in detect read\n");
 	return 0x00;
 }
 
@@ -455,7 +461,7 @@ MACHINE_CONFIG_START(mu100_state::mu100)
 	MCFG_SPEAKER_STANDARD_STEREO("lspeaker", "rspeaker")
 
 	MCFG_MIDI_PORT_ADD("mdin", midiin_slot, "midiin")
-	MCFG_MIDI_RX_HANDLER(DEVWRITELINE("maincpu:sci0", h8_sci_device, rx_w))
+	MCFG_MIDI_RX_HANDLER(DEVWRITELINE("maincpu:sci1", h8_sci_device, rx_w))
 
 	MCFG_MIDI_PORT_ADD("mdout", midiout_slot, "midiout")
 	MCFG_DEVICE_MODIFY("maincpu:sci0")
