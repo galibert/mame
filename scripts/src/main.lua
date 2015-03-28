@@ -99,7 +99,7 @@ end
 			flags { "DeploymentContent" }
 
 	configuration { "x64", "Release" }
-		targetsuffix "64"
+		targetsuffix ""
 		if _OPTIONS["PROFILE"] then
 			targetsuffix "64p"
 		end

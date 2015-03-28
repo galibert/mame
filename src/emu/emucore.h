@@ -219,20 +219,7 @@ inline TYPE &operator|=(TYPE &a, TYPE b) { return a = a | b; }
 #define FUNC(x) &x, #x
 
 
-// standard assertion macros
-#undef assert
-#undef assert_always
-
-#if defined(MAME_DEBUG_FAST)
-#define assert(x)               do { } while (0)
-#define assert_always(x, msg)   do { if (!(x)) throw emu_fatalerror("Fatal error: %s\nCaused by assert: %s:%d: %s", msg, __FILE__, __LINE__, #x); } while (0)
-#elif defined(MAME_DEBUG)
-#define assert(x)               do { if (!(x)) throw emu_fatalerror("assert: %s:%d: %s", __FILE__, __LINE__, #x); } while (0)
-#define assert_always(x, msg)   do { if (!(x)) throw emu_fatalerror("Fatal error: %s\nCaused by assert: %s:%d: %s", msg, __FILE__, __LINE__, #x); } while (0)
-#else
-#define assert(x)               do { } while (0)
-#define assert_always(x, msg)   do { if (!(x)) throw emu_fatalerror("Fatal error: %s (%s:%d)", msg, __FILE__, __LINE__); } while (0)
-#endif
+#define assert_always(x, msg)   do { if (!(x)) { fprintf(stderr, "%s:%d: %s %s\n", __FILE__, __LINE__, msg, #x); abort(); }} while (0)
 
 
 // macros to convert radians to degrees and degrees to radians
@@ -311,20 +298,16 @@ inline std::enable_if_t<!std::is_base_of<device_t, Source>::value> report_bad_ca
 template <typename Dest, typename Source>
 inline Dest downcast(Source *src)
 {
-#if defined(MAME_DEBUG) && !defined(MAME_DEBUG_FAST)
 	Dest const chk(dynamic_cast<Dest>(src));
 	if (chk != src) report_bad_cast<std::remove_pointer_t<Dest>, Source>(src);
-#endif
 	return static_cast<Dest>(src);
 }
 
 template<class Dest, class Source>
 inline Dest downcast(Source &src)
 {
-#if defined(MAME_DEBUG) && !defined(MAME_DEBUG_FAST)
 	std::remove_reference_t<Dest> *const chk(dynamic_cast<std::remove_reference_t<Dest> *>(&src));
 	if (chk != &src) report_bad_cast<std::remove_reference_t<Dest>, Source>(&src);
-#endif
 	return static_cast<Dest>(src);
 }
 

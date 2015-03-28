@@ -12,6 +12,14 @@
 #################   BEGIN USER-CONFIGURABLE OPTIONS   #####################
 ###########################################################################
 
+#NOWERROR=1
+OPTIMIZE=3
+VERBOSE=1
+SYMBOLS=0
+ARCHOPTS=-march=native
+FILTER_DEPS=1
+SHLIB=0
+
 # REGENIE = 1
 # VERBOSE = 1
 # NOWERROR = 1
