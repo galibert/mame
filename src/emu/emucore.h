@@ -212,20 +212,7 @@ inline void operator--(_Type &value, int) { value = (_Type)((int)value - 1); }
 #define FUNC_NULL NULL, "(null)"
 
 
-// standard assertion macros
-#undef assert
-#undef assert_always
-
-#if defined(MAME_DEBUG_FAST)
-#define assert(x)               do { } while (0)
-#define assert_always(x, msg)   do { if (!(x)) throw emu_fatalerror("Fatal error: %s\nCaused by assert: %s:%d: %s", msg, __FILE__, __LINE__, #x); } while (0)
-#elif defined(MAME_DEBUG)
-#define assert(x)               do { if (!(x)) throw emu_fatalerror("assert: %s:%d: %s", __FILE__, __LINE__, #x); } while (0)
-#define assert_always(x, msg)   do { if (!(x)) throw emu_fatalerror("Fatal error: %s\nCaused by assert: %s:%d: %s", msg, __FILE__, __LINE__, #x); } while (0)
-#else
-#define assert(x)               do { } while (0)
-#define assert_always(x, msg)   do { if (!(x)) throw emu_fatalerror("Fatal error: %s (%s:%d)", msg, __FILE__, __LINE__); } while (0)
-#endif
+#define assert_always(x, msg)   do { if (!(x)) { fprintf(stderr, "%s:%d: %s %s\n", __FILE__, __LINE__, msg, #x); abort(); }} while (0)
 
 
 // macros to convert radians to degrees and degrees to radians
@@ -317,7 +304,6 @@ void report_bad_device_cast(const device_t *dev, const std::type_info &src_type,
 template<class _Dest, class _Source>
 inline _Dest downcast(_Source *src)
 {
-#if defined(MAME_DEBUG) && !defined(MAME_DEBUG_FAST)
 	try {
 		if (dynamic_cast<_Dest>(src) != src)
 		{
@@ -331,14 +317,12 @@ inline _Dest downcast(_Source *src)
 	{
 		report_bad_cast(typeid(src), typeid(_Dest));
 	}
-#endif
 	return static_cast<_Dest>(src);
 }
 
 template<class _Dest, class _Source>
 inline _Dest downcast(_Source &src)
 {
-#if defined(MAME_DEBUG) && !defined(MAME_DEBUG_FAST)
 	try {
 		if (&dynamic_cast<_Dest>(src) != &src)
 		{
@@ -352,7 +336,6 @@ inline _Dest downcast(_Source &src)
 	{
 		report_bad_cast(typeid(src), typeid(_Dest));
 	}
-#endif
 	return static_cast<_Dest>(src);
 }
 

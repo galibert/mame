@@ -497,11 +497,6 @@ if _OPTIONS["PROFILER"]=="1" then
 	}
 end
 
-configuration { "Release" }
-	defines {
-		"NDEBUG",
-	}
-
 configuration { }
 
 -- CR/LF setup: use both on win32/os2, CR only on everything else

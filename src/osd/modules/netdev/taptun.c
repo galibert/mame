@@ -59,7 +59,6 @@ netdev_tap::netdev_tap(const char *name, class device_network_interface *ifdev, 
 {
 #ifdef __linux__
 	struct ifreq ifr;
-
 	m_fd = -1;
 	if((m_fd = open("/dev/net/tun", O_RDWR)) == -1) {
 		osd_printf_verbose("tap: open failed %d\n", errno);
@@ -68,7 +67,7 @@ netdev_tap::netdev_tap(const char *name, class device_network_interface *ifdev, 
 
 	memset(&ifr, 0, sizeof(ifr));
 	ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
-	sprintf(ifr.ifr_name, "tap-mess-%d-0", getuid());
+	sprintf(ifr.ifr_name, "mess0");
 	if(ioctl(m_fd, TUNSETIFF, (void *)&ifr) == -1) {
 		osd_printf_verbose("tap: ioctl failed %d\n", errno);
 		close(m_fd);

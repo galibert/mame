@@ -15,6 +15,16 @@
 #################   BEGIN USER-CONFIGURABLE OPTIONS   #####################
 ###########################################################################
 
+NOWERROR=1
+OPTIMIZE=0
+SYMBOLS=1
+VERBOSE=1
+ARCHOPTS=-march=native
+PYTHON_EXECUTABLE=python2
+FILTER_DEPS=1
+TARGET=mame
+SUBTARGET=tiny
+
 # REGENIE = 1
 # VERBOSE = 1
 # NOWERROR = 1
