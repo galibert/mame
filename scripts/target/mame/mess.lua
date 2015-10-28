@@ -3494,6 +3494,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/bigbord2.cpp",
 	MAME_DIR .. "src/mame/drivers/alto1.cpp",
 	MAME_DIR .. "src/mame/drivers/alto2.cpp",
+	MAME_DIR .. "src/mame/drivers/star.cpp"
 }
 
 createMESSProjects(_target, _subtarget, "xussrpc")

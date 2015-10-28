@@ -35487,6 +35487,11 @@ stactics                        // (c) 1981 Sega
 @source:stadhero.cpp
 stadhero                        // (c) 1988 Data East Corporation (Japan)
 
+@source:star.cpp
+dlion
+dlight
+dtiger
+
 @source:starcrus.cpp
 starcrus                        // (c) 1977 Ramtek
 
