@@ -284,6 +284,6 @@ void set_led_status(running_machine &machine, int num, int on)
 
 CUSTOM_INPUT_MEMBER( driver_device::custom_port_read )
 {
-	const char *tag = (const char *)param;
+	std::string tag = (const char *)param;
 	return ioport(tag)->read();
 }

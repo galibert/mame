@@ -49,8 +49,8 @@ public:
 	static int find(const game_driver &driver) { return find(driver.name); }
 
 	// static helpers
-	static bool matches(const char *wildstring, const char *string);
-	static int penalty_compare(const char *source, const char *target);
+	static bool matches(std::string wildstring, std::string string);
+	static int penalty_compare(std::string source, std::string target);
 
 protected:
 	// internal helpers
@@ -72,7 +72,7 @@ class driver_enumerator : public driver_list
 public:
 	// construction/destruction
 	driver_enumerator(emu_options &options);
-	driver_enumerator(emu_options &options, const char *filter);
+	driver_enumerator(emu_options &options, std::string filter);
 	driver_enumerator(emu_options &options, const game_driver &filter);
 	~driver_enumerator();
 
@@ -103,7 +103,7 @@ public:
 	using driver_list::compatible_with;
 
 	// filtering/iterating
-	int filter(const char *string = nullptr);
+	int filter(std::string string = nullptr);
 	int filter(const game_driver &driver);
 	void include_all();
 	void exclude_all() { memset(&m_included[0], 0, sizeof(m_included[0]) * s_driver_count); m_filtered_count = 0; }
@@ -113,7 +113,7 @@ public:
 
 	// general helpers
 	void set_current(int index) { assert(index >= -1 && index <= s_driver_count); m_current = index; }
-	void find_approximate_matches(const char *string, int count, int *results);
+	void find_approximate_matches(std::string string, int count, int *results);
 
 private:
 	// internal helpers

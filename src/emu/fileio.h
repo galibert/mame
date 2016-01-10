@@ -39,18 +39,18 @@ class path_iterator
 {
 public:
 	// construction/destruction
-	path_iterator(const char *searchpath);
+	path_iterator(std::string searchpath);
 
 	// getters
-	bool next(std::string &buffer, const char *name = nullptr);
+	bool next(std::string &buffer, std::string name = nullptr);
 
 	// reset
 	void reset() { m_current = m_base; m_index = 0; }
 
 private:
 	// internal state
-	const char *    m_base;
-	const char *    m_current;
+	std::string     m_base;
+	std::string     m_current;
 	int             m_index;
 };
 
@@ -63,7 +63,7 @@ class file_enumerator
 {
 public:
 	// construction/destruction
-	file_enumerator(const char *searchpath);
+	file_enumerator(std::string searchpath);
 	~file_enumerator();
 
 	// iterator
@@ -86,17 +86,17 @@ class emu_file
 public:
 	// file open/creation
 	emu_file(UINT32 openflags);
-	emu_file(const char *searchpath, UINT32 openflags);
+	emu_file(std::string searchpath, UINT32 openflags);
 	virtual ~emu_file();
 
 	// getters
 	operator core_file *();
 	operator core_file &();
 	bool is_open() const { return (m_file != nullptr); }
-	const char *filename() const { return m_filename.c_str(); }
-	const char *fullpath() const { return m_fullpath.c_str(); }
+	std::string filename() const { return m_filename; }
+	std::string fullpath() const { return m_fullpath; }
 	UINT32 openflags() const { return m_openflags; }
-	hash_collection &hashes(const char *types);
+	hash_collection &hashes(std::string types);
 	bool restrict_to_mediapath() { return m_restrict_to_mediapath; }
 	bool part_of_mediapath(std::string path);
 
@@ -106,14 +106,14 @@ public:
 	void set_restrict_to_mediapath(bool rtmp = true) { m_restrict_to_mediapath = rtmp; }
 
 	// open/close
-	file_error open(const char *name);
-	file_error open(const char *name1, const char *name2);
-	file_error open(const char *name1, const char *name2, const char *name3);
-	file_error open(const char *name1, const char *name2, const char *name3, const char *name4);
-	file_error open(const char *name, UINT32 crc);
-	file_error open(const char *name1, const char *name2, UINT32 crc);
-	file_error open(const char *name1, const char *name2, const char *name3, UINT32 crc);
-	file_error open(const char *name1, const char *name2, const char *name3, const char *name4, UINT32 crc);
+	file_error open(std::string name);
+	file_error open(std::string name1, std::string name2);
+	file_error open(std::string name1, std::string name2, std::string name3);
+	file_error open(std::string name1, std::string name2, std::string name3, std::string name4);
+	file_error open(std::string name, UINT32 crc);
+	file_error open(std::string name1, std::string name2, UINT32 crc);
+	file_error open(std::string name1, std::string name2, std::string name3, UINT32 crc);
+	file_error open(std::string name1, std::string name2, std::string name3, std::string name4, UINT32 crc);
 	file_error open_next();
 	file_error open_ram(const void *data, UINT32 length);
 	void close();

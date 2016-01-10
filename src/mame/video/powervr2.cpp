@@ -3599,7 +3599,7 @@ void powervr2_device::pvr_dma_execute(address_space &space)
 	machine().scheduler().timer_set(state->m_maincpu->cycles_to_attotime(m_pvr_dma.size/4), timer_expired_delegate(FUNC(powervr2_device::pvr_dma_irq), this));
 }
 
-powervr2_device::powervr2_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+powervr2_device::powervr2_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, POWERVR2, "PowerVR 2", tag, owner, clock, "powervr2", __FILE__),
 		device_video_interface(mconfig, *this),
 		irq_cb(*this),

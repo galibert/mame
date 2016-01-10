@@ -26,7 +26,7 @@ DEVICE_ADDRESS_MAP_START(map, 32, smbus_device)
 	AM_RANGE(0x14, 0x17) AM_READ8      (notify_dhigh_r,                     0xff000000)
 ADDRESS_MAP_END
 
-smbus_device::smbus_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+smbus_device::smbus_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: pci_device(mconfig, SMBUS, "SMBUS interface", tag, owner, clock, "smbus", __FILE__)
 {
 }

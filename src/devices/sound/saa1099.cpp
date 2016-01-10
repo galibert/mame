@@ -140,7 +140,7 @@ const device_type SAA1099 = &device_creator<saa1099_device>;
 //  saa1099_device - constructor
 //-------------------------------------------------
 
-saa1099_device::saa1099_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+saa1099_device::saa1099_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, SAA1099, "SAA1099", tag, owner, clock, "saa1099", __FILE__),
 		device_sound_interface(mconfig, *this),
 		m_stream(nullptr),

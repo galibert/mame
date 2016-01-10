@@ -25,7 +25,7 @@
 struct config_type
 {
 	config_type *           next;               /* next in line */
-	const char *            name;               /* node name */
+	std::string             name;               /* node name */
 	config_saveload_delegate load;              /* load callback */
 	config_saveload_delegate save;              /* save callback */
 };
@@ -73,7 +73,7 @@ void config_init(running_machine &machine)
  *
  *************************************/
 
-void config_register(running_machine &machine, const char *nodename, config_saveload_delegate load, config_saveload_delegate save)
+void config_register(running_machine &machine, std::string nodename, config_saveload_delegate load, config_saveload_delegate save)
 {
 	config_type *newtype;
 	config_type **ptype;
@@ -100,7 +100,7 @@ void config_register(running_machine &machine, const char *nodename, config_save
 
 int config_load_settings(running_machine &machine)
 {
-	const char *controller = machine.options().ctrlr();
+	std::string controller = machine.options().ctrlr();
 	config_type *type;
 	int loaded = 0;
 
@@ -116,11 +116,11 @@ int config_load_settings(running_machine &machine)
 		file_error filerr = file.open(controller, ".cfg");
 
 		if (filerr != FILERR_NONE)
-			throw emu_fatalerror("Could not load controller file %s.cfg", controller);
+			throw emu_fatalerror("Could not load controller file %s.cfg", controller.c_str());
 
 		/* load the XML */
 		if (!config_load_xml(machine, file, CONFIG_TYPE_CONTROLLER))
-			throw emu_fatalerror("Could not load controller file %s.cfg", controller);
+			throw emu_fatalerror("Could not load controller file %s.cfg", controller.c_str());
 	}
 
 	/* next load the defaults file */
@@ -199,6 +199,7 @@ static int config_load_xml(running_machine &machine, emu_file &file, int which_t
 		goto error;
 
 	/* strip off all the path crap from the source filename */
+	
 	srcfile = strrchr(machine.system().source_file, '/');
 	if (!srcfile)
 		srcfile = strrchr(machine.system().source_file, '\\');
@@ -214,20 +215,20 @@ static int config_load_xml(running_machine &machine, emu_file &file, int which_t
 	for (systemnode = xml_get_sibling(confignode->child, "system"); systemnode; systemnode = xml_get_sibling(systemnode->next, "system"))
 	{
 		/* look up the name of the system here; skip if none */
-		const char *name = xml_get_attribute_string(systemnode, "name", "");
+		std::string name = xml_get_attribute_string(systemnode, "name", "");
 
 		/* based on the file type, determine whether we have a match */
 		switch (which_type)
 		{
 			case CONFIG_TYPE_GAME:
 				/* only match on the specific game name */
-				if (strcmp(name, machine.system().name) != 0)
+				if (name != machine.system().name)
 					continue;
 				break;
 
 			case CONFIG_TYPE_DEFAULT:
 				/* only match on default */
-				if (strcmp(name, "default") != 0)
+				if (name != "default")
 					continue;
 				break;
 
@@ -235,11 +236,11 @@ static int config_load_xml(running_machine &machine, emu_file &file, int which_t
 			{
 				int clone_of;
 				/* match on: default, game name, source file name, parent name, grandparent name */
-				if (strcmp(name, "default") != 0 &&
-					strcmp(name, machine.system().name) != 0 &&
-					strcmp(name, srcfile) != 0 &&
-					((clone_of = driver_list::clone(machine.system())) == -1 || strcmp(name, driver_list::driver(clone_of).name) != 0) &&
-					(clone_of == -1 || ((clone_of = driver_list::clone(clone_of)) == -1) || strcmp(name, driver_list::driver(clone_of).name) != 0))
+				if (name != "default" &&
+					name != machine.system().name &&
+					name != srcfile &&
+					((clone_of = driver_list::clone(machine.system())) == -1 || name != driver_list::driver(clone_of).name) &&
+					(clone_of == -1 || ((clone_of = driver_list::clone(clone_of)) == -1) || name != driver_list::driver(clone_of).name))
 					continue;
 				break;
 			}
@@ -247,11 +248,11 @@ static int config_load_xml(running_machine &machine, emu_file &file, int which_t
 
 		/* log that we are processing this entry */
 		if (DEBUG_CONFIG)
-			osd_printf_debug("Entry: %s -- processing\n", name);
+			osd_printf_debug("Entry: %s -- processing\n", name.c_str());
 
 		/* loop over all registrants and call their load function */
 		for (type = typelist; type; type = type->next)
-			type->load(which_type, xml_get_sibling(systemnode->child, type->name));
+			type->load(which_type, xml_get_sibling(systemnode->child, type->name.c_str()));
 		count++;
 	}
 
@@ -303,7 +304,7 @@ static int config_save_xml(running_machine &machine, emu_file &file, int which_t
 	/* loop over all registrants and call their save function */
 	for (type = typelist; type; type = type->next)
 	{
-		xml_data_node *curnode = xml_add_child(systemnode, type->name, nullptr);
+		xml_data_node *curnode = xml_add_child(systemnode, type->name.c_str(), nullptr);
 		if (!curnode)
 			goto error;
 		type->save(which_type, curnode);

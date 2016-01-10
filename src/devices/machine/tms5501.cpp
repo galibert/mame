@@ -53,7 +53,7 @@ ADDRESS_MAP_END
 //  tms5501_device - constructor
 //-------------------------------------------------
 
-tms5501_device::tms5501_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+tms5501_device::tms5501_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, TMS5501, "TMS5501", tag, owner, clock, "tms5501", __FILE__),
 	device_serial_interface(mconfig, *this),
 	m_write_irq(*this),

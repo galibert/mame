@@ -1466,7 +1466,7 @@ static const help_item static_help_list[] =
     CODE
 ***************************************************************************/
 
-const char *debug_get_help(const char *tag)
+const char *debug_get_help(std::string tag)
 {
 	static char ambig_message[1024];
 	const help_item *found = nullptr;

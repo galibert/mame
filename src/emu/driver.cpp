@@ -32,7 +32,7 @@ ADDRESS_MAP_END
 //  driver_device - constructor
 //-------------------------------------------------
 
-driver_device::driver_device(const machine_config &mconfig, device_type type, const char *tag)
+driver_device::driver_device(const machine_config &mconfig, device_type type, std::string tag)
 	: device_t(mconfig, type, "Driver Device", tag, nullptr, 0, "", __FILE__),
 		device_memory_interface(mconfig, *this),
 		m_space_config("generic", ENDIANNESS_LITTLE, 8, 32, 0, nullptr, *ADDRESS_MAP_NAME(generic)),

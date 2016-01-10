@@ -17,7 +17,7 @@
 const device_type VT82C505 = &device_creator<vt82c505_device>;
 
 
-vt82c505_device::vt82c505_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+vt82c505_device::vt82c505_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 		: device_t(mconfig, VT82C505, "VIA VT82C505 PCI bridge", tag, owner, clock, "vt82c505", __FILE__),
 		pci_device_interface( mconfig, *this )
 {

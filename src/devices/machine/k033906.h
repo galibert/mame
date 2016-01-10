@@ -33,9 +33,9 @@ class k033906_device :  public device_t
 {
 public:
 	// construction/destruction
-	k033906_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	k033906_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 
-	static void set_voodoo_tag(device_t &device, const char *tag) { downcast<k033906_device &>(device).m_voodoo_tag = tag; }
+	static void set_voodoo_tag(device_t &device, std::string tag) { downcast<k033906_device &>(device).m_voodoo_tag = tag; }
 
 	DECLARE_READ32_MEMBER( read );
 	DECLARE_WRITE32_MEMBER( write );

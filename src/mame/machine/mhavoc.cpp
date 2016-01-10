@@ -211,8 +211,8 @@ CUSTOM_INPUT_MEMBER(mhavoc_state::tms5220_r)
 
 CUSTOM_INPUT_MEMBER(mhavoc_state::mhavoc_bit67_r)
 {
-	const char *tag1 = (const char *)param;
-	const char *tag2 = tag1 + strlen(tag1) + 1;
+	std::string tag1 = (const char *)param;
+	std::string tag2 = tag1 + strlen(tag1) + 1;
 	return ioport(m_player_1 ? tag2 : tag1)->read() & 0x03;
 }
 

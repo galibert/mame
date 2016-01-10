@@ -50,7 +50,7 @@ machine_config_constructor cgenie_printer_device::device_mconfig_additions() con
 //  cgenie_printer_device - constructor
 //-------------------------------------------------
 
-cgenie_printer_device::cgenie_printer_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+cgenie_printer_device::cgenie_printer_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, CGENIE_PRINTER, "Printer Interface EG2012", tag, owner, clock, "cgenie_printer", __FILE__),
 	device_parallel_interface(mconfig, *this),
 	m_centronics(*this, "centronics"),

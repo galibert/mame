@@ -2626,7 +2626,7 @@ bool address_space::needs_backing_store(const address_map_entry *entry)
 //  read/write handler
 //-------------------------------------------------
 
-memory_bank &address_space::bank_find_or_allocate(const char *tag, offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, read_or_write readorwrite)
+memory_bank &address_space::bank_find_or_allocate(std::string tag, offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, read_or_write readorwrite)
 {
 	// adjust the addresses, handling mirrors and such
 	offs_t bytemirror = addrmirror;
@@ -3877,7 +3877,7 @@ memory_block::~memory_block()
 //  memory_bank - constructor
 //-------------------------------------------------
 
-memory_bank::memory_bank(address_space &space, int index, offs_t bytestart, offs_t byteend, const char *tag)
+memory_bank::memory_bank(address_space &space, int index, offs_t bytestart, offs_t byteend, std::string tag)
 	: m_next(nullptr),
 		m_machine(space.machine()),
 		m_baseptr(space.manager().bank_pointer_addr(index)),

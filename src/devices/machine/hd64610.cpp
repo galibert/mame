@@ -150,7 +150,7 @@ inline void hd64610_device::check_alarm()
 //  hd64610_device - constructor
 //-------------------------------------------------
 
-hd64610_device::hd64610_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd64610_device::hd64610_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, HD64610, "HD64610", tag, owner, clock, "hd64610", __FILE__),
 		device_rtc_interface(mconfig, *this),
 		device_nvram_interface(mconfig, *this),

@@ -431,7 +431,7 @@ const hdc92x4_device::cmddef hdc92x4_device::s_command[] =
 /*
     Standard constructor for the base class and the two variants
 */
-hdc92x4_device::hdc92x4_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
+hdc92x4_device::hdc92x4_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
 	: device_t(mconfig, type, name, tag, owner, clock, shortname, source),
 	m_out_intrq(*this),
 	m_out_dmarq(*this),
@@ -443,13 +443,13 @@ hdc92x4_device::hdc92x4_device(const machine_config &mconfig, device_type type, 
 {
 }
 
-hdc9224_device::hdc9224_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hdc9224_device::hdc9224_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hdc92x4_device(mconfig, HDC9224, "SMC HDC9224 Universal Disk Controller", tag, owner, clock, "hdc9224", __FILE__)
 {
 	m_is_hdc9234 = false;
 }
 
-hdc9234_device::hdc9234_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hdc9234_device::hdc9234_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hdc92x4_device(mconfig, HDC9234, "SMC HDC9234 Universal Disk Controller", tag, owner, clock, "hdc9234", __FILE__)
 {
 	m_is_hdc9234 = true;

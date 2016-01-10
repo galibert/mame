@@ -554,18 +554,18 @@ int drawsdl2_init(running_machine &machine, osd_draw_callbacks *callbacks)
 
 #if USE_OPENGL
 	// Load the GL library now - else MT will fail
-	const char *stemp = downcast<sdl_options &>(machine.options()).gl_lib();
+	std::string stemp = downcast<sdl_options &>(machine.options()).gl_lib();
 #else
-	const char *stemp = NULL;
+	std::string stemp;
 #endif
-	if (stemp != NULL && strcmp(stemp, OSDOPTVAL_AUTO) == 0)
-		stemp = NULL;
+	if (stemp == "auto")
+		stemp = "";
 
 	// No fatalerror here since not all video drivers support GL !
-	if (SDL_GL_LoadLibrary(stemp) != 0) // Load library (default for e==NULL
-		osd_printf_warning("Warning: Unable to load opengl library: %s\n", stemp ? stemp : "<default>");
+	if (SDL_GL_LoadLibrary(stemp.empty() ? nullptr : stemp.c_str()) != 0) // Load library (default for e==NULL
+		osd_printf_warning("Warning: Unable to load opengl library: %s\n", !stemp.empty() ? stemp.c_str() : "<default>");
 	else
-		osd_printf_verbose("Loaded opengl shared library: %s\n", stemp ? stemp : "<default>");
+		osd_printf_verbose("Loaded opengl shared library: %s\n", !stemp.empty() ? stemp.c_str() : "<default>");
 
 	return 0;
 }

@@ -12,7 +12,7 @@
 
 const device_type MOS6551 = &device_creator<mos6551_device>;
 
-mos6551_device::mos6551_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+mos6551_device::mos6551_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, MOS6551, "MOS6551", tag, owner, clock, "mos6551", __FILE__),
 	m_internal_clock(*this, "clock"),
 	m_irq_handler(*this),

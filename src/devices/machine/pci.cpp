@@ -58,7 +58,7 @@ DEVICE_ADDRESS_MAP_START(config_map, 32, pci_bridge_device)
 	AM_RANGE(0x3c, 0x3f) AM_READWRITE16(bridge_control_r,    bridge_control_w,    0xffff0000)
 ADDRESS_MAP_END
 
-pci_device::pci_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
+pci_device::pci_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
 	: device_t(mconfig, type, name, tag, owner, clock, shortname, source)
 {
 	main_id = 0xffffffff;
@@ -373,7 +373,7 @@ void pci_device::set_map_flags(int id, int flags)
 	remap_cb();
 }
 
-agp_device::agp_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
+agp_device::agp_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
 	: pci_device(mconfig, type, name, tag, owner, clock, shortname, source)
 {
 }
@@ -390,14 +390,14 @@ void agp_device::device_reset()
 
 
 
-pci_bridge_device::pci_bridge_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+pci_bridge_device::pci_bridge_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: pci_device(mconfig, PCI_BRIDGE, "PCI-PCI Bridge", tag, owner, clock, "pci_bridge", __FILE__),
 		device_memory_interface(mconfig, *this),
 		configure_space_config("configuration_space", ENDIANNESS_LITTLE, 32, 20)
 {
 }
 
-pci_bridge_device::pci_bridge_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
+pci_bridge_device::pci_bridge_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
 	: pci_device(mconfig, type, name, tag, owner, clock, shortname, source),
 		device_memory_interface(mconfig, *this),
 		configure_space_config("configuration_space", ENDIANNESS_LITTLE, 32, 20)
@@ -780,7 +780,7 @@ WRITE16_MEMBER(pci_bridge_device::bridge_control_w)
 }
 
 
-agp_bridge_device::agp_bridge_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
+agp_bridge_device::agp_bridge_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
 	: pci_bridge_device(mconfig, type, name, tag, owner, clock, shortname, source)
 {
 }
@@ -803,7 +803,7 @@ DEVICE_ADDRESS_MAP_START(io_configuration_access_map, 32, pci_host_device)
 ADDRESS_MAP_END
 
 
-pci_host_device::pci_host_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
+pci_host_device::pci_host_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
 	: pci_bridge_device(mconfig, type, name, tag, owner, clock, shortname, source)
 {
 }
@@ -883,7 +883,7 @@ void pci_host_device::root_config_write(UINT8 bus, UINT8 device, UINT16 reg, UIN
 }
 
 
-pci_root_device::pci_root_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+pci_root_device::pci_root_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, PCI_ROOT,"PCI virtual root", tag, owner, clock, "pci_root", __FILE__)
 {
 }

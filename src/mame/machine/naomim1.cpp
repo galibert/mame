@@ -12,7 +12,7 @@ DEVICE_ADDRESS_MAP_START(submap, 16, naomi_m1_board)
 	AM_INHERIT_FROM(naomi_board::submap)
 ADDRESS_MAP_END
 
-naomi_m1_board::naomi_m1_board(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+naomi_m1_board::naomi_m1_board(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: naomi_board(mconfig, NAOMI_M1_BOARD, "Sega NAOMI M1 Board", tag, owner, clock, "naomi_m1_board", __FILE__)
 {
 }

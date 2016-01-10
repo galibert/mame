@@ -321,7 +321,7 @@ WRITE16_MEMBER(itech32_state::bloodstm_paletteram_w)
  *
  *************************************/
 
-void itech32_state::logblit(const char *tag)
+void itech32_state::logblit(std::string tag)
 {
 	if (!machine().input().code_pressed(KEYCODE_L))
 		return;

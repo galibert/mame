@@ -74,14 +74,14 @@ public:
 
 	// construction/destruction
 	audit_record(const rom_entry &media, media_type type);
-	audit_record(const char *name, media_type type);
+	audit_record(std::string name, media_type type);
 
 	// getters
 	audit_record *next() const { return m_next; }
 	media_type type() const { return m_type; }
 	audit_status status() const { return m_status; }
 	audit_substatus substatus() const { return m_substatus; }
-	const char *name() const { return m_name; }
+	std::string name() const { return m_name; }
 	UINT64 expected_length() const { return m_explength; }
 	UINT64 actual_length() const { return m_length; }
 	const hash_collection &expected_hashes() const { return m_exphashes; }
@@ -112,7 +112,7 @@ private:
 	media_type          m_type;                 /* type of item that was audited */
 	audit_status        m_status;               /* status of audit on this item */
 	audit_substatus     m_substatus;            /* finer-detail status */
-	const char *        m_name;                 /* name of item */
+	std::string         m_name;                 /* name of item */
 	UINT64              m_explength;            /* expected length of item */
 	UINT64              m_length;               /* actual length of item */
 	hash_collection     m_exphashes;            /* expected hash data */
@@ -147,22 +147,22 @@ public:
 	// audit operations
 	summary audit_media(const char *validation = AUDIT_VALIDATE_FULL);
 	summary audit_device(device_t *device, const char *validation = AUDIT_VALIDATE_FULL);
-	summary audit_software(const char *list_name, software_info *swinfo, const char *validation = AUDIT_VALIDATE_FULL);
+	summary audit_software(std::string list_name, software_info *swinfo, const char *validation = AUDIT_VALIDATE_FULL);
 	summary audit_samples();
-	summary summarize(const char *name,std::string *output = nullptr);
+	summary summarize(std::string name,std::string *output = nullptr);
 
 private:
 	// internal helpers
 	audit_record *audit_one_rom(const rom_entry *rom);
-	audit_record *audit_one_disk(const rom_entry *rom, const char *locationtag = nullptr);
+	audit_record *audit_one_disk(const rom_entry *rom, std::string locationtag = "");
 	void compute_status(audit_record &record, const rom_entry *rom, bool found);
-	device_t *find_shared_device(device_t &device, const char *name, const hash_collection &romhashes, UINT64 romlength);
+	device_t *find_shared_device(device_t &device, std::string name, const hash_collection &romhashes, UINT64 romlength);
 
 	// internal state
 	simple_list<audit_record>   m_record_list;
 	const driver_enumerator &   m_enumerator;
 	const char *                m_validation;
-	const char *                m_searchpath;
+	std::string                 m_searchpath;
 };
 
 

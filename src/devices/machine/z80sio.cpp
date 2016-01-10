@@ -103,7 +103,7 @@ machine_config_constructor z80sio_device::device_mconfig_additions() const
 //  z80sio_device - constructor
 //-------------------------------------------------
 
-z80sio_device::z80sio_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, UINT32 variant, const char *shortname, const char *source)
+z80sio_device::z80sio_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, UINT32 variant, const char *shortname, const char *source)
 	: device_t(mconfig, type, name, tag, owner, clock, shortname, source),
 	device_z80daisy_interface(mconfig, *this),
 	m_chanA(*this, CHANA_TAG),
@@ -133,7 +133,7 @@ z80sio_device::z80sio_device(const machine_config &mconfig, device_type type, co
 		elem = 0;
 }
 
-z80sio_device::z80sio_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+z80sio_device::z80sio_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, Z80SIO, "Z80 SIO", tag, owner, clock, "z80sio", __FILE__),
 	device_z80daisy_interface(mconfig, *this),
 	m_chanA(*this, CHANA_TAG),
@@ -479,7 +479,7 @@ WRITE8_MEMBER( z80sio_device::ba_cd_w )
 //-------------------------------------------------
 //  z80sio_channel - constructor
 //-------------------------------------------------
-z80sio_channel::z80sio_channel(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+z80sio_channel::z80sio_channel(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, Z80SIO_CHANNEL, "Z80 SIO channel", tag, owner, clock, "z80sio_channel", __FILE__),
 		device_serial_interface(mconfig, *this),
 		m_rx_error(0),

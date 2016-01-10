@@ -57,7 +57,7 @@
  * </PRE>
  */
 
-diablo_hd_device::diablo_hd_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+diablo_hd_device::diablo_hd_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, DIABLO_HD, "Diablo Disk", tag, owner, clock, "diablo_hd", __FILE__),
 #if DIABLO_DEBUG
 	m_log_level(8),

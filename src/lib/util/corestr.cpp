@@ -50,12 +50,12 @@ int core_strnicmp(const char *s1, const char *s2, size_t n)
 
 
 /*-------------------------------------------------
-    core_strwildcmp - case-insensitive wildcard
+    core_strwildeq - case-insensitive wildcard
     string compare (up to 16 characters at the
     moment)
 -------------------------------------------------*/
 
-int core_strwildcmp(const char *sp1, const char *sp2)
+bool core_strwildeq(std::string sp1, std::string sp2)
 {
 	char s1[17], s2[17];
 	size_t i, l1, l2;
@@ -65,10 +65,10 @@ int core_strwildcmp(const char *sp1, const char *sp2)
 	//assert(strlen(sp2) < 16);
 
 	if (sp1[0] == 0) strcpy(s1, "*");
-	else { strncpy(s1, sp1, 16); s1[16] = 0; }
+	else { strncpy(s1, sp1.c_str(), 16); s1[16] = 0; }
 
 	if (sp2[0] == 0) strcpy(s2, "*");
-	else { strncpy(s2, sp2, 16); s2[16] = 0; }
+	else { strncpy(s2, sp2.c_str(), 16); s2[16] = 0; }
 
 	p = strchr(s1, '*');
 	if (p)
@@ -104,7 +104,7 @@ int core_strwildcmp(const char *sp1, const char *sp2)
 		if (s2[i] == '?' && s1[i] != '?') s2[i] = s1[i];
 	}
 
-	return core_stricmp(s1, s2);
+	return !core_stricmp(s1, s2);
 }
 
 

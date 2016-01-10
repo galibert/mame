@@ -69,7 +69,7 @@ public:
 	virtual osd_font *font_alloc() = 0;
 
 	// command option overrides
-	virtual bool execute_command(const char *command) = 0;
+	virtual bool execute_command(std::string command) = 0;
 
 	// midi interface
 	virtual osd_midi_device *create_midi_device() = 0;

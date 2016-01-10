@@ -90,21 +90,21 @@ public:
 	osd_options();
 
 	// keyboard mapping
-	const char *ui_mode_key() const { return value(OSDOPTION_UIMODEKEY); }
+	std::string ui_mode_key() const { return value(OSDOPTION_UIMODEKEY); }
 
 	// debugging options
-	const char *debugger() const { return value(OSDOPTION_DEBUGGER); }
-	const char *debugger_font() const { return value(OSDOPTION_DEBUGGER_FONT); }
+	std::string debugger() const { return value(OSDOPTION_DEBUGGER); }
+	std::string debugger_font() const { return value(OSDOPTION_DEBUGGER_FONT); }
 	float debugger_font_size() const { return float_value(OSDOPTION_DEBUGGER_FONT_SIZE); }
 	int watchdog() const { return int_value(OSDOPTION_WATCHDOG); }
 
 	// performance options
 	bool multithreading() const { return bool_value(OSDOPTION_MULTITHREADING); }
-	const char *numprocessors() const { return value(OSDOPTION_NUMPROCESSORS); }
+	std::string numprocessors() const { return value(OSDOPTION_NUMPROCESSORS); }
 	int bench() const { return int_value(OSDOPTION_BENCH); }
 
 	// video options
-	const char *video() const { return value(OSDOPTION_VIDEO); }
+	std::string video() const { return value(OSDOPTION_VIDEO); }
 	int numscreens() const { return int_value(OSDOPTION_NUMSCREENS); }
 	bool window() const { return bool_value(OSDOPTION_WINDOW); }
 	bool maximize() const { return bool_value(OSDOPTION_MAXIMIZE); }
@@ -114,14 +114,14 @@ public:
 	bool sync_refresh() const { return bool_value(OSDOPTION_SYNCREFRESH); }
 
 	// per-window options
-	const char *screen() const { return value(OSDOPTION_SCREEN); }
-	const char *aspect() const { return value(OSDOPTION_ASPECT); }
-	const char *resolution() const { return value(OSDOPTION_RESOLUTION); }
-	const char *view() const { return value(OSDOPTION_VIEW); }
-	const char *screen(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_SCREEN, index);  return value(temp.c_str()); }
-	const char *aspect(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_ASPECT, index); return value(temp.c_str()); }
-	const char *resolution(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_RESOLUTION, index); return value(temp.c_str()); }
-	const char *view(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_VIEW, index); return value(temp.c_str()); }
+	std::string screen() const { return value(OSDOPTION_SCREEN); }
+	std::string aspect() const { return value(OSDOPTION_ASPECT); }
+	std::string resolution() const { return value(OSDOPTION_RESOLUTION); }
+	std::string view() const { return value(OSDOPTION_VIEW); }
+	std::string screen(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_SCREEN, index);  return value(temp.c_str()); }
+	std::string aspect(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_ASPECT, index); return value(temp.c_str()); }
+	std::string resolution(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_RESOLUTION, index); return value(temp.c_str()); }
+	std::string view(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_VIEW, index); return value(temp.c_str()); }
 
 	// full screen options
 	bool switch_res() const { return bool_value(OSDOPTION_SWITCHRES); }
@@ -137,16 +137,16 @@ public:
 	bool gl_pbo() const { return bool_value(OSDOPTION_GL_PBO); }
 	bool gl_glsl() const { return bool_value(OSDOPTION_GL_GLSL); }
 	bool glsl_filter() const { return bool_value(OSDOPTION_GLSL_FILTER); }
-	const char *shader_mame(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_SHADER_MAME, index);  return value(temp.c_str()); }
-	const char *shader_screen(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_SHADER_SCREEN, index);  return value(temp.c_str()); }
+	std::string shader_mame(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_SHADER_MAME, index);  return value(temp.c_str()); }
+	std::string shader_screen(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_SHADER_SCREEN, index);  return value(temp.c_str()); }
 
 	// sound options
-	const char *sound() const { return value(OSDOPTION_SOUND); }
+	std::string sound() const { return value(OSDOPTION_SOUND); }
 	int audio_latency() const { return int_value(OSDOPTION_AUDIO_LATENCY); }
 
 	// CoreAudio specific options
-	const char *audio_output() const { return value(OSDOPTION_AUDIO_OUTPUT); }
-	const char *audio_effect(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_AUDIO_EFFECT, index); return value(temp.c_str()); }
+	std::string audio_output() const { return value(OSDOPTION_AUDIO_OUTPUT); }
+	std::string audio_effect(int index) const { std::string temp; strprintf(temp, "%s%d", OSDOPTION_AUDIO_EFFECT, index); return value(temp.c_str()); }
 
 private:
 	static const options_entry s_option_entries[];
@@ -182,7 +182,7 @@ public:
 	virtual void customize_input_type_list(simple_list<input_type_entry> &typelist) override;
 
 	// font overridables
-	virtual osd_font *font_open(const char *name, int &height);
+	virtual osd_font *font_open(std::string name, int &height);
 	virtual void font_close(osd_font *font);
 	virtual bool font_get_bitmap(osd_font *font, unicode_char chnum, bitmap_argb32 &bitmap, INT32 &width, INT32 &xoffs, INT32 &yoffs);
 
@@ -190,7 +190,7 @@ public:
 	virtual void *get_slider_list() override;
 
 	// command option overrides
-	virtual bool execute_command(const char *command) override;
+	virtual bool execute_command(std::string command) override;
 
 	virtual osd_font *font_alloc() override { return m_font_module->font_alloc(); }
 
@@ -221,7 +221,7 @@ public:
 
 	virtual void osd_exit();
 
-	virtual void video_options_add(const char *name, void *type);
+	virtual void video_options_add(std::string name, void *type);
 
 	osd_options &options() { return m_options; }
 
@@ -244,12 +244,12 @@ private:
 	osd_module_manager m_mod_man;
 	font_module *m_font_module;
 
-	void update_option(const char * key, std::vector<const char *> &values);
+	void update_option(std::string  key, const std::vector<std::string> &values);
 	// FIXME: should be elsewhere
 	osd_module *select_module_options(const core_options &opts, const std::string &opt_name)
 	{
 		std::string opt_val = opts.value(opt_name.c_str());
-		if (opt_val.compare("auto")==0)
+		if (opt_val == "auto")
 			opt_val = "";
 		else if (!m_mod_man.type_has_name(opt_name.c_str(), opt_val.c_str()))
 		{
@@ -270,7 +270,7 @@ protected:
 	debug_module* m_debugger;
 	midi_module* m_midi;
 private:
-	std::vector<const char *> m_video_names;
+	std::vector<std::string> m_video_names;
 };
 
 

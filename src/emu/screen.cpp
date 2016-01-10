@@ -43,7 +43,7 @@ UINT32 screen_device::m_id_counter = 0;
 //  screen_device - constructor
 //-------------------------------------------------
 
-screen_device::screen_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+screen_device::screen_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, SCREEN, "Video Screen", tag, owner, clock, "screen", __FILE__),
 		m_type(SCREEN_TYPE_RASTER),
 		m_oldstyle_vblank_supplied(false),
@@ -224,7 +224,7 @@ void screen_device::static_set_screen_vblank(device_t &device, screen_vblank_del
 //  configuration
 //-------------------------------------------------
 
-void screen_device::static_set_palette(device_t &device, const char *tag)
+void screen_device::static_set_palette(device_t &device, std::string tag)
 {
 	downcast<screen_device &>(device).m_palette.set_tag(tag);
 }

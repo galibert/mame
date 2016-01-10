@@ -695,7 +695,7 @@ const device_type LEGACY_FLOPPY = &device_creator<legacy_floppy_image_device>;
 //  legacy_floppy_image_device - constructor
 //-------------------------------------------------
 
-legacy_floppy_image_device::legacy_floppy_image_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+legacy_floppy_image_device::legacy_floppy_image_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, LEGACY_FLOPPY, "Floppy Disk", tag, owner, clock, "legacy_floppy_image", __FILE__),
 		device_image_interface(mconfig, *this),
 		m_out_idx_func(*this),
@@ -729,7 +729,7 @@ legacy_floppy_image_device::legacy_floppy_image_device(const machine_config &mco
 	memset(&m_extension_list,0,sizeof(m_extension_list));
 }
 
-legacy_floppy_image_device::legacy_floppy_image_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
+legacy_floppy_image_device::legacy_floppy_image_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
 	: device_t(mconfig, type, name, tag, owner, clock, shortname, source),
 		device_image_interface(mconfig, *this),
 		m_out_idx_func(*this),

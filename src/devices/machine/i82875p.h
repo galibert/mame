@@ -20,9 +20,9 @@
 
 class i82875p_host_device : public pci_host_device {
 public:
-	i82875p_host_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	i82875p_host_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 
-	void set_cpu_tag(const char *tag);
+	void set_cpu_tag(std::string tag);
 	void set_ram_size(int ram_size);
 
 	virtual void reset_all_mappings() override;
@@ -98,7 +98,7 @@ private:
 
 class i82875p_agp_device : public agp_bridge_device {
 public:
-	i82875p_agp_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	i82875p_agp_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 
 protected:
 	virtual void device_start() override;
@@ -107,7 +107,7 @@ protected:
 
 class i82875p_overflow_device : public pci_device {
 public:
-	i82875p_overflow_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	i82875p_overflow_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 
 
 	DECLARE_READ8_MEMBER  (dram_row_boundary_r);

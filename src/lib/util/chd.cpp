@@ -637,7 +637,7 @@ chd_error chd_file::create(core_file &file, UINT64 logicalbytes, UINT32 hunkbyte
 }
 
 /**
- * @fn  chd_error chd_file::create(const char *filename, UINT64 logicalbytes, UINT32 hunkbytes, UINT32 unitbytes, chd_codec_type compression[4])
+ * @fn  chd_error chd_file::create(std::string filename, UINT64 logicalbytes, UINT32 hunkbytes, UINT32 unitbytes, chd_codec_type compression[4])
  *
  * @brief   -------------------------------------------------
  *            create - create a new file with no parent using a filename
@@ -652,7 +652,7 @@ chd_error chd_file::create(core_file &file, UINT64 logicalbytes, UINT32 hunkbyte
  * @return  A chd_error.
  */
 
-chd_error chd_file::create(const char *filename, UINT64 logicalbytes, UINT32 hunkbytes, UINT32 unitbytes, chd_codec_type compression[4])
+chd_error chd_file::create(std::string filename, UINT64 logicalbytes, UINT32 hunkbytes, UINT32 unitbytes, chd_codec_type compression[4])
 {
 	// make sure we don't already have a file open
 	if (m_file != nullptr)
@@ -672,13 +672,13 @@ chd_error chd_file::create(const char *filename, UINT64 logicalbytes, UINT32 hun
 	if (chderr != CHDERR_NONE)
 	{
 		core_fclose(file);
-		osd_rmfile(filename);
+		osd_rmfile(filename.c_str());
 	}
 	return chderr;
 }
 
 /**
- * @fn  chd_error chd_file::create(const char *filename, UINT64 logicalbytes, UINT32 hunkbytes, chd_codec_type compression[4], chd_file &parent)
+ * @fn  chd_error chd_file::create(std::string filename, UINT64 logicalbytes, UINT32 hunkbytes, chd_codec_type compression[4], chd_file &parent)
  *
  * @brief   -------------------------------------------------
  *            create - create a new file with a parent using a filename
@@ -693,7 +693,7 @@ chd_error chd_file::create(const char *filename, UINT64 logicalbytes, UINT32 hun
  * @return  A chd_error.
  */
 
-chd_error chd_file::create(const char *filename, UINT64 logicalbytes, UINT32 hunkbytes, chd_codec_type compression[4], chd_file &parent)
+chd_error chd_file::create(std::string filename, UINT64 logicalbytes, UINT32 hunkbytes, chd_codec_type compression[4], chd_file &parent)
 {
 	// make sure we don't already have a file open
 	if (m_file != nullptr)
@@ -713,13 +713,13 @@ chd_error chd_file::create(const char *filename, UINT64 logicalbytes, UINT32 hun
 	if (chderr != CHDERR_NONE)
 	{
 		core_fclose(file);
-		osd_rmfile(filename);
+		osd_rmfile(filename.c_str());
 	}
 	return chderr;
 }
 
 /**
- * @fn  chd_error chd_file::open(const char *filename, bool writeable, chd_file *parent)
+ * @fn  chd_error chd_file::open(std::string filename, bool writeable, chd_file *parent)
  *
  * @brief   -------------------------------------------------
  *            open - open an existing file for read or read/write
@@ -732,7 +732,7 @@ chd_error chd_file::create(const char *filename, UINT64 logicalbytes, UINT32 hun
  * @return  A chd_error.
  */
 
-chd_error chd_file::open(const char *filename, bool writeable, chd_file *parent)
+chd_error chd_file::open(std::string filename, bool writeable, chd_file *parent)
 {
 	// make sure we don't already have a file open
 	if (m_file != nullptr)

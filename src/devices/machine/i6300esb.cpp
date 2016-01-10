@@ -8,7 +8,7 @@ const device_type I6300ESB_LPC      = &device_creator<i6300esb_lpc_device>;
 DEVICE_ADDRESS_MAP_START(map, 32, i6300esb_watchdog_device)
 ADDRESS_MAP_END
 
-i6300esb_watchdog_device::i6300esb_watchdog_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+i6300esb_watchdog_device::i6300esb_watchdog_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: pci_device(mconfig, I6300ESB_WATCHDOG, "i6300ESB southbridge watchdog", tag, owner, clock, "i6300esb_watchdog", __FILE__)
 {
 }
@@ -86,7 +86,7 @@ DEVICE_ADDRESS_MAP_START(internal_io_map, 32, i6300esb_lpc_device)
 ADDRESS_MAP_END
 
 
-i6300esb_lpc_device::i6300esb_lpc_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+i6300esb_lpc_device::i6300esb_lpc_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: pci_device(mconfig, I6300ESB_LPC, "i6300ESB southbridge ISA/LPC bridge", tag, owner, clock, "i6300esb_lpc", __FILE__),
 		acpi(*this, "acpi"),
 		rtc (*this, "rtc"),

@@ -142,7 +142,7 @@ ADDRESS_MAP_END
 //  via6522_device - constructor
 //-------------------------------------------------
 
-via6522_device::via6522_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+via6522_device::via6522_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, VIA6522, "6522 VIA", tag, owner, clock, "via6522", __FILE__),
 		m_in_a_handler(*this),
 		m_in_b_handler(*this),

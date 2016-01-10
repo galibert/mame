@@ -381,7 +381,7 @@ const char * nes_cart_slot_device::nes_get_slot( int pcb_id )
 
 struct nes_cart_lines
 {
-	const char *tag;
+	std::string tag;
 	int line;
 };
 

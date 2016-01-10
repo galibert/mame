@@ -66,7 +66,7 @@ void address_map_entry::set_mask(offs_t _mask)
 //  retrieve a submap from a device
 //-------------------------------------------------
 
-void address_map_entry::set_submap(const char *tag, address_map_delegate func, int bits, UINT64 mask)
+void address_map_entry::set_submap(std::string tag, address_map_delegate func, int bits, UINT64 mask)
 {
 	if(!bits)
 		bits = m_map.m_databits;
@@ -247,19 +247,19 @@ void address_map_entry::set_handler(setoffset_delegate func)
 //  provided unitmask is valid and expected
 //-------------------------------------------------
 
-bool address_map_entry::unitmask_is_appropriate(UINT8 width, UINT64 unitmask, const char *string)
+bool address_map_entry::unitmask_is_appropriate(UINT8 width, UINT64 unitmask, std::string string)
 {
 	// if no mask, this must match the default width of the map
 	if (unitmask == 0)
 	{
 		if (m_map.m_databits != width)
-			throw emu_fatalerror("Handler %s is a %d-bit handler but was specified in a %d-bit address map", string, width, m_map.m_databits);
+			throw emu_fatalerror("Handler %s is a %d-bit handler but was specified in a %d-bit address map", string.c_str(), width, m_map.m_databits);
 		return true;
 	}
 
 	// if we have a mask, we must be smaller than the default width of the map
 	if (m_map.m_databits < width)
-		throw emu_fatalerror("Handler %s is a %d-bit handler and is too wide to be used in a %d-bit address map", string, width, m_map.m_databits);
+		throw emu_fatalerror("Handler %s is a %d-bit handler and is too wide to be used in a %d-bit address map", string.c_str(), width, m_map.m_databits);
 
 	// the mask must represent whole units of width
 	UINT32 basemask = (width == 8) ? 0xff : (width == 16) ? 0xffff : 0xffffffff;
@@ -267,7 +267,7 @@ bool address_map_entry::unitmask_is_appropriate(UINT8 width, UINT64 unitmask, co
 	while (singlemask != 0)
 	{
 		if ((unitmask & singlemask) != 0 && (unitmask & singlemask) != singlemask)
-			throw emu_fatalerror("Handler %s specified a mask of %08X%08X; needs to be in even chunks of %X", string, (UINT32)(unitmask >> 32), (UINT32)unitmask, basemask);
+			throw emu_fatalerror("Handler %s specified a mask of %08X%08X; needs to be in even chunks of %X", string.c_str(), (UINT32)(unitmask >> 32), (UINT32)unitmask, basemask);
 		singlemask <<= width;
 	}
 	return true;
@@ -337,12 +337,12 @@ address_map::address_map(device_t &device, address_spacenum spacenum)
 	// get our memory interface
 	const device_memory_interface *memintf;
 	if (!device.interface(memintf))
-		throw emu_fatalerror("No memory interface defined for device '%s'\n", device.tag());
+		throw emu_fatalerror("No memory interface defined for device '%s'\n", device.tag().c_str());
 
 	// and then the configuration for the current address space
 	const address_space_config *spaceconfig = memintf->space_config(spacenum);
 	if (spaceconfig == nullptr)
-		throw emu_fatalerror("No memory address space configuration found for device '%s', space %d\n", device.tag(), spacenum);
+		throw emu_fatalerror("No memory address space configuration found for device '%s', space %d\n", device.tag().c_str(), spacenum);
 
 	// construct the internal device map (first so it takes priority)
 	if (spaceconfig->m_internal_map != nullptr)
@@ -503,7 +503,7 @@ void address_map::uplift_submaps(running_machine &machine, device_t &device, dev
 			std::string tag = owner.subtag(entry->m_read.m_tag);
 			device_t *mapdevice = machine.device(tag.c_str());
 			if (mapdevice == nullptr) {
-				throw emu_fatalerror("Attempted to submap a non-existent device '%s' in space %d of device '%s'\n", tag.c_str(), m_spacenum, device.basetag());
+				throw emu_fatalerror("Attempted to submap a non-existent device '%s' in space %d of device '%s'\n", tag.c_str(), m_spacenum, device.basetag().c_str());
 			}
 			// Grab the submap
 			address_map submap(*mapdevice, entry);
@@ -647,7 +647,7 @@ void address_map::map_validity_check(validity_checker &valid, const device_t &de
 	if (m_spacenum != spacenum)
 		osd_printf_error("Space %d has address space %d handlers!\n", spacenum, m_spacenum);
 	if (m_databits != datawidth)
-		osd_printf_error("Wrong memory handlers provided for %s space! (width = %d, memory = %08x)\n", spaceconfig.m_name, datawidth, m_databits);
+		osd_printf_error("Wrong memory handlers provided for %s space! (width = %d, memory = %08x)\n", spaceconfig.m_name.c_str(), datawidth, m_databits);
 
 	// loop over entries and look for errors
 	for (address_map_entry *entry = m_entrylist.first(); entry != nullptr; entry = entry->next())
@@ -663,7 +663,7 @@ void address_map::map_validity_check(validity_checker &valid, const device_t &de
 					((entry->m_read.m_type != AMH_NONE && scan->m_read.m_type != AMH_NONE) ||
 						(entry->m_write.m_type != AMH_NONE && scan->m_write.m_type != AMH_NONE)))
 				{
-					osd_printf_warning("%s space has overlapping memory (%X-%X,%d,%d) vs (%X-%X,%d,%d)\n", spaceconfig.m_name, entry->m_addrstart, entry->m_addrend, entry->m_read.m_type, entry->m_write.m_type, scan->m_addrstart, scan->m_addrend, scan->m_read.m_type, scan->m_write.m_type);
+					osd_printf_warning("%s space has overlapping memory (%X-%X,%d,%d) vs (%X-%X,%d,%d)\n", spaceconfig.m_name.c_str(), entry->m_addrstart, entry->m_addrend, entry->m_read.m_type, entry->m_write.m_type, scan->m_addrstart, scan->m_addrend, scan->m_read.m_type, scan->m_write.m_type);
 					detected_overlap = true;
 					break;
 				}
@@ -671,21 +671,21 @@ void address_map::map_validity_check(validity_checker &valid, const device_t &de
 
 		// look for inverted start/end pairs
 		if (byteend < bytestart)
-			osd_printf_error("Wrong %s memory read handler start = %08x > end = %08x\n", spaceconfig.m_name, entry->m_addrstart, entry->m_addrend);
+			osd_printf_error("Wrong %s memory read handler start = %08x > end = %08x\n", spaceconfig.m_name.c_str(), entry->m_addrstart, entry->m_addrend);
 
 		// look for misaligned entries
 		if ((bytestart & (alignunit - 1)) != 0 || (byteend & (alignunit - 1)) != (alignunit - 1))
-			osd_printf_error("Wrong %s memory read handler start = %08x, end = %08x ALIGN = %d\n", spaceconfig.m_name, entry->m_addrstart, entry->m_addrend, alignunit);
+			osd_printf_error("Wrong %s memory read handler start = %08x, end = %08x ALIGN = %d\n", spaceconfig.m_name.c_str(), entry->m_addrstart, entry->m_addrend, alignunit);
 
 		// if this is a program space, auto-assign implicit ROM entries
-		if (entry->m_read.m_type == AMH_ROM && entry->m_region == nullptr)
+		if (entry->m_read.m_type == AMH_ROM && entry->m_region.empty())
 		{
 			entry->m_region = device.tag();
 			entry->m_rgnoffs = entry->m_addrstart;
 		}
 
 		// if this entry references a memory region, validate it
-		if (entry->m_region != nullptr && entry->m_share == nullptr)
+		if (!entry->m_region.empty() && entry->m_share.empty())
 		{
 			// make sure we can resolve the full path to the region
 			bool found = false;
@@ -701,21 +701,21 @@ void address_map::map_validity_check(validity_checker &valid, const device_t &de
 						// verify the address range is within the region's bounds
 						offs_t length = ROMREGION_GETLENGTH(romp);
 						if (entry->m_rgnoffs + (byteend - bytestart + 1) > length)
-							osd_printf_error("%s space memory map entry %X-%X extends beyond region '%s' size (%X)\n", spaceconfig.m_name, entry->m_addrstart, entry->m_addrend, entry->m_region, length);
+							osd_printf_error("%s space memory map entry %X-%X extends beyond region '%s' size (%X)\n", spaceconfig.m_name.c_str(), entry->m_addrstart, entry->m_addrend, entry->m_region.c_str(), length);
 						found = true;
 					}
 				}
 
 			// error if not found
 			if (!found)
-				osd_printf_error("%s space memory map entry %X-%X references non-existant region '%s'\n", spaceconfig.m_name, entry->m_addrstart, entry->m_addrend, entry->m_region);
+				osd_printf_error("%s space memory map entry %X-%X references non-existant region '%s'\n", spaceconfig.m_name.c_str(), entry->m_addrstart, entry->m_addrend, entry->m_region.c_str());
 		}
 
 		// make sure all devices exist
 		if (entry->m_read.m_type == AMH_DEVICE_DELEGATE)
 		{
 			// extract the device tag from the proto-delegate
-			const char *devtag = nullptr;
+			std::string devtag;
 			switch (entry->m_read.m_bits)
 			{
 				case 8: devtag = entry->m_rproto8.device_name(); break;
@@ -724,13 +724,13 @@ void address_map::map_validity_check(validity_checker &valid, const device_t &de
 				case 64: devtag = entry->m_rproto64.device_name(); break;
 			}
 			if (entry->m_devbase.subdevice(devtag) == nullptr)
-				osd_printf_error("%s space memory map entry reads from nonexistant device '%s'\n", spaceconfig.m_name,
-					devtag != nullptr ? devtag : "<unspecified>");
+				osd_printf_error("%s space memory map entry reads from nonexistant device '%s'\n", spaceconfig.m_name.c_str(),
+								 !devtag.empty() ? devtag.c_str() : "<unspecified>");
 		}
 		if (entry->m_write.m_type == AMH_DEVICE_DELEGATE)
 		{
 			// extract the device tag from the proto-delegate
-			const char *devtag = nullptr;
+			std::string devtag;
 			switch (entry->m_write.m_bits)
 			{
 				case 8: devtag = entry->m_wproto8.device_name(); break;
@@ -739,29 +739,29 @@ void address_map::map_validity_check(validity_checker &valid, const device_t &de
 				case 64: devtag = entry->m_wproto64.device_name(); break;
 			}
 			if (entry->m_devbase.subdevice(devtag) == nullptr)
-				osd_printf_error("%s space memory map entry writes to nonexistant device '%s'\n", spaceconfig.m_name,
-					devtag != nullptr ? devtag : "<unspecified>");
+				osd_printf_error("%s space memory map entry writes to nonexistant device '%s'\n", spaceconfig.m_name.c_str(),
+								 !devtag.empty() ? devtag.c_str() : "<unspecified>");
 		}
 		if (entry->m_setoffsethd.m_type == AMH_DEVICE_DELEGATE)
 		{
 			// extract the device tag from the proto-delegate
-			const char *devtag = entry->m_soproto.device_name();
+			std::string devtag = entry->m_soproto.device_name();
 			if (entry->m_devbase.subdevice(devtag) == nullptr)
-				osd_printf_error("%s space memory map entry references nonexistant device '%s'\n", spaceconfig.m_name,
-					devtag != nullptr ? devtag : "<unspecified>");
+				osd_printf_error("%s space memory map entry references nonexistant device '%s'\n", spaceconfig.m_name.c_str(),
+								 !devtag.empty() ? devtag.c_str() : "<unspecified>");
 		}
 
 		// make sure ports exist
-//      if ((entry->m_read.m_type == AMH_PORT && entry->m_read.m_tag != NULL && portlist.find(entry->m_read.m_tag) == NULL) ||
-//          (entry->m_write.m_type == AMH_PORT && entry->m_write.m_tag != NULL && portlist.find(entry->m_write.m_tag) == NULL))
-//          osd_printf_error("%s space memory map entry references nonexistant port tag '%s'\n", spaceconfig.m_name, entry->m_read.m_tag);
+//      if ((entry->m_read.m_type == AMH_PORT && !entry->m_read.m_tag.empty() && portlist.find(entry->m_read.m_tag) == NULL) ||
+//          (entry->m_write.m_type == AMH_PORT && !entry->m_write.m_tag.empty() && portlist.find(entry->m_write.m_tag) == NULL))
+//          osd_printf_error("%s space memory map entry references nonexistant port tag '%s'\n", spaceconfig.m_name.c_str(), entry->m_read.m_tag.c_str());
 
 		// validate bank and share tags
 		if (entry->m_read.m_type == AMH_BANK)
 			valid.validate_tag(entry->m_read.m_tag);
 		if (entry->m_write.m_type == AMH_BANK)
 			valid.validate_tag(entry->m_write.m_tag);
-		if (entry->m_share != nullptr)
+		if (!entry->m_share.empty())
 			valid.validate_tag(entry->m_share);
 	}
 }

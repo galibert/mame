@@ -56,7 +56,7 @@ public:
 
 	// construction/destruction
 	hash_collection();
-	hash_collection(const char *string);
+	hash_collection(std::string string);
 	hash_collection(const hash_collection &src);
 	~hash_collection();
 
@@ -67,11 +67,11 @@ public:
 
 	// getters
 	bool flag(char flag) const { return (m_flags.find_first_of(flag) != std::string::npos); }
-	const char *hash_types(std::string &buffer) const;
+	std::string hash_types() const;
 
 	// hash manipulators
 	void reset();
-	bool add_from_string(char type, const char *buffer, int length = -1);
+	bool add_from_string(char type, std::string buffer, int length = -1);
 	bool remove(char type);
 
 	// CRC-specific helpers
@@ -83,16 +83,16 @@ public:
 	void add_sha1(sha1_t sha1) { m_has_sha1 = true; m_sha1 = sha1; }
 
 	// string conversion
-	const char *internal_string(std::string &buffer) const;
-	const char *macro_string(std::string &buffer) const;
-	const char *attribute_string(std::string &buffer) const;
-	bool from_internal_string(const char *string);
+	std::string internal_string() const;
+	std::string macro_string() const;
+	std::string attribute_string() const;
+	bool from_internal_string(std::string string);
 
 	// creation
-	void begin(const char *types = nullptr);
+	void begin(std::string types = nullptr);
 	void buffer(const UINT8 *data, UINT32 length);
 	void end();
-	void compute(const UINT8 *data, UINT32 length, const char *types = nullptr) { begin(types); buffer(data, length); end(); }
+	void compute(const UINT8 *data, UINT32 length, std::string types = nullptr) { begin(types); buffer(data, length); end(); }
 
 private:
 	// internal helpers

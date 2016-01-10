@@ -29,7 +29,7 @@ const device_type RAM = &device_creator<ram_device>;
 //  ram_device - constructor
 //-------------------------------------------------
 
-ram_device::ram_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+ram_device::ram_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, RAM, "RAM", tag, owner, clock, "ram", __FILE__)
 {
 	m_size = 0;

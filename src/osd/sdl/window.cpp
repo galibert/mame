@@ -743,7 +743,7 @@ int sdl_window_info::window_init()
 	m_target = m_machine.render().target_alloc();
 
 	// set the specific view
-	set_starting_view(m_index, options.view(), options.view(m_index));
+	set_starting_view(m_index, options.view().c_str(), options.view(m_index).c_str());
 
 	// make the window title
 	if (video_config.numscreens == 1)

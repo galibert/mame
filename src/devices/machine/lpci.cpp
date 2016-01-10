@@ -89,7 +89,7 @@ const device_type PCI_BUS_LEGACY = &device_creator<pci_bus_legacy_device>;
 //-------------------------------------------------
 //  pci_bus_legacy_device - constructor
 //-------------------------------------------------
-pci_bus_legacy_device::pci_bus_legacy_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+pci_bus_legacy_device::pci_bus_legacy_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 		device_t(mconfig, PCI_BUS_LEGACY, "PCI Bus Legacy", tag, owner, clock, "pci_bus_legacy", __FILE__),
 		m_father(nullptr)
 {

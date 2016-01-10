@@ -202,7 +202,7 @@ inline void i8155_device::write_port(int port, UINT8 data)
 //  i8155_device - constructor
 //-------------------------------------------------
 
-i8155_device::i8155_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+i8155_device::i8155_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, I8155, "8155 RIOT", tag, owner, clock, "i8155", __FILE__),
 		device_memory_interface(mconfig, *this),
 		m_in_pa_cb(*this),

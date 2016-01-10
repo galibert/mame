@@ -134,7 +134,7 @@
 #define GKRACKER_ROM_TAG "gkracker_rom"
 #define GKRACKER_NVRAM_TAG "gkracker_nvram"
 
-gromport_device::gromport_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+gromport_device::gromport_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	:   bus8z_device(mconfig, GROMPORT, "Cartridge port", tag, owner, clock, "gromport", __FILE__),
 		device_slot_interface(mconfig, *this),
 		m_connector(nullptr),
@@ -248,7 +248,7 @@ const device_type GROMPORT_SINGLE = &device_creator<single_conn_device>;
 const device_type GROMPORT_MULTI = &device_creator<multi_conn_device>;
 const device_type GROMPORT_GK = &device_creator<gkracker_device>;
 
-ti99_cartridge_connector_device::ti99_cartridge_connector_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
+ti99_cartridge_connector_device::ti99_cartridge_connector_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
 	: bus8z_device(mconfig, type, name, tag, owner, clock, shortname, source),
 	m_gromport(nullptr)
 {
@@ -274,7 +274,7 @@ UINT16 ti99_cartridge_connector_device::grom_mask()
 	return m_gromport->get_grom_mask();
 }
 
-single_conn_device::single_conn_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+single_conn_device::single_conn_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: ti99_cartridge_connector_device(mconfig, GROMPORT_SINGLE, "Standard cartridge connector", tag, owner, clock, "single", __FILE__),
 	m_cartridge(nullptr)
 {
@@ -367,7 +367,7 @@ machine_config_constructor single_conn_device::device_mconfig_additions() const
 
 #define AUTO -1
 
-multi_conn_device::multi_conn_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+multi_conn_device::multi_conn_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: ti99_cartridge_connector_device(mconfig, GROMPORT_MULTI, "Multi-cartridge extender", tag, owner, clock, "multi", __FILE__),
 	m_active_slot(0),
 	m_fixed_slot(0),
@@ -693,7 +693,7 @@ enum
 #define GKSWITCH4_TAG "GKSWITCH4"
 #define GKSWITCH5_TAG "GKSWITCH5"
 
-gkracker_device::gkracker_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+gkracker_device::gkracker_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	:   ti99_cartridge_connector_device(mconfig, GROMPORT_GK, "GRAMKracker", tag, owner, clock, "ti99_gkracker", __FILE__),
 		device_nvram_interface(mconfig, *this),
 		m_ram_page(0),
@@ -1118,7 +1118,7 @@ static const pcb_type sw_pcbdefs[] =
 	{ 0, nullptr}
 };
 
-ti99_cartridge_device::ti99_cartridge_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+ti99_cartridge_device::ti99_cartridge_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 :   bus8z_device(mconfig, TI99CART, "TI-99 cartridge", tag, owner, clock, "cartridge", __FILE__),
 	device_image_interface(mconfig, *this),
 	m_softlist(false),

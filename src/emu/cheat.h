@@ -56,7 +56,7 @@ public:
 	operator const UINT64 &() const { return m_value; }
 
 	// format the number according to its format
-	const char *format(std::string &str) const;
+	std::string format() const;
 
 private:
 	// internal state
@@ -72,10 +72,10 @@ class cheat_parameter
 {
 public:
 	// construction/destruction
-	cheat_parameter(cheat_manager &manager, symbol_table &symbols, const char *filename, xml_data_node &paramnode);
+	cheat_parameter(cheat_manager &manager, symbol_table &symbols, std::string filename, xml_data_node &paramnode);
 
 	// queries
-	const char *text();
+	std::string text();
 	bool has_itemlist() const { return (m_itemlist.count() != 0); }
 	bool is_minimum() const { return (m_value == ((m_itemlist.count() == 0) ? m_minval : m_itemlist.first()->value())); }
 	bool is_maximum() const { return (m_value == ((m_itemlist.count() == 0) ? m_maxval : m_itemlist.last()->value())); }
@@ -96,7 +96,7 @@ private:
 
 	public:
 		// construction/destruction
-		item(const char *text, UINT64 value, int valformat)
+		item(std::string text, UINT64 value, int valformat)
 			: m_next(nullptr),
 				m_text(text),
 				m_value(value, valformat) { }
@@ -104,7 +104,7 @@ private:
 		// getters
 		item *next() const { return m_next; }
 		const number_and_format &value() const { return m_value; }
-		const char *text() const { return m_text.c_str(); }
+		std::string text() const { return m_text; }
 
 	private:
 		// internal state
@@ -132,7 +132,7 @@ class cheat_script
 
 public:
 	// construction/destruction
-	cheat_script(cheat_manager &manager, symbol_table &symbols, const char *filename, xml_data_node &scriptnode);
+	cheat_script(cheat_manager &manager, symbol_table &symbols, std::string filename, xml_data_node &scriptnode);
 
 	// getters
 	script_state state() const { return m_state; }
@@ -149,7 +149,7 @@ private:
 
 	public:
 		// construction/destruction
-		script_entry(cheat_manager &manager, symbol_table &symbols, const char *filename, xml_data_node &entrynode, bool isaction);
+		script_entry(cheat_manager &manager, symbol_table &symbols, std::string filename, xml_data_node &entrynode, bool isaction);
 
 		// getters
 		script_entry *next() const { return m_next; }
@@ -166,7 +166,7 @@ private:
 
 		public:
 			// construction/destruction
-			output_argument(cheat_manager &manager, symbol_table &symbols, const char *filename, xml_data_node &argnode);
+			output_argument(cheat_manager &manager, symbol_table &symbols, std::string filename, xml_data_node &argnode);
 
 			// getters
 			output_argument *next() const { return m_next; }
@@ -184,7 +184,7 @@ private:
 		};
 
 		// internal helpers
-		void validate_format(const char *filename, int line);
+		void validate_format(std::string filename, int line);
 
 		// internal state
 		script_entry *      m_next;                         // link to next entry
@@ -214,15 +214,15 @@ class cheat_entry
 
 public:
 	// construction/destruction
-	cheat_entry(cheat_manager &manager, symbol_table &globaltable, const char *filename, xml_data_node &cheatnode);
+	cheat_entry(cheat_manager &manager, symbol_table &globaltable, std::string filename, xml_data_node &cheatnode);
 	~cheat_entry();
 
 	// getters
 	cheat_manager &manager() const { return m_manager; }
 	cheat_entry *next() const { return m_next; }
 	script_state state() const { return m_state; }
-	const char *description() const { return m_description.c_str(); }
-	const char *comment() const { return m_comment.c_str(); }
+	std::string description() const { return m_description; }
+	std::string comment() const { return m_comment; }
 
 	// script detection
 	bool has_run_script() const { return (m_run_script != nullptr); }
@@ -301,21 +301,21 @@ public:
 
 	// actions
 	void reload();
-	bool save_all(const char *filename);
+	bool save_all(std::string filename);
 	void render_text(render_container &container);
 
 	// output helpers
 	std::string &get_output_astring(int row, int justify);
 
 	// global helpers
-	static const char *quote_expression(std::string &str, const parsed_expression &expression);
+	static std::string quote_expression(const parsed_expression &expression);
 	static UINT64 execute_frombcd(symbol_table &table, void *ref, int params, const UINT64 *param);
 	static UINT64 execute_tobcd(symbol_table &table, void *ref, int params, const UINT64 *param);
 
 private:
 	// internal helpers
 	void frame_update();
-	void load_cheats(const char *filename);
+	void load_cheats(std::string filename);
 
 	// internal state
 	running_machine &   m_machine;                          // reference to our machine

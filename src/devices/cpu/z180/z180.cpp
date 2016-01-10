@@ -81,7 +81,7 @@ Hitachi HD647180 series:
 const device_type Z180 = &device_creator<z180_device>;
 
 
-z180_device::z180_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+z180_device::z180_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: cpu_device(mconfig, Z180, "Z180", tag, owner, clock, "z180", __FILE__)
 	, m_program_config("program", ENDIANNESS_LITTLE, 8, 20, 0)
 	, m_io_config("io", ENDIANNESS_LITTLE, 8, 16, 0)

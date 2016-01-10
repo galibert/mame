@@ -5,7 +5,7 @@
 
 const device_type I8271 = &device_creator<i8271_device>;
 
-i8271_device::i8271_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+i8271_device::i8271_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, I8271, "Intel 8271", tag, owner, clock, "i8271", __FILE__), ready_connected(false), mode(0), main_phase(0),
 	intrq_cb(*this),
 	drq_cb(*this),

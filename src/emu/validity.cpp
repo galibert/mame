@@ -67,7 +67,7 @@ inline int validity_checker::get_defstr_index(const char *string, bool suppress_
 //  meets the general requirements
 //-------------------------------------------------
 
-void validity_checker::validate_tag(const char *tag)
+void validity_checker::validate_tag(std::string tag)
 {
 	// some common names that are now deprecated
 	if (strcmp(tag, "main") == 0 || strcmp(tag, "audio") == 0 || strcmp(tag, "sound") == 0 || strcmp(tag, "left") == 0 || strcmp(tag, "right") == 0)

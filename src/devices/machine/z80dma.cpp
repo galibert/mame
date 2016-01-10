@@ -146,7 +146,7 @@ const device_type Z80DMA = &device_creator<z80dma_device>;
 //  z80dma_device - constructor
 //-------------------------------------------------
 
-z80dma_device::z80dma_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+z80dma_device::z80dma_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, Z80DMA, "Z80 DMA", tag, owner, clock, "z80dma", __FILE__),
 		device_z80daisy_interface(mconfig, *this),
 		m_out_busreq_cb(*this),

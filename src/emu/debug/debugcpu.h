@@ -58,8 +58,8 @@ public:
 					symbol_table &symbols,
 					int index,
 					offs_t address,
-					const char *condition = nullptr,
-					const char *action = nullptr);
+					std::string condition = nullptr,
+					std::string action = nullptr);
 
 		// getters
 		const device_debug *debugInterface() const { return m_debugInterface; }
@@ -67,8 +67,8 @@ public:
 		int index() const { return m_index; }
 		bool enabled() const { return m_enabled; }
 		offs_t address() const { return m_address; }
-		const char *condition() const { return m_condition.original_string(); }
-		const char *action() const { return m_action.c_str(); }
+		std::string condition() const { return m_condition.original_string(); }
+		std::string action() const { return m_action; }
 
 		// setters
 		void setEnabled(bool value) { m_enabled = value; }
@@ -100,8 +100,8 @@ public:
 					int type,
 					offs_t address,
 					offs_t length,
-					const char *condition = nullptr,
-					const char *action = nullptr);
+					std::string condition = nullptr,
+					std::string action = nullptr);
 
 		// getters
 		const device_debug *debugInterface() const { return m_debugInterface; }
@@ -112,8 +112,8 @@ public:
 		bool enabled() const { return m_enabled; }
 		offs_t address() const { return m_address; }
 		offs_t length() const { return m_length; }
-		const char *condition() const { return m_condition.original_string(); }
-		const char *action() const { return m_action.c_str(); }
+		std::string condition() const { return m_condition.original_string(); }
+		std::string action() const { return m_action; }
 
 		// setters
 		void setEnabled(bool value) { m_enabled = value; }
@@ -141,14 +141,14 @@ public:
 
 	public:
 		// construction/destruction
-		registerpoint(symbol_table &symbols, int index, const char *condition, const char *action = nullptr);
+		registerpoint(symbol_table &symbols, int index, std::string condition, std::string action = nullptr);
 
 		// getters
 		registerpoint *next() const { return m_next; }
 		int index() const { return m_index; }
 		bool enabled() const { return m_enabled; }
-		const char *condition() const { return m_condition.original_string(); }
-		const char *action() const { return m_action.c_str(); }
+		std::string condition() const { return m_condition.original_string(); }
+		std::string action() const { return m_action; }
 
 	private:
 		// internals
@@ -213,7 +213,7 @@ public:
 
 	// breakpoints
 	breakpoint *breakpoint_first() const { return m_bplist; }
-	int breakpoint_set(offs_t address, const char *condition = nullptr, const char *action = nullptr);
+	int breakpoint_set(offs_t address, std::string condition = nullptr, std::string action = nullptr);
 	bool breakpoint_clear(int index);
 	void breakpoint_clear_all();
 	bool breakpoint_enable(int index, bool enable = true);
@@ -221,7 +221,7 @@ public:
 
 	// watchpoints
 	watchpoint *watchpoint_first(address_spacenum spacenum) const { return m_wplist[spacenum]; }
-	int watchpoint_set(address_space &space, int type, offs_t address, offs_t length, const char *condition, const char *action);
+	int watchpoint_set(address_space &space, int type, offs_t address, offs_t length, std::string condition, std::string action);
 	bool watchpoint_clear(int wpnum);
 	void watchpoint_clear_all();
 	bool watchpoint_enable(int index, bool enable = true);
@@ -229,7 +229,7 @@ public:
 
 	// registerpoints
 	registerpoint *registerpoint_first() const { return m_rplist; }
-	int registerpoint_set(const char *condition, const char *action = nullptr);
+	int registerpoint_set(std::string condition, std::string action = nullptr);
 	bool registerpoint_clear(int index);
 	void registerpoint_clear_all();
 	bool registerpoint_enable(int index, bool enable = true);
@@ -240,9 +240,9 @@ public:
 	void hotspot_track(int numspots, int threshhold);
 
 	// comments
-	void comment_add(offs_t address, const char *comment, rgb_t color);
+	void comment_add(offs_t address, std::string comment, rgb_t color);
 	bool comment_remove(offs_t addr);
-	const char *comment_text(offs_t addr) const;
+	std::string comment_text(offs_t addr) const;
 	UINT32 comment_count() const { return m_comment_set.size(); }
 	UINT32 comment_change_count() const { return m_comment_change; }
 	bool comment_export(xml_data_node &node);
@@ -266,7 +266,7 @@ public:
 	void track_mem_data_clear() { m_track_mem_set.clear(); }
 
 	// tracing
-	void trace(FILE *file, bool trace_over, const char *action);
+	void trace(FILE *file, bool trace_over, std::string action);
 	void trace_printf(const char *fmt, ...) ATTR_PRINTF(2,3);
 	void trace_flush() { if (m_trace != nullptr) m_trace->flush(); }
 
@@ -339,7 +339,7 @@ private:
 	class tracer
 	{
 	public:
-		tracer(device_debug &debug, FILE &file, bool trace_over, const char *action);
+		tracer(device_debug &debug, FILE &file, bool trace_over, std::string action);
 		~tracer();
 
 		void update(offs_t pc);
@@ -397,7 +397,7 @@ private:
 	class dasm_comment : public dasm_pc_tag
 	{
 	public:
-		dasm_comment(offs_t address, UINT32 crc, const char *text, rgb_t color);
+		dasm_comment(offs_t address, UINT32 crc, std::string text, rgb_t color);
 
 		std::string  m_text;        // Stores comment text & color for a given address & crc32
 		rgb_t    m_color;
@@ -499,7 +499,7 @@ symbol_table *debug_cpu_get_visible_symtable(running_machine &machine);
 /* ----- misc debugger functions ----- */
 
 /* specifies a debug command script to execute */
-void debug_cpu_source_script(running_machine &machine, const char *file);
+void debug_cpu_source_script(running_machine &machine, std::string file);
 
 
 

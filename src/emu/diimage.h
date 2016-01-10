@@ -63,8 +63,8 @@ enum image_error_t
 struct image_device_type_info
 {
 	iodevice_t m_type;
-	const char *m_name;
-	const char *m_shortname;
+	std::string m_name;
+	std::string m_shortname;
 };
 
 class image_device_format
@@ -72,7 +72,7 @@ class image_device_format
 	friend class simple_list<image_device_format>;
 
 public:
-	image_device_format(const char *name, const char *description, const char *extensions, const char *optspec)
+	image_device_format(std::string name, std::string description, std::string extensions, std::string optspec)
 		: m_next(nullptr),
 			m_name(name),
 			m_description(description),
@@ -80,10 +80,10 @@ public:
 			m_optspec(optspec)  { }
 
 	image_device_format *next() const { return m_next; }
-	const char *name() const { return m_name.c_str(); }
-	const char *description() const { return m_description.c_str(); }
-	const char *extensions() const { return m_extensions.c_str(); }
-	const char *optspec() const { return m_optspec.c_str(); }
+	std::string name() const { return m_name; }
+	std::string description() const { return m_description.c_str(); }
+	std::string extensions() const { return m_extensions.c_str(); }
+	std::string optspec() const { return m_optspec.c_str(); }
 
 private:
 	image_device_format *m_next;
@@ -104,7 +104,7 @@ class ui_menu;
 typedef delegate<int (device_image_interface &)> device_image_load_delegate;
 typedef delegate<void (device_image_interface &)> device_image_func_delegate;
 // legacy
-typedef void (*device_image_partialhash_func)(hash_collection &, const unsigned char *, unsigned long, const char *);
+typedef void (*device_image_partialhash_func)(hash_collection &, const unsigned char *, unsigned long, std::string );
 
 //**************************************************************************
 //  MACROS
@@ -138,14 +138,14 @@ public:
 	device_image_interface(const machine_config &mconfig, device_t &device);
 	virtual ~device_image_interface();
 
-	static const char *device_typename(iodevice_t type);
-	static const char *device_brieftypename(iodevice_t type);
-	static iodevice_t device_typeid(const char *name);
+	static std::string device_typename(iodevice_t type);
+	static std::string device_brieftypename(iodevice_t type);
+	static iodevice_t device_typeid(std::string name);
 
-	virtual void device_compute_hash(hash_collection &hashes, const void *data, size_t length, const char *types) const;
+	virtual void device_compute_hash(hash_collection &hashes, const void *data, size_t length, std::string types) const;
 
 	virtual bool call_load() { return FALSE; }
-	virtual bool call_softlist_load(software_list_device &swlist, const char *swname, const rom_entry *start_entry) { return FALSE; }
+	virtual bool call_softlist_load(software_list_device &swlist, std::string swname, const rom_entry *start_entry) { return FALSE; }
 	virtual bool call_create(int format_type, option_resolution *format_options) { return FALSE; }
 	virtual void call_unload() { }
 	virtual void call_display() { }
@@ -157,25 +157,25 @@ public:
 	virtual bool is_creatable() const = 0;
 	virtual bool must_be_loaded() const = 0;
 	virtual bool is_reset_on_load() const = 0;
-	virtual const char *image_interface() const { return nullptr; }
-	virtual const char *file_extensions() const = 0;
+	virtual std::string image_interface() const { return nullptr; }
+	virtual std::string file_extensions() const = 0;
 	virtual const option_guide *create_option_guide() const = 0;
 
 	virtual ui_menu *get_selection_menu(running_machine &machine, class render_container *container);
 
 	const image_device_format *device_get_indexed_creatable_format(int index) { return m_formatlist.find(index); }
-	const image_device_format *device_get_named_creatable_format(const char *format_name);
+	const image_device_format *device_get_named_creatable_format(std::string format_name);
 	const option_guide *device_get_creation_option_guide() { return create_option_guide(); }
 
-	const char *error();
-	void seterror(image_error_t err, const char *message);
+	std::string error();
+	void seterror(image_error_t err, std::string message);
 	void message(const char *format, ...) ATTR_PRINTF(2,3);
 
 	bool exists() { return !m_image_name.empty(); }
-	const char *filename() { if (m_image_name.empty()) return nullptr; else return m_image_name.c_str(); }
-	const char *basename() { if (m_basename.empty()) return nullptr; else return m_basename.c_str(); }
-	const char *basename_noext()  { if (m_basename_noext.empty()) return nullptr; else return m_basename_noext.c_str(); }
-	const char *filetype()  { if (m_filetype.empty()) return nullptr; else return m_filetype.c_str(); }
+	std::string filename() { if (m_image_name.empty()) return nullptr; else return m_image_name.c_str(); }
+	std::string basename() { if (m_basename.empty()) return nullptr; else return m_basename.c_str(); }
+	std::string basename_noext()  { if (m_basename_noext.empty()) return nullptr; else return m_basename_noext.c_str(); }
+	std::string filetype()  { if (m_filetype.empty()) return nullptr; else return m_filetype.c_str(); }
 	core_file *image_core_file() { return m_file; }
 	UINT64 length() { check_for_file(); return core_fsize(m_file); }
 	bool is_readonly() { return m_readonly; }
@@ -201,15 +201,15 @@ public:
 
 	const software_info *software_entry() { return m_software_info_ptr; }
 	const software_part *part_entry() { return m_software_part_ptr; }
-	const char *software_list_name() { return m_software_list_name.c_str(); }
+	std::string software_list_name() { return m_software_list_name.c_str(); }
 
-	void set_working_directory(const char *working_directory) { m_working_directory = working_directory; }
-	const char * working_directory();
+	void set_working_directory(std::string working_directory) { m_working_directory = working_directory; }
+	std::string  working_directory();
 
-	UINT8 *get_software_region(const char *tag);
-	UINT32 get_software_region_length(const char *tag);
-	const char *get_feature(const char *feature_name);
-	bool load_software_region(const char *tag, optional_shared_ptr<UINT8> &ptr);
+	UINT8 *get_software_region(std::string tag);
+	UINT32 get_software_region_length(std::string tag);
+	std::string get_feature(std::string feature_name);
+	bool load_software_region(std::string tag, optional_shared_ptr<UINT8> &ptr);
 
 	UINT32 crc();
 	hash_collection& hash() { return m_hash; }
@@ -218,48 +218,48 @@ public:
 	void battery_load(void *buffer, int length, void *def_buffer);
 	void battery_save(const void *buffer, int length);
 
-	const char *image_type_name()  const { return device_typename(image_type()); }
+	std::string image_type_name()  const { return device_typename(image_type()); }
 
 
 
-	const char *instance_name() const { return m_instance_name.c_str(); }
-	const char *brief_instance_name() const { return m_brief_instance_name.c_str(); }
-	bool uses_file_extension(const char *file_extension) const;
+	std::string instance_name() const { return m_instance_name.c_str(); }
+	std::string brief_instance_name() const { return m_brief_instance_name.c_str(); }
+	bool uses_file_extension(std::string file_extension) const;
 	image_device_format *formatlist() const { return m_formatlist.first(); }
 
-	bool load(const char *path);
+	bool load(std::string path);
 	bool open_image_file(emu_options &options);
 	bool finish_load();
 	void unload();
-	bool create(const char *path, const image_device_format *create_format, option_resolution *create_args);
-	bool load_software(software_list_device &swlist, const char *swname, const rom_entry *entry);
-	int reopen_for_write(const char *path);
+	bool create(std::string path, const image_device_format *create_format, option_resolution *create_args);
+	bool load_software(software_list_device &swlist, std::string swname, const rom_entry *entry);
+	int reopen_for_write(std::string path);
 
-	static void software_name_split(const char *swlist_swname, std::string &swlist_name, std::string &swname, std::string &swpart);
+	static void software_name_split(std::string swlist_swname, std::string &swlist_name, std::string &swname, std::string &swpart);
 
 protected:
-	bool load_internal(const char *path, bool is_create, int create_format, option_resolution *create_args, bool just_load);
+	bool load_internal(std::string path, bool is_create, int create_format, option_resolution *create_args, bool just_load);
 	void determine_open_plan(int is_create, UINT32 *open_plan);
-	image_error_t load_image_by_path(UINT32 open_flags, const char *path);
+	image_error_t load_image_by_path(UINT32 open_flags, std::string path);
 	void clear();
 	bool is_loaded();
 
-	image_error_t set_image_filename(const char *filename);
+	image_error_t set_image_filename(std::string filename);
 
 	void clear_error();
 
 	void check_for_file() { assert_always(m_file != nullptr, "Illegal operation on unmounted image"); }
 
 	void setup_working_directory();
-	bool try_change_working_directory(const char *subdir);
+	bool try_change_working_directory(std::string subdir);
 
-	void run_hash(void (*partialhash)(hash_collection &, const unsigned char *, unsigned long, const char *), hash_collection &hashes, const char *types);
+	void run_hash(void (*partialhash)(hash_collection &, const unsigned char *, unsigned long, std::string ), hash_collection &hashes, std::string types);
 	void image_checkhash();
-	void update_names(const device_type device_type = nullptr, const char *inst = nullptr, const char *brief = nullptr);
+	void update_names(const device_type device_type = nullptr, std::string inst = nullptr, std::string brief = nullptr);
 
-	software_part *find_software_item(const char *path, bool restrict_to_interface);
-	bool load_software_part(const char *path, software_part *&swpart);
-	void software_get_default_slot(std::string &result, const char *default_card_slot);
+	software_part *find_software_item(std::string path, bool restrict_to_interface);
+	bool load_software_part(std::string path, software_part *&swpart);
+	std::string software_get_default_slot(std::string default_card_slot);
 
 	// derived class overrides
 

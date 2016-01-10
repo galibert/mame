@@ -93,7 +93,7 @@ const device_type MC6852 = &device_creator<mc6852_device>;
 //  mc6852_device - constructor
 //-------------------------------------------------
 
-mc6852_device::mc6852_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+mc6852_device::mc6852_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, MC6852, "MC6852", tag, owner, clock, "mc6852", __FILE__),
 	device_serial_interface(mconfig, *this),
 	m_write_tx_data(*this),

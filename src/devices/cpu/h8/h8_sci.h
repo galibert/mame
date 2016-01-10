@@ -30,7 +30,7 @@
 
 class h8_sci_device : public device_t {
 public:
-	h8_sci_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	h8_sci_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 
 	void set_info(const char *intc, int eri, int rxi, int txi, int tei);
 	void set_external_clock_period(const attotime &_period);

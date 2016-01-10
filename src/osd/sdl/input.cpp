@@ -660,13 +660,13 @@ static void devmap_init(running_machine &machine, device_map_t *devmap, const ch
 
 	for (dev = 0; dev < max_devices; dev++)
 	{
-		const char *dev_name;
+		std::string dev_name;
 		sprintf(defname, "%s%d", opt, dev + 1);
 
 		dev_name = machine.options().value(defname);
-		if (dev_name && *dev_name && strcmp(dev_name,OSDOPTVAL_AUTO))
+		if (!dev_name.empty() && dev_name != OSDOPTVAL_AUTO)
 		{
-			devmap->map[dev].name = remove_spaces(machine, dev_name);
+			devmap->map[dev].name = remove_spaces(machine, dev_name.c_str());
 			osd_printf_verbose("%s: Logical id %d: %s\n", label, dev + 1, devmap->map[dev].name);
 			devmap->initialized = 1;
 		}
@@ -1200,7 +1200,6 @@ static input_item_id lookup_mame_code(const char *scode)
 
 static kt_table * sdlinput_read_keymap(running_machine &machine)
 {
-	char *keymap_filename;
 	kt_table *key_trans_table;
 	FILE *keymap_file;
 	int line = 1;
@@ -1214,13 +1213,13 @@ static kt_table * sdlinput_read_keymap(running_machine &machine)
 	if (!machine.options().bool_value(SDLOPTION_KEYMAP))
 		return sdl_key_trans_table;
 
-	keymap_filename = (char *)downcast<sdl_options &>(machine.options()).keymap_file();
-	osd_printf_verbose("Keymap: Start reading keymap_file %s\n", keymap_filename);
+	std::string keymap_filename = downcast<sdl_options &>(machine.options()).keymap_file();
+	osd_printf_verbose("Keymap: Start reading keymap_file %s\n", keymap_filename.c_str());
 
-	keymap_file = fopen(keymap_filename, "r");
+	keymap_file = fopen(keymap_filename.c_str(), "r");
 	if (keymap_file == NULL)
 	{
-		osd_printf_warning( "Keymap: Unable to open keymap %s, using default\n", keymap_filename);
+		osd_printf_warning( "Keymap: Unable to open keymap %s, using default\n", keymap_filename.c_str());
 		return sdl_key_trans_table;
 	}
 
@@ -2060,7 +2059,6 @@ void sdl_osd_interface::customize_input_type_list(simple_list<input_type_entry> 
 	input_item_id mameid_code;
 	input_code ui_code;
 	input_type_entry *entry;
-	const char* uimode;
 	char fullmode[64];
 
 	// loop over the defaults
@@ -2069,9 +2067,9 @@ void sdl_osd_interface::customize_input_type_list(simple_list<input_type_entry> 
 		switch (entry->type())
 		{
 			// configurable UI mode switch
-			case IPT_UI_TOGGLE_UI:
-				uimode = options().ui_mode_key();
-				if(!strcmp(uimode,"auto"))
+			case IPT_UI_TOGGLE_UI: {
+				std::string uimode = options().ui_mode_key();
+				if(uimode == "auto")
 				{
 					#if defined(__APPLE__) && defined(__MACH__)
 					mameid_code = lookup_mame_code("ITEM_ID_INSERT");
@@ -2081,12 +2079,13 @@ void sdl_osd_interface::customize_input_type_list(simple_list<input_type_entry> 
 				}
 				else
 				{
-					snprintf(fullmode, 63, "ITEM_ID_%s", uimode);
+					snprintf(fullmode, 63, "ITEM_ID_%s", uimode.c_str());
 					mameid_code = lookup_mame_code(fullmode);
 				}
 				ui_code = input_code(DEVICE_CLASS_KEYBOARD, 0, ITEM_CLASS_SWITCH, ITEM_MODIFIER_NONE, input_item_id(mameid_code));
 				entry->defseq(SEQ_TYPE_STANDARD).set(ui_code);
 				break;
+			}
 			// alt-enter for fullscreen
 			case IPT_OSD_1:
 				entry->configure_osd("TOGGLE_FULLSCREEN", "Toggle Fullscreen");

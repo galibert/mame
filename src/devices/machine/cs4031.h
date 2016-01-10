@@ -82,7 +82,7 @@ class cs4031_device : public device_t
 {
 public:
 	// construction/destruction
-	cs4031_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	cs4031_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 
 	// optional information overrides
 	virtual machine_config_constructor device_mconfig_additions() const override;
@@ -181,10 +181,10 @@ public:
 	IRQ_CALLBACK_MEMBER(int_ack_r) { return m_intc1->acknowledge(); }
 
 	// inline configuration
-	static void static_set_cputag(device_t &device, const char *tag);
-	static void static_set_isatag(device_t &device, const char *tag);
-	static void static_set_biostag(device_t &device, const char *tag);
-	static void static_set_keybctag(device_t &device, const char *tag);
+	static void static_set_cputag(device_t &device, std::string tag);
+	static void static_set_isatag(device_t &device, std::string tag);
+	static void static_set_biostag(device_t &device, std::string tag);
+	static void static_set_keybctag(device_t &device, std::string tag);
 
 protected:
 	// device-level overrides

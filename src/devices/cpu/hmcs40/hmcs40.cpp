@@ -78,56 +78,56 @@ ADDRESS_MAP_END
 
 
 // device definitions
-hmcs43_cpu_device::hmcs43_cpu_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, UINT16 polarity, const char *shortname)
+hmcs43_cpu_device::hmcs43_cpu_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, UINT16 polarity, const char *shortname)
 	: hmcs40_cpu_device(mconfig, type, name, tag, owner, clock, HMCS40_FAMILY_HMCS43, polarity, 3 /* stack levels */, 10 /* pc width */, 11 /* prg width */, ADDRESS_MAP_NAME(program_1k), 7 /* data width */, ADDRESS_MAP_NAME(data_80x4), shortname, __FILE__)
 { }
 
-hd38750_device::hd38750_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd38750_device::hd38750_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hmcs43_cpu_device(mconfig, HD38750, "HD38750", tag, owner, clock, IS_PMOS, "hd38750")
 { }
-hd38755_device::hd38755_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd38755_device::hd38755_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hmcs43_cpu_device(mconfig, HD38755, "HD38755", tag, owner, clock, IS_PMOS, "hd38755")
 { }
-hd44750_device::hd44750_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd44750_device::hd44750_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hmcs43_cpu_device(mconfig, HD44750, "HD44750", tag, owner, clock, IS_CMOS, "hd44750")
 { }
-hd44758_device::hd44758_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd44758_device::hd44758_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hmcs43_cpu_device(mconfig, HD44758, "HD44758", tag, owner, clock, IS_CMOS, "hd44758")
 { }
 
 
-hmcs44_cpu_device::hmcs44_cpu_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, UINT16 polarity, const char *shortname)
+hmcs44_cpu_device::hmcs44_cpu_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, UINT16 polarity, const char *shortname)
 	: hmcs40_cpu_device(mconfig, type, name, tag, owner, clock, HMCS40_FAMILY_HMCS44, polarity, 4, 11, 12, ADDRESS_MAP_NAME(program_2k), 8, ADDRESS_MAP_NAME(data_160x4), shortname, __FILE__)
 { }
 
-hd38800_device::hd38800_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd38800_device::hd38800_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hmcs44_cpu_device(mconfig, HD38800, "HD38800", tag, owner, clock, IS_PMOS, "hd38800")
 { }
-hd38805_device::hd38805_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd38805_device::hd38805_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hmcs44_cpu_device(mconfig, HD38805, "HD38805", tag, owner, clock, IS_PMOS, "hd38805")
 { }
-hd44801_device::hd44801_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd44801_device::hd44801_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hmcs44_cpu_device(mconfig, HD44801, "HD44801", tag, owner, clock, IS_CMOS, "hd44801")
 { }
-hd44808_device::hd44808_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd44808_device::hd44808_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hmcs44_cpu_device(mconfig, HD44808, "HD44808", tag, owner, clock, IS_CMOS, "hd44808")
 { }
 
 
-hmcs45_cpu_device::hmcs45_cpu_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, UINT16 polarity, const char *shortname)
+hmcs45_cpu_device::hmcs45_cpu_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, UINT16 polarity, const char *shortname)
 	: hmcs40_cpu_device(mconfig, type, name, tag, owner, clock, HMCS40_FAMILY_HMCS45, polarity, 4, 11, 12, ADDRESS_MAP_NAME(program_2k), 8, ADDRESS_MAP_NAME(data_160x4), shortname, __FILE__)
 { }
 
-hd38820_device::hd38820_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd38820_device::hd38820_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hmcs45_cpu_device(mconfig, HD38820, "HD38820", tag, owner, clock, IS_PMOS, "hd38820")
 { }
-hd38825_device::hd38825_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd38825_device::hd38825_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hmcs45_cpu_device(mconfig, HD38825, "HD38825", tag, owner, clock, IS_PMOS, "hd38825")
 { }
-hd44820_device::hd44820_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd44820_device::hd44820_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hmcs45_cpu_device(mconfig, HD44820, "HD44820", tag, owner, clock, IS_CMOS, "hd44820")
 { }
-hd44828_device::hd44828_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd44828_device::hd44828_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: hmcs45_cpu_device(mconfig, HD44828, "HD44828", tag, owner, clock, IS_CMOS, "hd44828")
 { }
 

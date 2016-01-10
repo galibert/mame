@@ -257,7 +257,7 @@ inline void i8257_device::advance()
 //  i8257_device - constructor
 //-------------------------------------------------
 
-i8257_device::i8257_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+i8257_device::i8257_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, I8257, "Intel 8257", tag, owner, clock, "i8257", __FILE__),
 		device_execute_interface(mconfig, *this),
 		m_icount(0),

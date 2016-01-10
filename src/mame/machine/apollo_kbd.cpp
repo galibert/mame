@@ -61,7 +61,7 @@ const device_type APOLLO_KBD = &device_creator<apollo_kbd_device>;
 // apollo_kbd_device - constructor
 //-------------------------------------------------
 
-apollo_kbd_device::apollo_kbd_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+apollo_kbd_device::apollo_kbd_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, APOLLO_KBD, "Apollo Keyboard", tag, owner, clock, "apollo_kbd", __FILE__),
 	device_serial_interface(mconfig, *this),
 	m_tx_w(*this),

@@ -47,11 +47,11 @@ class nesapu_device : public device_t,
 						public device_sound_interface
 {
 public:
-	nesapu_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	nesapu_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 	~nesapu_device() {}
 
-	static void set_cpu_tag(device_t &device, const char *tag) { downcast<nesapu_device &>(device).m_cpu_tag = tag; }
-	void set_tag_memory(const char *tag);
+	static void set_cpu_tag(device_t &device, std::string tag) { downcast<nesapu_device &>(device).m_cpu_tag = tag; }
+	void set_tag_memory(std::string tag);
 
 	DECLARE_READ8_MEMBER( read );
 	DECLARE_WRITE8_MEMBER( write );

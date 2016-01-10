@@ -52,7 +52,7 @@ const score7_cpu_device::op_handler score7_cpu_device::s_opcode16_table[8] =
 //  score7_cpu_device - constructor
 //-------------------------------------------------
 
-score7_cpu_device::score7_cpu_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+score7_cpu_device::score7_cpu_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: cpu_device(mconfig, SCORE7, "S+core 7", tag, owner, clock, "score7", __FILE__),
 		m_program_config("program", ENDIANNESS_LITTLE, 32, 32, 0),
 		m_pc(0),

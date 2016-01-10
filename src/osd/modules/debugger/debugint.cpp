@@ -912,7 +912,7 @@ void debug_internal::init_debugger(running_machine &machine)
 	int chw;
 
 	m_machine = &machine;
-	font_name = (downcast<osd_options &>(m_machine->options()).debugger_font());
+	font_name = (downcast<osd_options &>(m_machine->options()).debugger_font().c_str());
 	font_size = (downcast<osd_options &>(m_machine->options()).debugger_font_size());
 
 	if(!strcmp(font_name, OSDOPTVAL_AUTO))

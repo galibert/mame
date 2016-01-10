@@ -36,31 +36,31 @@ public:
 	int execute(int argc, char **argv);
 
 	// direct access to the command operations
-	void listxml(const char *gamename = "*");
-	void listfull(const char *gamename = "*");
-	void listsource(const char *gamename = "*");
-	void listclones(const char *gamename = "*");
-	void listbrothers(const char *gamename = "*");
-	void listcrc(const char *gamename = "*");
-	void listroms(const char *gamename = "*");
-	void listsamples(const char *gamename = "*");
+	void listxml(std::string gamename = "*");
+	void listfull(std::string gamename = "*");
+	void listsource(std::string gamename = "*");
+	void listclones(std::string gamename = "*");
+	void listbrothers(std::string gamename = "*");
+	void listcrc(std::string gamename = "*");
+	void listroms(std::string gamename = "*");
+	void listsamples(std::string gamename = "*");
 	static int compare_devices(const void *i1, const void *i2);
-	void listdevices(const char *gamename = "*");
-	void listslots(const char *gamename = "*");
-	void listmedia(const char *gamename = "*");
-	void listsoftware(const char *gamename = "*");
-	void verifysoftware(const char *gamename = "*");
-	void verifyroms(const char *gamename = "*");
-	void verifysamples(const char *gamename = "*");
-	void romident(const char *filename);
-	void getsoftlist(const char *gamename = "*");
-	void verifysoftlist(const char *gamename = "*");
+	void listdevices(std::string gamename = "*");
+	void listslots(std::string gamename = "*");
+	void listmedia(std::string gamename = "*");
+	void listsoftware(std::string gamename = "*");
+	void verifysoftware(std::string gamename = "*");
+	void verifyroms(std::string gamename = "*");
+	void verifysamples(std::string gamename = "*");
+	void romident(std::string filename);
+	void getsoftlist(std::string gamename = "*");
+	void verifysoftlist(std::string gamename = "*");
 
 private:
 	// internal helpers
-	void execute_commands(const char *exename);
+	void execute_commands(std::string exename);
 	void display_help();
-	void display_suggestions(const char *gamename);
+	void display_suggestions(std::string gamename);
 	void output_single_softlist(FILE *out, software_list_device &swlist);
 
 	// internal state

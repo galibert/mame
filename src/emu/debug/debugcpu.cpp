@@ -1110,7 +1110,7 @@ static void process_source_file(running_machine &machine)
     based on a case insensitive tag search
 -------------------------------------------------*/
 
-static device_t *expression_get_device(running_machine &machine, const char *tag)
+static device_t *expression_get_device(running_machine &machine, std::string tag)
 {
 	// convert to lowercase then lookup the name (tags are enforced to be all lower case)
 	std::string fullname(tag);

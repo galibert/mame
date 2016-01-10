@@ -36,7 +36,7 @@ const device_type MM74C923 = &device_creator<mm74c922_device>;
 //  mm74c922_device - constructor
 //-------------------------------------------------
 
-mm74c922_device::mm74c922_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+mm74c922_device::mm74c922_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, MM74C922, "MM74C922", tag, owner, clock, "mm74c922", __FILE__),
 	m_write_da(*this),
 	m_read_x1(*this),

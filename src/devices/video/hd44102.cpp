@@ -67,7 +67,7 @@ inline void hd44102_device::count_up_or_down()
 //  hd44102_device - constructor
 //-------------------------------------------------
 
-hd44102_device::hd44102_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+hd44102_device::hd44102_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, HD44102, "HD44102", tag, owner, clock, "hd44102", __FILE__),
 		device_video_interface(mconfig, *this),
 		m_cs2(0),

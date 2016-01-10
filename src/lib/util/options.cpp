@@ -52,7 +52,7 @@ const char *const core_options::s_option_unadorned[MAX_UNADORNED_OPTIONS] =
 //  entry - constructor
 //-------------------------------------------------
 
-core_options::entry::entry(const char *name, const char *description, UINT32 flags, const char *defvalue)
+core_options::entry::entry(std::string name, std::string description, UINT32 flags, std::string defvalue)
 	: m_next(nullptr),
 		m_flags(flags),
 		m_seqid(0),
@@ -61,7 +61,7 @@ core_options::entry::entry(const char *name, const char *description, UINT32 fla
 		m_description(description)
 {
 	// copy in the name(s) as appropriate
-	if (name != nullptr)
+	if (!name.empty())
 	{
 		// first extract any range
 		std::string namestr(name);
@@ -90,7 +90,7 @@ core_options::entry::entry(const char *name, const char *description, UINT32 fla
 	}
 
 	// set the default value
-	if (defvalue != nullptr)
+	if (!defvalue.empty())
 		m_defdata = defvalue;
 	m_data = m_defdata;
 }
@@ -100,7 +100,7 @@ core_options::entry::entry(const char *name, const char *description, UINT32 fla
 //  set_value - update our data value
 //-------------------------------------------------
 
-void core_options::entry::set_value(const char *newdata, int priority)
+void core_options::entry::set_value(std::string newdata, int priority)
 {
 	// ignore if we don't have priority
 	if (priority < m_priority)
@@ -118,7 +118,7 @@ void core_options::entry::set_value(const char *newdata, int priority)
 //  an option, and reset the current value to it
 //-------------------------------------------------
 
-void core_options::entry::set_default_value(const char *defvalue)
+void core_options::entry::set_default_value(std::string defvalue)
 {
 	m_data = defvalue;
 	m_defdata = defvalue;
@@ -131,7 +131,7 @@ void core_options::entry::set_default_value(const char *defvalue)
 //  an option
 //-------------------------------------------------
 
-void core_options::entry::set_description(const char *description)
+void core_options::entry::set_description(std::string description)
 {
 	m_description = description;
 }
@@ -229,7 +229,7 @@ bool core_options::operator==(const core_options &rhs)
 		if (!curentry->is_header())
 		{
 			// if the values differ, return false
-			if (strcmp(curentry->value(), rhs.value(curentry->name())) != 0)
+			if (curentry->value() != rhs.value(curentry->name()))
 				return false;
 		}
 
@@ -252,11 +252,11 @@ bool core_options::operator!=(const core_options &rhs)
 //  options set
 //-------------------------------------------------
 
-void core_options::add_entry(const char *name, const char *description, UINT32 flags, const char *defvalue, bool override_existing)
+void core_options::add_entry(std::string name, std::string description, UINT32 flags, std::string defvalue, bool override_existing)
 {
 	// allocate a new entry
 	auto  newentry = global_alloc(entry(name, description, flags, defvalue));
-	if (newentry->name() != nullptr)
+	if (!newentry->name().empty())
 	{
 		// see if we match an existing entry
 		auto checkentry = m_entrymap.find(newentry->name());
@@ -300,7 +300,7 @@ void core_options::add_entries(const options_entry *entrylist, bool override_exi
 //  of an option
 //-------------------------------------------------
 
-void core_options::set_default_value(const char *name, const char *defvalue)
+void core_options::set_default_value(std::string name, std::string defvalue)
 {
 	// find the entry and bail if we can't
 	auto curentry = m_entrymap.find(name);
@@ -317,7 +317,7 @@ void core_options::set_default_value(const char *name, const char *defvalue)
 //  of an option
 //-------------------------------------------------
 
-void core_options::set_description(const char *name, const char *description)
+void core_options::set_description(std::string name, std::string description)
 {
 	// find the entry and bail if we can't
 	auto curentry = m_entrymap.find(name);
@@ -478,24 +478,24 @@ void core_options::revert(int priority)
 //  the optional diff
 //-------------------------------------------------
 
-const char *core_options::output_ini(std::string &buffer, const core_options *diff)
+std::string core_options::output_ini(const core_options *diff)
 {
 	// INI files are complete, so always start with a blank buffer
-	buffer.clear();
+	std::string buffer;
 
 	int num_valid_headers = 0;
 	int unadorned_index = 0;
-	const char *last_header = nullptr;
+	std::string last_header;
 
 	// loop over all items
 	for (entry *curentry = m_entrylist.first(); curentry != nullptr; curentry = curentry->next())
 	{
-		const char *name = curentry->name();
-		const char *value = curentry->value();
+		std::string name = curentry->name();
+		std::string value = curentry->value();
 		bool is_unadorned = false;
 
 		// check if it's unadorned
-		if (name && strlen(name) && !strcmp(name, core_options::unadorned(unadorned_index)))
+		if (name == core_options::unadorned(unadorned_index))
 		{
 			unadorned_index++;
 			is_unadorned = true;
@@ -511,30 +511,30 @@ const char *core_options::output_ini(std::string &buffer, const core_options *di
 			if ( !curentry->is_internal() )
 			{
 				// look up counterpart in diff, if diff is specified
-				if (diff == nullptr || strcmp(value, diff->value(name)) != 0)
+				if (diff == nullptr || value != diff->value(name))
 				{
 					// output header, if we have one
-					if (last_header != nullptr)
+					if (!last_header.empty())
 					{
 						if (num_valid_headers++)
 							strcatprintf(buffer,"\n");
-						strcatprintf(buffer, "#\n# %s\n#\n", last_header);
-						last_header = nullptr;
+						strcatprintf(buffer, "#\n# %s\n#\n", last_header.c_str());
+						last_header = "";
 					}
 
 					// and finally output the data, skip if unadorned
 					if (!is_unadorned)
 					{
-						if (strchr(value, ' ') != nullptr)
-							strcatprintf(buffer,"%-25s \"%s\"\n", name, value);
+						if (value.find(' ') != std::string::npos)
+							strcatprintf(buffer,"%-25s \"%s\"\n", name.c_str(), value.c_str());
 						else
-							strcatprintf(buffer,"%-25s %s\n", name, value);
+							strcatprintf(buffer,"%-25s %s\n", name.c_str(), value.c_str());
 					}
 				}
 			}
 		}
 	}
-	return buffer.c_str();
+	return buffer;
 }
 
 
@@ -542,23 +542,23 @@ const char *core_options::output_ini(std::string &buffer, const core_options *di
 //  output_help - output option help to a string
 //-------------------------------------------------
 
-const char *core_options::output_help(std::string &buffer)
+std::string core_options::output_help()
 {
 	// start empty
-	buffer.clear();
+	std::string buffer;
 
 	// loop over all items
 	for (entry *curentry = m_entrylist.first(); curentry != nullptr; curentry = curentry->next())
 	{
 		// header: just print
 		if (curentry->is_header())
-			strcatprintf(buffer,"\n#\n# %s\n#\n", curentry->description());
+			strcatprintf(buffer,"\n#\n# %s\n#\n", curentry->description().c_str());
 
 		// otherwise, output entries for all non-deprecated items
-		else if (curentry->description() != nullptr)
-			strcatprintf(buffer,"-%-20s%s\n", curentry->name(), curentry->description());
+		else if (!curentry->description().empty())
+			strcatprintf(buffer,"-%-20s%s\n", curentry->name().c_str(), curentry->description().c_str());
 	}
-	return buffer.c_str();
+	return buffer;
 }
 
 
@@ -566,7 +566,7 @@ const char *core_options::output_help(std::string &buffer)
 //  value - return the raw option value
 //-------------------------------------------------
 
-const char *core_options::value(const char *name) const
+std::string core_options::value(std::string name) const
 {
 	auto curentry = m_entrymap.find(name);
 	return (curentry != m_entrymap.end()) ? curentry->second->value() : "";
@@ -577,7 +577,7 @@ const char *core_options::value(const char *name) const
 //  description - return description of option
 //-------------------------------------------------
 
-const char *core_options::description(const char *name) const
+std::string core_options::description(std::string name) const
 {
 	auto curentry = m_entrymap.find(name);
 	return (curentry != m_entrymap.end()) ? curentry->second->description() : "";
@@ -588,7 +588,7 @@ const char *core_options::description(const char *name) const
 //  priority - return the priority of option
 //-------------------------------------------------
 
-int core_options::priority(const char *name) const
+int core_options::priority(std::string name) const
 {
 	auto curentry = m_entrymap.find(name);
 	return (curentry != m_entrymap.end()) ? curentry->second->priority() : 0;
@@ -599,7 +599,7 @@ int core_options::priority(const char *name) const
 //  seqid - return the seqid for a given option
 //-------------------------------------------------
 
-UINT32 core_options::seqid(const char *name) const
+UINT32 core_options::seqid(std::string name) const
 {
 	auto curentry = m_entrymap.find(name);
 	return (curentry != m_entrymap.end()) ? curentry->second->seqid() : 0;
@@ -609,7 +609,7 @@ UINT32 core_options::seqid(const char *name) const
 //  exists - return if option exists in list
 //-------------------------------------------------
 
-bool core_options::exists(const char *name) const
+bool core_options::exists(std::string name) const
 {
 	return (m_entrymap.find(name) != m_entrymap.end());
 }
@@ -618,13 +618,13 @@ bool core_options::exists(const char *name) const
 //  set_value - set the raw option value
 //-------------------------------------------------
 
-bool core_options::set_value(const char *name, const char *value, int priority, std::string &error_string)
+bool core_options::set_value(std::string name, std::string value, int priority, std::string &error_string)
 {
 	// find the entry first
 	auto curentry = m_entrymap.find(name);
 	if (curentry == m_entrymap.end())
 	{
-		strcatprintf(error_string, "Attempted to set unknown option %s\n", name);
+		strcatprintf(error_string, "Attempted to set unknown option %s\n", name.c_str());
 		return false;
 	}
 
@@ -632,22 +632,22 @@ bool core_options::set_value(const char *name, const char *value, int priority, 
 	return validate_and_set_data(*curentry->second, value, priority, error_string);
 }
 
-bool core_options::set_value(const char *name, int value, int priority, std::string &error_string)
+bool core_options::set_value(std::string name, int value, int priority, std::string &error_string)
 {
 	std::string tempstr;
 	strprintf(tempstr,"%d", value);
-	return set_value(name, tempstr.c_str(), priority, error_string);
+	return set_value(name, tempstr, priority, error_string);
 }
 
-bool core_options::set_value(const char *name, float value, int priority, std::string &error_string)
+bool core_options::set_value(std::string name, float value, int priority, std::string &error_string)
 {
 	std::string tempstr;
 	strprintf(tempstr, "%f", (double) value);
-	return set_value(name, tempstr.c_str(), priority, error_string);
+	return set_value(name, tempstr, priority, error_string);
 }
 
 
-void core_options::set_flag(const char *name, UINT32 mask, UINT32 flag)
+void core_options::set_flag(std::string name, UINT32 mask, UINT32 flag)
 {
 	// find the entry first
 	auto curentry = m_entrymap.find(name);
@@ -682,12 +682,12 @@ void core_options::append_entry(core_options::entry &newentry)
 
 	// if we have names, add them to the map
 	for (int name = 0; name < ARRAY_LENGTH(newentry.m_name); name++)
-		if (newentry.name(name) != nullptr)
+		if (!newentry.name(name).empty())
 		{
 			m_entrymap.insert(std::make_pair(newentry.name(name), &newentry));
 			// for boolean options add a "no" variant as well
 			if (newentry.type() == OPTION_BOOLEAN)
-				m_entrymap.insert(std::make_pair(std::string("no").append(newentry.name(name)), &newentry));
+				m_entrymap.insert(std::make_pair(std::string("no") + newentry.name(name), &newentry));
 		}
 }
 
@@ -732,7 +732,7 @@ void core_options::copyfrom(const core_options &src)
 }
 
 /**
- * @fn  bool core_options::validate_and_set_data(core_options::entry &curentry, const char *newdata, int priority, std::string &error_string)
+ * @fn  bool core_options::validate_and_set_data(core_options::entry &curentry, std::string newdata, int priority, std::string &error_string)
  *
  * @brief   -------------------------------------------------
  *            validate_and_set_data - make sure the data is of the appropriate type and within
@@ -747,7 +747,7 @@ void core_options::copyfrom(const core_options &src)
  * @return  true if it succeeds, false if it fails.
  */
 
-bool core_options::validate_and_set_data(core_options::entry &curentry, const char *newdata, int priority, std::string &error_string)
+bool core_options::validate_and_set_data(core_options::entry &curentry, std::string newdata, int priority, std::string &error_string)
 {
 	// trim any whitespace
 	std::string data(newdata);
@@ -770,7 +770,7 @@ bool core_options::validate_and_set_data(core_options::entry &curentry, const ch
 		case OPTION_BOOLEAN:
 			if (sscanf(data.c_str(), "%d", &ival) != 1 || ival < 0 || ival > 1)
 			{
-				strcatprintf(error_string, "Illegal boolean value for %s: \"%s\"; reverting to %s\n", curentry.name(), data.c_str(), curentry.value());
+				strcatprintf(error_string, "Illegal boolean value for %s: \"%s\"; reverting to %s\n", curentry.name().c_str(), data.c_str(), curentry.value().c_str());
 				return false;
 			}
 			break;
@@ -779,12 +779,12 @@ bool core_options::validate_and_set_data(core_options::entry &curentry, const ch
 		case OPTION_INTEGER:
 			if (sscanf(data.c_str(), "%d", &ival) != 1)
 			{
-				strcatprintf(error_string, "Illegal integer value for %s: \"%s\"; reverting to %s\n", curentry.name(), data.c_str(), curentry.value());
+				strcatprintf(error_string, "Illegal integer value for %s: \"%s\"; reverting to %s\n", curentry.name().c_str(), data.c_str(), curentry.value().c_str());
 				return false;
 			}
-			if (curentry.has_range() && (ival < atoi(curentry.minimum()) || ival > atoi(curentry.maximum())))
+			if (curentry.has_range() && (ival < atoi(curentry.minimum().c_str()) || ival > atoi(curentry.maximum().c_str())))
 			{
-				strcatprintf(error_string, "Out-of-range integer value for %s: \"%s\" (must be between %s and %s); reverting to %s\n", curentry.name(), data.c_str(), curentry.minimum(), curentry.maximum(), curentry.value());
+				strcatprintf(error_string, "Out-of-range integer value for %s: \"%s\" (must be between %s and %s); reverting to %s\n", curentry.name().c_str(), data.c_str(), curentry.minimum().c_str(), curentry.maximum().c_str(), curentry.value().c_str());
 				return false;
 			}
 			break;
@@ -793,12 +793,12 @@ bool core_options::validate_and_set_data(core_options::entry &curentry, const ch
 		case OPTION_FLOAT:
 			if (sscanf(data.c_str(), "%f", &fval) != 1)
 			{
-				strcatprintf(error_string, "Illegal float value for %s: \"%s\"; reverting to %s\n", curentry.name(), data.c_str(), curentry.value());
+				strcatprintf(error_string, "Illegal float value for %s: \"%s\"; reverting to %s\n", curentry.name().c_str(), data.c_str(), curentry.value().c_str());
 				return false;
 			}
-			if (curentry.has_range() && ((double) fval < atof(curentry.minimum()) || (double) fval > atof(curentry.maximum())))
+			if (curentry.has_range() && ((double) fval < atof(curentry.minimum().c_str()) || (double) fval > atof(curentry.maximum().c_str())))
 			{
-				strcatprintf(error_string, "Out-of-range float value for %s: \"%s\" (must be between %s and %s); reverting to %s\n", curentry.name(), data.c_str(), curentry.minimum(), curentry.maximum(), curentry.value());
+				strcatprintf(error_string, "Out-of-range float value for %s: \"%s\" (must be between %s and %s); reverting to %s\n", curentry.name().c_str(), data.c_str(), curentry.minimum().c_str(), curentry.maximum().c_str(), curentry.value().c_str());
 				return false;
 			}
 			break;
@@ -811,7 +811,7 @@ bool core_options::validate_and_set_data(core_options::entry &curentry, const ch
 		case OPTION_INVALID:
 		case OPTION_HEADER:
 		default:
-			strcatprintf(error_string, "Attempted to set invalid option %s\n", curentry.name());
+			strcatprintf(error_string, "Attempted to set invalid option %s\n", curentry.name().c_str());
 			return false;
 	}
 

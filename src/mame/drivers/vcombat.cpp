@@ -95,7 +95,7 @@ TODO :  This is a partially working driver.  Most of the memory maps for
 class vcombat_state : public driver_device
 {
 public:
-	vcombat_state(const machine_config &mconfig, device_type type, const char *tag)
+	vcombat_state(const machine_config &mconfig, device_type type, std::string tag)
 		: driver_device(mconfig, type, tag),
 		m_tlc34076(*this, "tlc34076"),
 		m_framebuffer_ctrl(*this, "fb_control"),

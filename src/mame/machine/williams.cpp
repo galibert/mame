@@ -342,7 +342,7 @@ WRITE_LINE_MEMBER(williams_state::williams_port_select_w)
 
 CUSTOM_INPUT_MEMBER(williams_state::williams_mux_r)
 {
-	const char *tag = (const char *)param;
+	std::string tag = (const char *)param;
 
 	if (m_port_select != 0)
 		tag += strlen(tag) + 1;

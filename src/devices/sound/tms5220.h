@@ -32,8 +32,8 @@ class tms5220_device : public device_t,
 									public device_sound_interface
 {
 public:
-	tms5220_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
-	tms5220_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source);
+	tms5220_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
+	tms5220_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source);
 
 	// static configuration helpers
 	template<class _Object> static devcb_base &set_irq_handler(device_t &device, _Object object) { return downcast<tms5220_device &>(device).m_irq_handler.set_callback(object); }
@@ -210,7 +210,7 @@ extern const device_type TMS5220;
 class tms5220c_device : public tms5220_device
 {
 public:
-	tms5220c_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	tms5220c_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 protected:
 	// device-level overrides
 	virtual void device_start() override;
@@ -221,7 +221,7 @@ extern const device_type TMS5220C;
 class cd2501e_device : public tms5220_device
 {
 public:
-	cd2501e_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	cd2501e_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 protected:
 	// device-level overrides
 	virtual void device_start() override;
@@ -232,7 +232,7 @@ extern const device_type CD2501E;
 class tms5200_device : public tms5220_device
 {
 public:
-	tms5200_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	tms5200_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 protected:
 	// device-level overrides
 	virtual void device_start() override;
@@ -243,7 +243,7 @@ extern const device_type TMS5200;
 class cd2501ecd_device : public tms5220_device
 {
 public:
-	cd2501ecd_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	cd2501ecd_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 protected:
 	// device-level overrides
 	virtual void device_start() override;

@@ -91,7 +91,7 @@ const device_type I8275 = &device_creator<i8275_device>;
 //  i8275_device - constructor
 //-------------------------------------------------
 
-i8275_device::i8275_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+i8275_device::i8275_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, I8275, "I8275 CRTC", tag, owner, clock, "i8275x", __FILE__),
 	device_video_interface(mconfig, *this),
 	m_write_irq(*this),

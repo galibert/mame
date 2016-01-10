@@ -51,7 +51,7 @@ const char *i82730_device::m_command_names[] =
 //  i82730_device - constructor
 //-------------------------------------------------
 
-i82730_device::i82730_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+i82730_device::i82730_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, I82730, "I82730", tag, owner, clock, "i82730", __FILE__),
 	device_video_interface(mconfig, *this),
 	m_sint_handler(*this),
@@ -73,7 +73,7 @@ i82730_device::i82730_device(const machine_config &mconfig, const char *tag, dev
 //  set_cpu_tag - set cpu we are attached to
 //-------------------------------------------------
 
-void i82730_device::set_cpu_tag(device_t &device, device_t *owner, const char *tag)
+void i82730_device::set_cpu_tag(device_t &device, device_t *owner, std::string tag)
 {
 	i82730_device &dev = dynamic_cast<i82730_device &>(device);
 	dev.m_cpu_tag = tag;

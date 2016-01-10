@@ -145,7 +145,7 @@ WRITE8_MEMBER( latch8_device::bit7_w ) { bitx_w(7, offset, data); }
 
 const device_type LATCH8 = &device_creator<latch8_device>;
 
-latch8_device::latch8_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+latch8_device::latch8_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 		: device_t(mconfig, LATCH8, "8 bit latch", tag, owner, clock, "latch8", __FILE__),
 		m_value(0),
 		m_has_write(0),

@@ -105,7 +105,7 @@ static MACHINE_CONFIG_FRAGMENT( k573dio )
 	MCFG_DS2401_ADD( "digital_id" )
 MACHINE_CONFIG_END
 
-k573dio_device::k573dio_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+k573dio_device::k573dio_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, KONAMI_573_DIGITAL_IO_BOARD, "Konami 573 digital I/O board", tag, owner, clock, "k573dio", __FILE__),
 	mas3507d(*this, "mpeg"),
 	digital_id(*this, "digital_id"),

@@ -186,7 +186,7 @@ static void buf_reset(buf_t *buf)
 
 const device_type GAELCO_SERIAL = &device_creator<gaelco_serial_device>;
 
-gaelco_serial_device::gaelco_serial_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+gaelco_serial_device::gaelco_serial_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, GAELCO_SERIAL, "Gaelco 3D Serial Hardware", tag, owner, clock, "gaelco_serial", __FILE__),
 	m_irq_handler(*this),
 	m_status(0),

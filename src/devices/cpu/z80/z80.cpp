@@ -3711,7 +3711,7 @@ void z80_device::z80_set_cycle_tables(const UINT8 *op, const UINT8 *cb, const UI
 }
 
 
-z80_device::z80_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+z80_device::z80_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	cpu_device(mconfig, Z80, "Z80", tag, owner, clock, "z80", __FILE__),
 	m_program_config("program", ENDIANNESS_LITTLE, 8, 16, 0),
 	m_decrypted_opcodes_config("decrypted_opcodes", ENDIANNESS_LITTLE, 8, 16, 0),
@@ -3721,7 +3721,7 @@ z80_device::z80_device(const machine_config &mconfig, const char *tag, device_t 
 {
 }
 
-z80_device::z80_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
+z80_device::z80_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
 	cpu_device(mconfig, type, name, tag, owner, clock, shortname, source),
 	m_program_config("program", ENDIANNESS_LITTLE, 8, 16, 0),
 	m_decrypted_opcodes_config("decrypted_opcodes", ENDIANNESS_LITTLE, 8, 16, 0),
@@ -3744,7 +3744,7 @@ const address_space_config *z80_device::memory_space_config(address_spacenum spa
 
 const device_type Z80 = &device_creator<z80_device>;
 
-nsc800_device::nsc800_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+nsc800_device::nsc800_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: z80_device(mconfig, NSC800, "NSC800", tag, owner, clock, "nsc800", __FILE__)
 {
 }

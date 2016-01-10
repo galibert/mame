@@ -170,7 +170,7 @@ ADDRESS_MAP_END
 //  lc8670_cpu_device - constructor
 //-------------------------------------------------
 
-lc8670_cpu_device::lc8670_cpu_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+lc8670_cpu_device::lc8670_cpu_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: cpu_device(mconfig, LC8670, "Sanyo LC8670", tag, owner, clock, "lc8670", __FILE__),
 		m_program_config("program", ENDIANNESS_BIG, 8, 16, 0),
 		m_data_config("data", ENDIANNESS_BIG, 8, 9, 0, ADDRESS_MAP_NAME(lc8670_internal_map)),

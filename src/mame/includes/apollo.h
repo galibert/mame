@@ -112,7 +112,7 @@ class apollo_ni;
 class apollo_state : public driver_device
 {
 public:
-	apollo_state(const machine_config &mconfig, device_type type, const char *tag)
+	apollo_state(const machine_config &mconfig, device_type type, std::string tag)
 			: driver_device(mconfig, type, tag),
 			m_maincpu(*this, MAINCPU),
 			m_messram_ptr(*this, "messram"),
@@ -326,7 +326,7 @@ void apollo_csr_set_status_register(UINT16 mask, UINT16 data);
 class apollo_sio: public mc68681_device
 {
 public:
-	apollo_sio(const machine_config &mconfig, const char *tag,
+	apollo_sio(const machine_config &mconfig, std::string tag,
 			device_t *owner, UINT32 clock);
 
 	DECLARE_READ8_MEMBER(read);
@@ -353,7 +353,7 @@ class apollo_ni: public device_t, public device_image_interface
 {
 public:
 	// construction/destruction
-	apollo_ni(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	apollo_ni(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 	virtual ~apollo_ni();
 
 	virtual iodevice_t image_type() const override { return IO_ROM; }
@@ -398,8 +398,8 @@ extern const device_type APOLLO_NI;
 class apollo_graphics_15i : public device_t
 {
 public:
-	apollo_graphics_15i(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
-	apollo_graphics_15i(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock, device_type type, const char *name, const char *shortname, const char *source);
+	apollo_graphics_15i(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
+	apollo_graphics_15i(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock, device_type type, const char *name, const char *shortname, const char *source);
 	~apollo_graphics_15i();
 
 	UINT32 screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
@@ -637,7 +637,7 @@ MACHINE_CONFIG_EXTERN( apollo_graphics );
 class apollo_graphics_19i : public apollo_graphics_15i
 {
 public:
-	apollo_graphics_19i(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	apollo_graphics_19i(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 protected:
 	// device-level overrides
 	virtual void device_config_complete() override;
@@ -676,7 +676,7 @@ class apollo_stdio_device: public device_t, public device_serial_interface
 {
 public:
 	// construction/destruction
-	apollo_stdio_device(const machine_config &mconfig, const char *tag,
+	apollo_stdio_device(const machine_config &mconfig, std::string tag,
 			device_t *owner, UINT32 clock);
 
 	template<class _Object> static devcb_base &set_tx_cb(device_t &device, _Object object)

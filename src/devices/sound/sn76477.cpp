@@ -159,7 +159,7 @@ static const double out_neg_gain[] =
 
 const device_type SN76477 = &device_creator<sn76477_device>;
 
-sn76477_device::sn76477_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+sn76477_device::sn76477_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, SN76477, "SN76477", tag, owner, clock, "sn76477", __FILE__),
 		device_sound_interface(mconfig, *this),
 		m_enable(0),

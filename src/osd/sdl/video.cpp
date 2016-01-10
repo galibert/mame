@@ -107,7 +107,7 @@ bool sdl_osd_interface::video_init()
 	{
 		osd_window_config conf;
 		memset(&conf, 0, sizeof(conf));
-		get_resolution(options().resolution(), options().resolution(index), &conf, TRUE);
+		get_resolution(options().resolution().c_str(), options().resolution(index).c_str(), &conf, TRUE);
 
 		// create window ...
 		sdl_window_info *win = global_alloc(sdl_window_info(machine(), index, sdl_monitor_info::pick_monitor(options(), index), &conf));
@@ -453,7 +453,7 @@ void sdl_monitor_info::exit()
 osd_monitor_info *osd_monitor_info::pick_monitor(sdl_options &options, int index)
 {
 	osd_monitor_info *monitor;
-	const char *scrname, *scrname2;
+	std::string scrname, scrname2;
 	int moncount = 0;
 	float aspect;
 
@@ -462,19 +462,19 @@ osd_monitor_info *osd_monitor_info::pick_monitor(sdl_options &options, int index
 	scrname2 = options.screen(index);
 
 	// decide which one we want to use
-	if (strcmp(scrname2, "auto") != 0)
+	if (scrname2 != "auto")
 		scrname = scrname2;
 
 	// get the aspect ratio
-	aspect = get_aspect(options.aspect(), options.aspect(index), TRUE);
+	aspect = get_aspect(options.aspect().c_str(), options.aspect(index).c_str(), TRUE);
 
 	// look for a match in the name first
-	if (scrname != NULL && (scrname[0] != 0))
+	if (!scrname.empty())
 	{
 		for (monitor = osd_monitor_info::list; monitor != NULL; monitor = monitor->next())
 		{
 			moncount++;
-			if (strcmp(scrname, monitor->devicename()) == 0)
+			if (scrname == monitor->devicename())
 				goto finishit;
 		}
 	}
@@ -556,7 +556,7 @@ static void check_osd_inputs(running_machine &machine)
 
 void sdl_osd_interface::extract_video_config()
 {
-	const char *stemp;
+	std::string stemp;
 
 	video_config.perftest    = options().video_fps();
 
@@ -580,7 +580,7 @@ void sdl_osd_interface::extract_video_config()
 
 	// d3d options: extract the data
 	stemp = options().video();
-	if (strcmp(stemp, "auto") == 0)
+	if (stemp == "auto")
 	{
 #if (defined SDLMAME_MACOSX || defined SDLMAME_WIN32)
 		stemp = "opengl";
@@ -588,9 +588,9 @@ void sdl_osd_interface::extract_video_config()
 		stemp = "soft";
 #endif
 	}
-	if (strcmp(stemp, SDLOPTVAL_SOFT) == 0)
+	if (stemp == SDLOPTVAL_SOFT)
 		video_config.mode = VIDEO_MODE_SOFT;
-	else if (strcmp(stemp, OSDOPTVAL_NONE) == 0)
+	else if (stemp == OSDOPTVAL_NONE)
 	{
 		video_config.mode = VIDEO_MODE_SOFT;
 		video_config.novideo = 1;
@@ -598,21 +598,21 @@ void sdl_osd_interface::extract_video_config()
 		if (options().seconds_to_run() == 0)
 			osd_printf_warning("Warning: -video none doesn't make much sense without -seconds_to_run\n");
 	}
-	else if (USE_OPENGL && (strcmp(stemp, SDLOPTVAL_OPENGL) == 0))
+	else if (USE_OPENGL && stemp == SDLOPTVAL_OPENGL)
 		video_config.mode = VIDEO_MODE_OPENGL;
-	else if (SDLMAME_SDL2 && (strcmp(stemp, SDLOPTVAL_SDL2ACCEL) == 0))
+	else if (SDLMAME_SDL2 && stemp == SDLOPTVAL_SDL2ACCEL)
 	{
 		video_config.mode = VIDEO_MODE_SDL2ACCEL;
 	}
 #ifdef USE_BGFX
-	else if (strcmp(stemp, SDLOPTVAL_BGFX) == 0)
+	else if (stemp == SDLOPTVAL_BGFX)
 	{
 		video_config.mode = VIDEO_MODE_BGFX;
 	}
 #endif
 	else
 	{
-		osd_printf_warning("Invalid video value %s; reverting to software\n", stemp);
+		osd_printf_warning("Invalid video value %s; reverting to software\n", stemp.c_str());
 		video_config.mode = VIDEO_MODE_SOFT;
 	}
 
@@ -650,10 +650,10 @@ void sdl_osd_interface::extract_video_config()
 			for(i=0; i<GLSL_SHADER_MAX; i++)
 			{
 				stemp = options().shader_mame(i);
-				if (stemp && strcmp(stemp, OSDOPTVAL_NONE) != 0 && strlen(stemp)>0)
+				if (!stemp.empty() && stemp != OSDOPTVAL_NONE)
 				{
-					video_config.glsl_shader_mamebm[i] = (char *) malloc(strlen(stemp)+1);
-					strcpy(video_config.glsl_shader_mamebm[i], stemp);
+					video_config.glsl_shader_mamebm[i] = (char *) malloc(stemp.size()+1);
+					strcpy(video_config.glsl_shader_mamebm[i], stemp.c_str());
 					video_config.glsl_shader_mamebm_num++;
 				} else {
 					video_config.glsl_shader_mamebm[i] = NULL;
@@ -665,10 +665,10 @@ void sdl_osd_interface::extract_video_config()
 			for(i=0; i<GLSL_SHADER_MAX; i++)
 			{
 				stemp = options().shader_screen(i);
-				if (stemp && strcmp(stemp, OSDOPTVAL_NONE) != 0 && strlen(stemp)>0)
+				if (!stemp.empty() && stemp != OSDOPTVAL_NONE)
 				{
-					video_config.glsl_shader_scrn[i] = (char *) malloc(strlen(stemp)+1);
-					strcpy(video_config.glsl_shader_scrn[i], stemp);
+					video_config.glsl_shader_scrn[i] = (char *) malloc(stemp.size()+1);
+					strcpy(video_config.glsl_shader_scrn[i], stemp.c_str());
 					video_config.glsl_shader_scrn_num++;
 				} else {
 					video_config.glsl_shader_scrn[i] = NULL;
@@ -708,10 +708,10 @@ void sdl_osd_interface::extract_video_config()
 #endif
 	// yuv settings ...
 	stemp = options().scale_mode();
-	video_config.scale_mode = drawsdl_scale_mode(stemp);
+	video_config.scale_mode = drawsdl_scale_mode(stemp.c_str());
 	if (video_config.scale_mode < 0)
 	{
-		osd_printf_warning("Invalid yuvmode value %s; reverting to none\n", stemp);
+		osd_printf_warning("Invalid yuvmode value %s; reverting to none\n", stemp.c_str());
 		video_config.scale_mode = VIDEO_SCALE_MODE_NONE;
 	}
 	if ( (video_config.mode != VIDEO_MODE_SOFT) && (video_config.scale_mode != VIDEO_SCALE_MODE_NONE) )

@@ -48,7 +48,7 @@
 class px4_state : public driver_device, public device_serial_interface
 {
 public:
-	px4_state(const machine_config &mconfig, device_type type, const char *tag) :
+	px4_state(const machine_config &mconfig, device_type type, std::string tag) :
 	driver_device(mconfig, type, tag),
 	device_serial_interface(mconfig, *this),
 	m_z80(*this, "maincpu"),
@@ -244,7 +244,7 @@ private:
 class px4p_state : public px4_state
 {
 public:
-	px4p_state(const machine_config &mconfig, device_type type, const char *tag) :
+	px4p_state(const machine_config &mconfig, device_type type, std::string tag) :
 	px4_state(mconfig, type, tag),
 	m_rdnvram(*this, "rdnvram"),
 	m_rdsocket(*this, "ramdisk_socket"),

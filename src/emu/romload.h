@@ -125,8 +125,8 @@ class software_list_device;
 
 struct rom_entry
 {
-	const char *    _name;              /* name of the file to load */
-	const char *    _hashdata;          /* hashing informations (checksums) */
+	std::string     _name;              /* name of the file to load */
+	std::string     _hashdata;          /* hashing informations (checksums) */
 	UINT32          _offset;            /* offset to load it to */
 	UINT32          _length;            /* length of the file */
 	UINT32          _flags;             /* flags */
@@ -274,8 +274,8 @@ int rom_load_knownbad(running_machine &machine);
 
 /* ----- Helpers ----- */
 
-file_error common_process_file(emu_options &options, const char *location, const char *ext, const rom_entry *romp, emu_file **image_file);
-file_error common_process_file(emu_options &options, const char *location, bool has_crc, UINT32 crc, const rom_entry *romp, emu_file **image_file);
+file_error common_process_file(emu_options &options, std::string location, std::string ext, const rom_entry *romp, emu_file **image_file);
+file_error common_process_file(emu_options &options, std::string location, bool has_crc, UINT32 crc, const rom_entry *romp, emu_file **image_file);
 
 
 /* ----- ROM iteration ----- */
@@ -314,14 +314,14 @@ std::string rom_parameter_value(const rom_entry *romp);
 /* ----- disk handling ----- */
 
 /* open a disk image, searching up the parent and loading by checksum */
-int open_disk_image(emu_options &options, const game_driver *gamedrv, const rom_entry *romp, chd_file &image_chd, const char *locationtag);
+int open_disk_image(emu_options &options, const game_driver *gamedrv, const rom_entry *romp, chd_file &image_chd, std::string locationtag);
 
 /* return a pointer to the CHD file associated with the given region */
-chd_file *get_disk_handle(running_machine &machine, const char *region);
+chd_file *get_disk_handle(running_machine &machine, std::string region);
 
 /* set a pointer to the CHD file associated with the given region */
-int set_disk_handle(running_machine &machine, const char *region, const char *fullpath);
+int set_disk_handle(running_machine &machine, std::string region, std::string fullpath);
 
-void load_software_part_region(device_t &device, software_list_device &swlist, const char *swname, const rom_entry *start_region);
+void load_software_part_region(device_t &device, software_list_device &swlist, std::string swname, const rom_entry *start_region);
 
 #endif  /* __ROMLOAD_H__ */

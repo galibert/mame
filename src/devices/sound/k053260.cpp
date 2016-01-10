@@ -73,7 +73,7 @@ const device_type K053260 = &device_creator<k053260_device>;
 //  k053260_device - constructor
 //-------------------------------------------------
 
-k053260_device::k053260_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+k053260_device::k053260_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, K053260, "K053260 KDSC", tag, owner, clock, "k053260", __FILE__),
 		device_sound_interface(mconfig, *this),
 		m_rgnoverride(nullptr),

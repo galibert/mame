@@ -89,7 +89,7 @@ const device_type I8279 = &device_creator<i8279_device>;
 //  i8279_device - constructor
 //-------------------------------------------------
 
-i8279_device::i8279_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+i8279_device::i8279_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, I8279, "8279 KDC", tag, owner, clock, "i8279", __FILE__),
 	m_out_irq_cb(*this),
 	m_out_sl_cb(*this),

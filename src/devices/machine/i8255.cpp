@@ -257,7 +257,7 @@ inline int i8255_device::port_c_upper_mode()
 //  i8255_device - constructor
 //-------------------------------------------------
 
-i8255_device::i8255_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+i8255_device::i8255_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, I8255, "8255 PPI", tag, owner, clock, "i8255", __FILE__),
 		m_in_pa_cb(*this),
 		m_in_pb_cb(*this),

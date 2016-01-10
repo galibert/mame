@@ -214,13 +214,13 @@ class address_space_config
 public:
 	// construction/destruction
 	address_space_config();
-	address_space_config(const char *name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift = 0, address_map_constructor internal = nullptr, address_map_constructor defmap = nullptr);
-	address_space_config(const char *name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, UINT8 logwidth, UINT8 pageshift, address_map_constructor internal = nullptr, address_map_constructor defmap = nullptr);
-	address_space_config(const char *name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, address_map_delegate internal, address_map_delegate defmap = address_map_delegate());
-	address_space_config(const char *name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, UINT8 logwidth, UINT8 pageshift, address_map_delegate internal, address_map_delegate defmap = address_map_delegate());
+	address_space_config(std::string name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift = 0, address_map_constructor internal = nullptr, address_map_constructor defmap = nullptr);
+	address_space_config(std::string name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, UINT8 logwidth, UINT8 pageshift, address_map_constructor internal = nullptr, address_map_constructor defmap = nullptr);
+	address_space_config(std::string name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, address_map_delegate internal, address_map_delegate defmap = address_map_delegate());
+	address_space_config(std::string name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, UINT8 logwidth, UINT8 pageshift, address_map_delegate internal, address_map_delegate defmap = address_map_delegate());
 
 	// getters
-	const char *name() const { return m_name; }
+	std::string name() const { return m_name; }
 	endianness_t endianness() const { return m_endianness; }
 	int data_width() const { return m_databus_width; }
 	int addr_width() const { return m_addrbus_width; }
@@ -232,7 +232,7 @@ public:
 	inline offs_t byte2addr_end(offs_t address) const { return (m_addrbus_shift > 0) ? ((address << m_addrbus_shift) | ((1 << m_addrbus_shift) - 1)) : (address >> -m_addrbus_shift); }
 
 	// state
-	const char *        m_name;
+	std::string         m_name;
 	endianness_t        m_endianness;
 	UINT8               m_databus_width;
 	UINT8               m_addrbus_width;
@@ -273,7 +273,7 @@ public:
 	memory_manager &manager() const { return m_manager; }
 	device_t &device() const { return m_device; }
 	running_machine &machine() const { return m_machine; }
-	const char *name() const { return m_name; }
+	std::string name() const { return m_name; }
 	address_spacenum spacenum() const { return m_spacenum; }
 	address_map *map() const { return m_map.get(); }
 
@@ -292,7 +292,7 @@ public:
 	UINT8 logaddrchars() const { return m_logaddrchars; }
 
 	// debug helpers
-	const char *get_handler_string(read_or_write readorwrite, offs_t byteaddress);
+	std::string get_handler_string(read_or_write readorwrite, offs_t byteaddress);
 	bool debugger_access() const { return m_debugger_access; }
 	void set_debugger_access(bool debugger) { m_debugger_access = debugger; }
 	bool log_unmap() const { return m_log_unmap; }
@@ -367,12 +367,12 @@ public:
 	void nop_readwrite(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror) { unmap_generic(addrstart, addrend, addrmask, addrmirror, ROW_READWRITE, true); }
 
 	// install ports, banks, RAM (short form)
-	void install_read_port(offs_t addrstart, offs_t addrend, const char *rtag) { install_read_port(addrstart, addrend, 0, 0, rtag); }
-	void install_write_port(offs_t addrstart, offs_t addrend, const char *wtag) { install_write_port(addrstart, addrend, 0, 0, wtag); }
-	void install_readwrite_port(offs_t addrstart, offs_t addrend, const char *rtag, const char *wtag) { install_readwrite_port(addrstart, addrend, 0, 0, rtag, wtag); }
-	void install_read_bank(offs_t addrstart, offs_t addrend, const char *tag) { install_read_bank(addrstart, addrend, 0, 0, tag); }
-	void install_write_bank(offs_t addrstart, offs_t addrend, const char *tag) { install_write_bank(addrstart, addrend, 0, 0, tag); }
-	void install_readwrite_bank(offs_t addrstart, offs_t addrend, const char *tag) { install_readwrite_bank(addrstart, addrend, 0, 0, tag); }
+	void install_read_port(offs_t addrstart, offs_t addrend, std::string rtag) { install_read_port(addrstart, addrend, 0, 0, rtag); }
+	void install_write_port(offs_t addrstart, offs_t addrend, std::string wtag) { install_write_port(addrstart, addrend, 0, 0, wtag); }
+	void install_readwrite_port(offs_t addrstart, offs_t addrend, std::string rtag, std::string wtag) { install_readwrite_port(addrstart, addrend, 0, 0, rtag, wtag); }
+	void install_read_bank(offs_t addrstart, offs_t addrend, std::string tag) { install_read_bank(addrstart, addrend, 0, 0, tag); }
+	void install_write_bank(offs_t addrstart, offs_t addrend, std::string tag) { install_write_bank(addrstart, addrend, 0, 0, tag); }
+	void install_readwrite_bank(offs_t addrstart, offs_t addrend, std::string tag) { install_readwrite_bank(addrstart, addrend, 0, 0, tag); }
 	void install_read_bank(offs_t addrstart, offs_t addrend, memory_bank *bank) { install_read_bank(addrstart, addrend, 0, 0, bank); }
 	void install_write_bank(offs_t addrstart, offs_t addrend, memory_bank *bank) { install_write_bank(addrstart, addrend, 0, 0, bank); }
 	void install_readwrite_bank(offs_t addrstart, offs_t addrend, memory_bank *bank) { install_readwrite_bank(addrstart, addrend, 0, 0, bank); }
@@ -381,12 +381,12 @@ public:
 	void *install_ram(offs_t addrstart, offs_t addrend, void *baseptr = nullptr) { return install_ram(addrstart, addrend, 0, 0, baseptr); }
 
 	// install ports, banks, RAM (with mirror/mask)
-	void install_read_port(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, const char *rtag) { install_readwrite_port(addrstart, addrend, addrmask, addrmirror, rtag, nullptr); }
-	void install_write_port(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, const char *wtag) { install_readwrite_port(addrstart, addrend, addrmask, addrmirror, nullptr, wtag); }
-	void install_readwrite_port(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, const char *rtag, const char *wtag);
-	void install_read_bank(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, const char *tag) { install_bank_generic(addrstart, addrend, addrmask, addrmirror, tag, nullptr); }
-	void install_write_bank(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, const char *tag) { install_bank_generic(addrstart, addrend, addrmask, addrmirror, nullptr, tag); }
-	void install_readwrite_bank(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, const char *tag)  { install_bank_generic(addrstart, addrend, addrmask, addrmirror, tag, tag); }
+	void install_read_port(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, std::string rtag) { install_readwrite_port(addrstart, addrend, addrmask, addrmirror, rtag, nullptr); }
+	void install_write_port(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, std::string wtag) { install_readwrite_port(addrstart, addrend, addrmask, addrmirror, nullptr, wtag); }
+	void install_readwrite_port(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, std::string rtag, std::string wtag);
+	void install_read_bank(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, std::string tag) { install_bank_generic(addrstart, addrend, addrmask, addrmirror, tag, nullptr); }
+	void install_write_bank(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, std::string tag) { install_bank_generic(addrstart, addrend, addrmask, addrmirror, nullptr, tag); }
+	void install_readwrite_bank(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, std::string tag)  { install_bank_generic(addrstart, addrend, addrmask, addrmirror, tag, tag); }
 	void install_read_bank(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, memory_bank *bank) { install_bank_generic(addrstart, addrend, addrmask, addrmirror, bank, nullptr); }
 	void install_write_bank(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, memory_bank *bank) { install_bank_generic(addrstart, addrend, addrmask, addrmirror, nullptr, bank); }
 	void install_readwrite_bank(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, memory_bank *bank)  { install_bank_generic(addrstart, addrend, addrmask, addrmirror, bank, bank); }
@@ -450,12 +450,12 @@ private:
 	void populate_map_entry_setoffset(const address_map_entry &entry);
 	void unmap_generic(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, read_or_write readorwrite, bool quiet);
 	void *install_ram_generic(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, read_or_write readorwrite, void *baseptr);
-	void install_bank_generic(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, const char *rtag, const char *wtag);
+	void install_bank_generic(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, std::string rtag, std::string wtag);
 	void install_bank_generic(offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, memory_bank *rbank, memory_bank *wbank);
 	void adjust_addresses(offs_t &start, offs_t &end, offs_t &mask, offs_t &mirror);
 	void *find_backing_memory(offs_t addrstart, offs_t addrend);
 	bool needs_backing_store(const address_map_entry *entry);
-	memory_bank &bank_find_or_allocate(const char *tag, offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, read_or_write readorwrite);
+	memory_bank &bank_find_or_allocate(std::string tag, offs_t addrstart, offs_t addrend, offs_t addrmask, offs_t addrmirror, read_or_write readorwrite);
 	address_map_entry *block_assign_intersecting(offs_t bytestart, offs_t byteend, UINT8 *base);
 
 protected:
@@ -473,7 +473,7 @@ protected:
 	bool                    m_debugger_access;  // treat accesses as coming from the debugger
 	bool                    m_log_unmap;        // log unmapped accesses in this space?
 	std::unique_ptr<direct_read_data> m_direct;    // fast direct-access read info
-	const char *            m_name;             // friendly name of the address space
+	std::string             m_name;             // friendly name of the address space
 	UINT8                   m_addrchars;        // number of characters to use for physical addresses
 	UINT8                   m_logaddrchars;     // number of characters to use for logical addresses
 
@@ -568,7 +568,7 @@ class memory_bank
 
 public:
 	// construction/destruction
-	memory_bank(address_space &space, int index, offs_t bytestart, offs_t byteend, const char *tag = nullptr);
+	memory_bank(address_space &space, int index, offs_t bytestart, offs_t byteend, std::string tag = nullptr);
 	~memory_bank();
 
 	// getters
@@ -579,8 +579,8 @@ public:
 	bool anonymous() const { return m_anonymous; }
 	offs_t bytestart() const { return m_bytestart; }
 	void *base() const { return *m_baseptr; }
-	const char *tag() const { return m_tag.c_str(); }
-	const char *name() const { return m_name.c_str(); }
+	std::string tag() const { return m_tag; }
+	std::string name() const { return m_name; }
 
 	// compare a range against our range
 	bool matches_exactly(offs_t bytestart, offs_t byteend) const { return (m_bytestart == bytestart && m_byteend == byteend); }
@@ -676,7 +676,7 @@ class memory_region
 	friend resource_pool_object<memory_region>::~resource_pool_object();
 
 	// construction/destruction
-	memory_region(running_machine &machine, const char *name, UINT32 length, UINT8 width, endianness_t endian);
+	memory_region(running_machine &machine, std::string name, UINT32 length, UINT8 width, endianness_t endian);
 
 public:
 	// getters
@@ -685,7 +685,7 @@ public:
 	UINT8 *base() { return (this != nullptr) ? &m_buffer[0] : nullptr; }
 	UINT8 *end() { return (this != nullptr) ? base() + m_buffer.size() : nullptr; }
 	UINT32 bytes() const { return (this != nullptr) ? m_buffer.size() : 0; }
-	const char *name() const { return m_name.c_str(); }
+	std::string name() const { return m_name; }
 
 	// flag expansion
 	endianness_t endianness() const { return m_endianness; }
@@ -738,15 +738,15 @@ public:
 	UINT8 **bank_pointer_addr(UINT8 index) { return &m_bank_ptr[index]; }
 
 	// regions
-	memory_region *region_alloc(const char *name, UINT32 length, UINT8 width, endianness_t endian);
-	void region_free(const char *name);
+	memory_region *region_alloc(std::string name, UINT32 length, UINT8 width, endianness_t endian);
+	void region_free(std::string name);
 
 private:
 	// internal helpers
 	memory_bank *first_bank() const { return m_banklist.first(); }
-	memory_bank *bank(const char *tag) const { return m_banklist.find(tag); }
-	memory_region *region(const char *tag) { return m_regionlist.find(tag); }
-	memory_share *shared(const char *tag) { return m_sharelist.find(tag); }
+	memory_bank *bank(std::string tag) const { return m_banklist.find(tag); }
+	memory_region *region(std::string tag) { return m_regionlist.find(tag); }
+	memory_share *shared(std::string tag) { return m_sharelist.find(tag); }
 	void bank_reattach();
 
 	// internal state

@@ -449,7 +449,7 @@ inline void crt9007_t::recompute_parameters()
 //  crt9007_t - constructor
 //-------------------------------------------------
 
-crt9007_t::crt9007_t(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+crt9007_t::crt9007_t(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, CRT9007, "SMC CRT9007", tag, owner, clock, "crt9007", __FILE__),
 	device_memory_interface(mconfig, *this),
 	device_video_interface(mconfig, *this),

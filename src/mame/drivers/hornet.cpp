@@ -329,7 +329,7 @@
 class hornet_state : public driver_device
 {
 public:
-	hornet_state(const machine_config &mconfig, device_type type, const char *tag)
+	hornet_state(const machine_config &mconfig, device_type type, std::string tag)
 		: driver_device(mconfig, type, tag),
 		m_workram(*this, "workram"),
 		m_sharc_dataram0(*this, "sharc_dataram0"),

@@ -175,7 +175,7 @@ inline void wd11c00_17_device::select()
 //  wd11c00_17_device - constructor
 //-------------------------------------------------
 
-wd11c00_17_device::wd11c00_17_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+wd11c00_17_device::wd11c00_17_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, WD11C00_17, "Western Digital WD11C00-17", tag, owner, clock, "wd11c00_17", __FILE__),
 		m_out_irq5_cb(*this),
 		m_out_drq3_cb(*this),

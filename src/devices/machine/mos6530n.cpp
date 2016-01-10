@@ -113,7 +113,7 @@ WRITE8_MEMBER(mos6532_t::io_w)
 //  mos6530_base_t - constructor
 //-------------------------------------------------
 
-mos6530_base_t::mos6530_base_t(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
+mos6530_base_t::mos6530_base_t(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
 	device_t(mconfig, type, name, tag, owner, clock, shortname, source),
 	m_ram(*this),
 	m_irq_cb(*this),
@@ -176,7 +176,7 @@ mos6530_base_t::mos6530_base_t(const machine_config &mconfig, device_type type, 
 //  mos6530_t - constructor
 //-------------------------------------------------
 
-mos6530_t::mos6530_t(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+mos6530_t::mos6530_t(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: mos6530_base_t(mconfig, MOS6530n, "MOS6530n", tag, owner, clock, "mos6530n", __FILE__) { }
 
 
@@ -184,7 +184,7 @@ mos6530_t::mos6530_t(const machine_config &mconfig, const char *tag, device_t *o
 //  mos6532_t - constructor
 //-------------------------------------------------
 
-mos6532_t::mos6532_t(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+mos6532_t::mos6532_t(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: mos6530_base_t(mconfig, MOS6532n, "MOS6532n", tag, owner, clock, "mos6532n", __FILE__) { }
 
 

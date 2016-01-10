@@ -14,7 +14,7 @@ DEVICE_ADDRESS_MAP_START(extmap, 32, lpc_rtc_device)
 	AM_RANGE(0x70, 0x77) AM_READWRITE8(exttarget_r, exttarget_w, 0xff000000)
 ADDRESS_MAP_END
 
-lpc_rtc_device::lpc_rtc_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+lpc_rtc_device::lpc_rtc_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: lpc_device(mconfig, LPC_RTC, "LPC RTC", tag, owner, clock, "lpc_rtc", __FILE__), cur_index(0), cur_extindex(0)
 {
 }

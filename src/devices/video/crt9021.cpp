@@ -60,7 +60,7 @@ const device_type CRT9021 = &device_creator<crt9021_t>;
 //  crt9021_t - constructor
 //-------------------------------------------------
 
-crt9021_t::crt9021_t(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+crt9021_t::crt9021_t(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, CRT9021, "SMC CRT9021", tag, owner, clock, "crt9021", __FILE__),
 	device_video_interface(mconfig, *this),
 	m_data(0),

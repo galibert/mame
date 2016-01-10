@@ -259,7 +259,7 @@ ioport_constructor iskr_1030_keyboard_device::device_input_ports() const
 //  iskr_1030_keyboard_device - constructor
 //-------------------------------------------------
 
-iskr_1030_keyboard_device::iskr_1030_keyboard_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+iskr_1030_keyboard_device::iskr_1030_keyboard_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, PC_KBD_ISKR_1030, "Iskra-1030 Keyboard", tag, owner, clock, "kb_iskr1030", __FILE__),
 		device_pc_kbd_interface(mconfig, *this),
 		m_maincpu(*this, I8048_TAG),

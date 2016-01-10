@@ -95,11 +95,11 @@ struct chan_info {
 class es1373_device : public pci_device, public device_sound_interface
 {
 public:
-	es1373_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	es1373_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 	virtual void map_extra(UINT64 memory_window_start, UINT64 memory_window_end, UINT64 memory_offset, address_space *memory_space,
 							UINT64 io_window_start, UINT64 io_window_end, UINT64 io_offset, address_space *io_space) override;
 
-	void set_irq_info(const char *tag, const int irq_num);
+	void set_irq_info(std::string tag, const int irq_num);
 
 	DECLARE_READ32_MEMBER (reg_r);
 	DECLARE_WRITE32_MEMBER(reg_w);

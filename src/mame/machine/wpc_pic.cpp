@@ -6,7 +6,7 @@
 
 const device_type WPC_PIC = &device_creator<wpc_pic_device>;
 
-wpc_pic_device::wpc_pic_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+wpc_pic_device::wpc_pic_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, WPC_PIC, "Williams Pinball Controller PIC Security", tag, owner, clock, "wpc_pic", __FILE__),
 	swarray(*this, ":SW")
 {

@@ -54,14 +54,14 @@ int driver_list::find(const char *name)
 //  account wildcards in the wildstring
 //-------------------------------------------------
 
-bool driver_list::matches(const char *wildstring, const char *string)
+bool driver_list::matches(std::string wildstring, std::string string)
 {
 	// can only match internal drivers if the wildstring starts with an underscore
-	if (string[0] == '_' && (wildstring == nullptr || wildstring[0] != '_'))
+	if (string[0] == '_' && (wildstring.empty() || wildstring[0] != '_'))
 		return false;
 
 	// match everything else normally
-	return (wildstring == nullptr || core_strwildcmp(wildstring, string) == 0);
+	return wildstring.empty() || core_strwildeq(wildstring, string);
 }
 
 
@@ -83,7 +83,7 @@ int driver_list::driver_sort_callback(const void *elem1, const void *elem2)
 //  closeness and assign a score.
 //-------------------------------------------------
 
-int driver_list::penalty_compare(const char *source, const char *target)
+int driver_list::penalty_compare(std::string source, std::string target)
 {
 	int gaps = 1;
 	bool last = true;
@@ -141,7 +141,7 @@ driver_enumerator::driver_enumerator(emu_options &options)
 }
 
 
-driver_enumerator::driver_enumerator(emu_options &options, const char *string)
+driver_enumerator::driver_enumerator(emu_options &options, std::string string)
 	: m_current(-1),
 		m_filtered_count(0),
 		m_options(options),
@@ -208,7 +208,7 @@ machine_config &driver_enumerator::config(int index, emu_options &options) const
 //  given string
 //-------------------------------------------------
 
-int driver_enumerator::filter(const char *filterstring)
+int driver_enumerator::filter(std::string filterstring)
 {
 	// reset the count
 	exclude_all();
@@ -310,12 +310,12 @@ bool driver_enumerator::next_excluded()
 //  an array of game_driver pointers
 //-------------------------------------------------
 
-void driver_enumerator::find_approximate_matches(const char *string, int count, int *results)
+void driver_enumerator::find_approximate_matches(std::string string, int count, int *results)
 {
 #undef rand
 
 	// if no name, pick random entries
-	if (string == nullptr || string[0] == 0)
+	if (string.empty())
 	{
 		// seed the RNG first
 		srand(osd_ticks());

@@ -7,7 +7,7 @@ const device_type H8_SCI = &device_creator<h8_sci_device>;
 
 const char *const h8_sci_device::state_names[] = { "idle", "start", "bit", "parity", "stop", "last-tick" };
 
-h8_sci_device::h8_sci_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+h8_sci_device::h8_sci_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, H8_SCI, "H8 Serial Communications Interface", tag, owner, clock, "h8_sci", __FILE__),
 	cpu(*this, DEVICE_SELF_OWNER),
 	tx_cb(*this),

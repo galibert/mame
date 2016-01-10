@@ -87,7 +87,7 @@
 /*
    Constructor for the HFDC card.
 */
-myarc_hfdc_device::myarc_hfdc_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+myarc_hfdc_device::myarc_hfdc_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: ti_expansion_card_device(mconfig, TI99_HFDC, "Myarc Hard and Floppy Disk Controller", tag, owner, clock, "ti99_hfdc", __FILE__), m_motor_on_timer(nullptr),
 		m_hdc9234(*this, FDC_TAG),
 		m_clock(*this, CLOCK_TAG), m_current_floppy(nullptr), m_current_harddisk(nullptr), m_see_switches(false), m_irq(), m_dip(), m_motor_running(false),

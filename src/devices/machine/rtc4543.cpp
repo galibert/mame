@@ -29,7 +29,7 @@ const device_type RTC4543 = &device_creator<rtc4543_device>;
 //  rtc4543_device - constructor
 //-------------------------------------------------
 
-rtc4543_device::rtc4543_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+rtc4543_device::rtc4543_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, RTC4543, "R4543 RTC", tag, owner, clock, "rtc4543", __FILE__),
 		device_rtc_interface(mconfig, *this),
 		data_cb(*this), m_ce(0), m_clk(0), m_wr(0), m_data(0), m_shiftreg(0), m_curreg(0), m_curbit(0), m_clock_timer(nullptr)

@@ -26,8 +26,8 @@ class jvs_host;
 class sega_837_13551 : public jvs_device
 {
 public:
-	sega_837_13551(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
-	static void static_set_port_tag(device_t &device, int port, const char *tag);
+	sega_837_13551(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
+	static void static_set_port_tag(device_t &device, int port, std::string tag);
 
 	virtual const rom_entry *device_rom_region() const override;
 

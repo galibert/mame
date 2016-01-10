@@ -889,19 +889,19 @@ public:
 
 	// construction/destruction
 	ioport_condition() { reset(); }
-	ioport_condition(condition_t condition, const char *tag, ioport_value mask, ioport_value value) { set(condition, tag, mask, value); }
+	ioport_condition(condition_t condition, std::string tag, ioport_value mask, ioport_value value) { set(condition, tag, mask, value); }
 
 	// getters
-	const char *tag() const { return m_tag; }
+	std::string tag() const { return m_tag; }
 
 	// operators
-	bool operator==(const ioport_condition &rhs) const { return (m_mask == rhs.m_mask && m_value == rhs.m_value && m_condition == rhs.m_condition && strcmp(m_tag, rhs.m_tag) == 0); }
+	bool operator==(const ioport_condition &rhs) const { return m_mask == rhs.m_mask && m_value == rhs.m_value && m_condition == rhs.m_condition && m_tag == rhs.m_tag; }
 	bool eval() const;
 	bool none() const { return (m_condition == ALWAYS); }
 
 	// configuration
 	void reset() { set(ALWAYS, nullptr, 0, 0); }
-	void set(condition_t condition, const char *tag, ioport_value mask, ioport_value value)
+	void set(condition_t condition, std::string tag, ioport_value mask, ioport_value value)
 	{
 		m_condition = condition;
 		m_tag = tag;
@@ -914,7 +914,7 @@ public:
 private:
 	// internal state
 	condition_t     m_condition;    // condition to use
-	const char *    m_tag;          // tag of port whose condition is to be tested
+	std::string     m_tag;          // tag of port whose condition is to be tested
 	ioport_port *   m_port;         // reference to the port to be tested
 	ioport_value    m_mask;         // mask to apply to the port
 	ioport_value    m_value;        // value to compare against
@@ -969,7 +969,7 @@ public:
 
 	// getters
 	ioport_diplocation *next() const { return m_next; }
-	const char *name() const { return m_name.c_str(); }
+	std::string name() const { return m_name; }
 	UINT8 number() const { return m_number; }
 	bool inverted() const { return m_invert; }
 
@@ -1003,7 +1003,7 @@ class ioport_field
 
 public:
 	// construction/destruction
-	ioport_field(ioport_port &port, ioport_type type, ioport_value defvalue, ioport_value maskbits, const char *name = nullptr);
+	ioport_field(ioport_port &port, ioport_type type, ioport_value defvalue, ioport_value maskbits, std::string name = nullptr);
 	~ioport_field();
 
 	// getters
@@ -1033,8 +1033,8 @@ public:
 	bool analog_invert() const { return ((m_flags & ANALOG_FLAG_INVERT) != 0); }
 
 	UINT8 impulse() const { return m_impulse; }
-	const char *name() const;
-	const char *specific_name() const { return m_name; }
+	std::string name() const;
+	std::string specific_name() const { return m_name; }
 	const input_seq &seq(input_seq_type seqtype = SEQ_TYPE_STANDARD) const;
 	const input_seq &defseq(input_seq_type seqtype = SEQ_TYPE_STANDARD) const;
 	const input_seq &defseq_unresolved(input_seq_type seqtype = SEQ_TYPE_STANDARD) const { return m_seq[seqtype]; }
@@ -1068,7 +1068,7 @@ public:
 
 	// additional operations
 	bool enabled() const { return m_condition.eval(); }
-	const char *setting_name() const;
+	std::string setting_name() const;
 	bool has_previous_setting() const;
 	void select_previous_setting();
 	bool has_next_setting() const;
@@ -1093,7 +1093,7 @@ public:
 	void set_user_settings(const user_settings &settings);
 
 private:
-	void expand_diplocation(const char *location, std::string &errorbuf);
+	void expand_diplocation(std::string location, std::string &errorbuf);
 
 	// internal state
 	ioport_field *              m_next;             // pointer to next field in sequence
@@ -1111,7 +1111,7 @@ private:
 	UINT8                       m_player;           // player number (0-based)
 	UINT32                      m_flags;            // combination of FIELD_FLAG_* and ANALOG_FLAG_* above
 	UINT8                       m_impulse;          // number of frames before reverting to defvalue
-	const char *                m_name;             // user-friendly name to display
+	std::string                 m_name;             // user-friendly name to display
 	input_seq                   m_seq[SEQ_TYPE_TOTAL];// sequences of all types
 	ioport_field_read_delegate  m_read;             // read callback routine
 	void *                      m_read_param;       // parameter for read callback routine
@@ -1188,7 +1188,7 @@ class ioport_port
 
 public:
 	// construction/destruction
-	ioport_port(device_t &owner, const char *tag);
+	ioport_port(device_t &owner, std::string tag);
 	~ioport_port();
 
 	// getters
@@ -1197,7 +1197,7 @@ public:
 	device_t &device() const { return m_device; }
 	running_machine &machine() const;
 	ioport_field *first_field() const { return m_fieldlist.first(); }
-	const char *tag() const { return m_tag.c_str(); }
+	std::string tag() const { return m_tag; }
 	int modcount() const { return m_modcount; }
 	ioport_value active() const { return m_active; }
 	ioport_port_live &live() const { assert(m_live != nullptr); return *m_live; }
@@ -1382,7 +1382,7 @@ public:
 	// type helpers
 	input_type_entry *first_type() const { return m_typelist.first(); }
 	bool type_pressed(ioport_type type, int player = 0);
-	const char *type_name(ioport_type type, UINT8 player);
+	std::string type_name(ioport_type type, UINT8 player);
 	ioport_group type_group(ioport_type type, int player);
 	const input_seq &type_seq(ioport_type type, int player = 0, input_seq_type seqtype = SEQ_TYPE_STANDARD);
 	void set_type_seq(ioport_type type, int player, input_seq_type seqtype, const input_seq &newseq);
@@ -1395,20 +1395,20 @@ public:
 	bool crosshair_position(int player, float &x, float &y);
 	bool has_keyboard() const;
 	INT32 frame_interpolate(INT32 oldval, INT32 newval);
-	ioport_type token_to_input_type(const char *string, int &player) const;
-	const char *input_type_to_token(std::string &str, ioport_type type, int player);
+	ioport_type token_to_input_type(std::string string, int &player) const;
+	std::string input_type_to_token(std::string &str, ioport_type type, int player);
 
 private:
 	// internal helpers
 	void init_port_types();
-	void init_autoselect_devices(int type1, int type2, int type3, const char *option, const char *ananame);
+	void init_autoselect_devices(int type1, int type2, int type3, std::string option, std::string ananame);
 
 	void frame_update_callback();
 	void frame_update();
 
-	ioport_port *port(const char *tag) const { return m_portlist.find(tag); }
+	ioport_port *port(std::string tag) const { return m_portlist.find(tag); }
 	void exit();
-	input_seq_type token_to_seq_type(const char *string);
+	input_seq_type token_to_seq_type(std::string string);
 	void update_defaults();
 
 	void load_config(int config_type, xml_data_node *parentnode);
@@ -1424,13 +1424,13 @@ private:
 
 	template<typename _Type> _Type playback_read(_Type &result);
 	time_t playback_init();
-	void playback_end(const char *message = nullptr);
+	void playback_end(std::string message = nullptr);
 	void playback_frame(const attotime &curtime);
 	void playback_port(ioport_port &port);
 
 	template<typename _Type> void record_write(_Type value);
 	void record_init();
-	void record_end(const char *message = nullptr);
+	void record_end(std::string message = nullptr);
 	void record_frame(const attotime &curtime);
 	void record_port(ioport_port &port);
 
@@ -1475,19 +1475,19 @@ public:
 	ioport_configurer(device_t &owner, ioport_list &portlist, std::string &errorbuf);
 
 	// static helpers
-	static const char *string_from_token(const char *string);
+	static std::string string_from_token(std::string string);
 
 	// port helpers
-	void port_alloc(const char *tag);
-	void port_modify(const char *tag);
+	void port_alloc(std::string tag);
+	void port_modify(std::string tag);
 
 	// field helpers
-	void field_alloc(ioport_type type, ioport_value defval, ioport_value mask, const char *name = nullptr);
+	void field_alloc(ioport_type type, ioport_value defval, ioport_value mask, std::string name = nullptr);
 	void field_add_char(unicode_char ch);
 	void field_add_code(input_seq_type which, input_code code);
 	void field_set_way(int way) const { m_curfield->m_way = way; }
 	void field_set_rotated() const { m_curfield->m_flags |= ioport_field::FIELD_FLAG_ROTATED; }
-	void field_set_name(const char *name) const { m_curfield->m_name = string_from_token(name); }
+	void field_set_name(std::string name) const { m_curfield->m_name = string_from_token(name); }
 	void field_set_player(int player) const { m_curfield->m_player = player - 1; }
 	void field_set_cocktail() const { m_curfield->m_flags |= ioport_field::FIELD_FLAG_COCKTAIL; field_set_player(2); }
 	void field_set_toggle() const { m_curfield->m_flags |= ioport_field::FIELD_FLAG_TOGGLE; }
@@ -1507,14 +1507,14 @@ public:
 	void field_set_analog_invert() const { m_curfield->m_flags |= ioport_field::ANALOG_FLAG_INVERT; }
 	void field_set_dynamic_read(ioport_field_read_delegate delegate, void *param = nullptr) const { m_curfield->m_read = delegate; m_curfield->m_read_param = param; }
 	void field_set_dynamic_write(ioport_field_write_delegate delegate, void *param = nullptr) const { m_curfield->m_write = delegate; m_curfield->m_write_param = param; }
-	void field_set_diplocation(const char *location) const { m_curfield->expand_diplocation(location, m_errorbuf); }
+	void field_set_diplocation(std::string location) const { m_curfield->expand_diplocation(location, m_errorbuf); }
 
 	// setting helpers
-	void setting_alloc(ioport_value value, const char *name);
+	void setting_alloc(ioport_value value, std::string name);
 
 	// misc helpers
-	void set_condition(ioport_condition::condition_t condition, const char *tag, ioport_value mask, ioport_value value);
-	void onoff_alloc(const char *name, ioport_value defval, ioport_value mask, const char *diplocation);
+	void set_condition(ioport_condition::condition_t condition, std::string tag, ioport_value mask, ioport_value value);
+	void onoff_alloc(std::string name, ioport_value defval, ioport_value mask, std::string diplocation);
 
 private:
 	// internal state

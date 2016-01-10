@@ -107,7 +107,7 @@ screen_device *machine_config::first_screen() const
 //  new device
 //-------------------------------------------------
 
-device_t *machine_config::device_add(device_t *owner, const char *tag, device_type type, UINT32 clock)
+device_t *machine_config::device_add(device_t *owner, std::string tag, device_type type, UINT32 clock)
 {
 	const char *orig_tag = tag;
 
@@ -157,7 +157,7 @@ device_t *machine_config::device_add(device_t *owner, const char *tag, device_ty
 //  replace one device with a new device
 //-------------------------------------------------
 
-device_t *machine_config::device_replace(device_t *owner, const char *tag, device_type type, UINT32 clock)
+device_t *machine_config::device_replace(device_t *owner, std::string tag, device_type type, UINT32 clock)
 {
 	// find the original device by this name (must exist)
 	assert(owner != nullptr);
@@ -178,7 +178,7 @@ device_t *machine_config::device_replace(device_t *owner, const char *tag, devic
 //  remove a device
 //-------------------------------------------------
 
-device_t *machine_config::device_remove(device_t *owner, const char *tag)
+device_t *machine_config::device_remove(device_t *owner, std::string tag)
 {
 	// find the original device by this name (must exist)
 	assert(owner != nullptr);
@@ -200,7 +200,7 @@ device_t *machine_config::device_remove(device_t *owner, const char *tag)
 //  locate a device
 //-------------------------------------------------
 
-device_t *machine_config::device_find(device_t *owner, const char *tag)
+device_t *machine_config::device_find(device_t *owner, std::string tag)
 {
 	// find the original device by this name (must exist)
 	assert(owner != nullptr);

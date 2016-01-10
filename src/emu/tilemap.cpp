@@ -1586,7 +1586,7 @@ const device_type TILEMAP = &device_creator<tilemap_device>;
 //  tilemap_device - constructor
 //-------------------------------------------------
 
-tilemap_device::tilemap_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+tilemap_device::tilemap_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, TILEMAP, "Tilemap", tag, owner, clock, "tilemap", __FILE__),
 		m_gfxdecode(*this),
 		m_standard_mapper(TILEMAP_STANDARD_COUNT),
@@ -1606,7 +1606,7 @@ tilemap_device::tilemap_device(const machine_config &mconfig, const char *tag, d
 //  gfx decoder
 //-------------------------------------------------
 
-void tilemap_device::static_set_gfxdecode_tag(device_t &device, const char *tag)
+void tilemap_device::static_set_gfxdecode_tag(device_t &device, std::string tag)
 {
 	downcast<tilemap_device &>(device).m_gfxdecode.set_tag(tag);
 }

@@ -11,7 +11,7 @@
 const device_type MSX_SLOT_FS4600 = &device_creator<msx_slot_fs4600_device>;
 
 
-msx_slot_fs4600_device::msx_slot_fs4600_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+msx_slot_fs4600_device::msx_slot_fs4600_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, MSX_SLOT_FS4600, "MSX Internal FS4600 Firmware", tag, owner, clock, "msx_slot_fs4600", __FILE__)
 	, msx_internal_slot_interface()
 	, m_nvram(*this, "nvram")

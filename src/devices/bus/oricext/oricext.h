@@ -25,10 +25,10 @@ class oricext_connector: public device_t,
 							public device_slot_interface
 {
 public:
-	oricext_connector(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	oricext_connector(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 	virtual ~oricext_connector();
 
-	void set_cputag(const char *tag);
+	void set_cputag(std::string tag);
 	template<class _Object> static devcb_base &set_irq_handler(device_t &device, _Object object) { return downcast<oricext_connector &>(device).irq_handler.set_callback(object); }
 	void irq_w(int state);
 
@@ -43,9 +43,9 @@ class oricext_device : public device_t,
 						public device_slot_card_interface
 {
 public:
-	oricext_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source);
+	oricext_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source);
 
-	void set_cputag(const char *tag);
+	void set_cputag(std::string tag);
 	DECLARE_WRITE_LINE_MEMBER(irq_w);
 
 protected:

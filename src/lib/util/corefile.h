@@ -49,7 +49,7 @@ struct core_file;
 /* ----- file open/close ----- */
 
 /* open a file with the specified filename */
-file_error core_fopen(const char *filename, UINT32 openflags, core_file **file);
+file_error core_fopen(std::string filename, UINT32 openflags, core_file **file);
 
 /* open a RAM-based "file" using the given data and length (read-only) */
 file_error core_fopen_ram(const void *data, size_t length, UINT32 openflags, core_file **file);
@@ -100,8 +100,8 @@ char *core_fgets(char *s, int n, core_file *file);
 const void *core_fbuffer(core_file *file);
 
 /* open a file with the specified filename, read it into memory, and return a pointer */
-file_error core_fload(const char *filename, void **data, UINT32 *length);
-file_error core_fload(const char *filename, dynamic_buffer &data);
+file_error core_fload(std::string filename, void **data, UINT32 *length);
+file_error core_fload(std::string filename, dynamic_buffer &data);
 
 
 
@@ -125,10 +125,10 @@ file_error core_truncate(core_file *f, UINT64 offset);
 /* ----- filename utilities ----- */
 
 /* extract the base part of a filename (remove extensions and paths) */
-std::string &core_filename_extract_base(std::string &result, const char *name, bool strip_extension = false);
+std::string &core_filename_extract_base(std::string &result, std::string name, bool strip_extension = false);
 
 /* true if the given filename ends with a particular extension */
-int core_filename_ends_with(const char *filename, const char *extension);
+int core_filename_ends_with(std::string filename, std::string extension);
 
 
 #endif  /* __COREFILE_H__ */

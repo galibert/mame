@@ -25,7 +25,7 @@ extern const char layout_vsc[];
 class csc_state : public driver_device
 {
 public:
-	csc_state(const machine_config &mconfig, device_type type, const char *tag)
+	csc_state(const machine_config &mconfig, device_type type, std::string tag)
 		: driver_device(mconfig, type, tag),
 			m_speech(*this, "speech")
 		,

@@ -176,7 +176,7 @@ enum
     Constructor
 ****************************************************************************/
 
-tms9995_device::tms9995_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+tms9995_device::tms9995_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: cpu_device(mconfig, TMS9995, "TMS9995", tag, owner, clock, "tms9995", __FILE__),
 		m_state_any(0),
 		PC(0),
@@ -198,7 +198,7 @@ tms9995_device::tms9995_device(const machine_config &mconfig, const char *tag, d
 /*
     Called from subclass.
 */
-tms9995_device::tms9995_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
+tms9995_device::tms9995_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
 		: cpu_device(mconfig, TMS9995, name, tag, owner, clock, shortname, source),
 		m_state_any(0),
 		PC(0),

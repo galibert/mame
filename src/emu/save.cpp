@@ -146,7 +146,7 @@ void save_manager::register_postload(save_prepost_delegate func)
 //  memory
 //-------------------------------------------------
 
-void save_manager::save_memory(device_t *device, const char *module, const char *tag, UINT32 index, const char *name, void *val, UINT32 valsize, UINT32 valcount)
+void save_manager::save_memory(device_t *device, const char *module, std::string tag, UINT32 index, const char *name, void *val, UINT32 valsize, UINT32 valcount)
 {
 	assert(valsize == 1 || valsize == 2 || valsize == 4 || valsize == 8);
 
@@ -418,7 +418,7 @@ save_manager::state_callback::state_callback(save_prepost_delegate callback)
 //  state_entry - constructor
 //-------------------------------------------------
 
-state_entry::state_entry(void *data, const char *name, device_t *device, const char *module, const char *tag, int index, UINT8 size, UINT32 count)
+state_entry::state_entry(void *data, const char *name, device_t *device, const char *module, std::string tag, int index, UINT8 size, UINT32 count)
 	: m_next(nullptr),
 		m_data(data),
 		m_name(name),

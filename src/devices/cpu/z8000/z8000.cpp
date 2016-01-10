@@ -33,7 +33,7 @@ const device_type Z8001 = &device_creator<z8001_device>;
 const device_type Z8002 = &device_creator<z8002_device>;
 
 
-z8002_device::z8002_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+z8002_device::z8002_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: cpu_device(mconfig, Z8002, "Z8002", tag, owner, clock, "z8002", __FILE__)
 	, m_program_config("program", ENDIANNESS_BIG, 16, 16, 0)
 	, m_io_config("io", ENDIANNESS_BIG, 8, 16, 0)
@@ -43,7 +43,7 @@ z8002_device::z8002_device(const machine_config &mconfig, const char *tag, devic
 }
 
 
-z8002_device::z8002_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
+z8002_device::z8002_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
 	: cpu_device(mconfig, type, name, tag, owner, clock, shortname, source)
 	, m_program_config("program", ENDIANNESS_BIG, 16, 20, 0)
 	, m_io_config("io", ENDIANNESS_BIG, 16, 16, 0)
@@ -53,7 +53,7 @@ z8002_device::z8002_device(const machine_config &mconfig, device_type type, cons
 }
 
 
-z8001_device::z8001_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+z8001_device::z8001_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: z8002_device(mconfig, Z8001, "Zilog Z8001", tag, owner, clock, "z8001", __FILE__)
 	, m_data_config("data", ENDIANNESS_BIG, 16, 20, 0)
 {

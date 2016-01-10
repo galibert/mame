@@ -76,7 +76,7 @@
 
 const device_type SEIBU_SOUND = &device_creator<seibu_sound_device>;
 
-seibu_sound_device::seibu_sound_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+seibu_sound_device::seibu_sound_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, SEIBU_SOUND, "Seibu Sound System", tag, owner, clock, "seibu_sound", __FILE__),
 		m_main2sub_pending(0),
 		m_sub2main_pending(0),
@@ -506,7 +506,7 @@ ADDRESS_MAP_END
 
 const device_type SEIBU_ADPCM = &device_creator<seibu_adpcm_device>;
 
-seibu_adpcm_device::seibu_adpcm_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+seibu_adpcm_device::seibu_adpcm_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, SEIBU_ADPCM, "Seibu ADPCM (MSM5205)", tag, owner, clock, "seibu_adpcm", __FILE__),
 		device_sound_interface(mconfig, *this),
 		m_stream(nullptr),

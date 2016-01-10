@@ -164,7 +164,7 @@ DEVICE_ADDRESS_MAP_START(submap, 16, aw_rom_board)
 	AM_RANGE(0x40, 0x41) AM_READWRITE(pio_r, pio_w)
 ADDRESS_MAP_END
 
-aw_rom_board::aw_rom_board(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+aw_rom_board::aw_rom_board(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: naomi_g1_device(mconfig, AW_ROM_BOARD, "Sammy Atomiswave ROM Board", tag, owner, clock, "aw_rom_board", __FILE__)
 {
 	keyregion = nullptr;

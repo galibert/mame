@@ -11,7 +11,7 @@ DEVICE_ADDRESS_MAP_START(map, 32, lpc_pit_device)
 	AM_RANGE(0x50, 0x53) AM_WRITE8    (          control_w, 0xff000000)
 ADDRESS_MAP_END
 
-lpc_pit_device::lpc_pit_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+lpc_pit_device::lpc_pit_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: lpc_device(mconfig, LPC_PIT, "LPC PIT", tag, owner, clock, "lpc_pit", __FILE__)
 {
 }

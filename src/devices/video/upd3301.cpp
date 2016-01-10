@@ -74,7 +74,7 @@ const device_type UPD3301 = &device_creator<upd3301_device>;
 //  upd3301_device - constructor
 //-------------------------------------------------
 
-upd3301_device::upd3301_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+upd3301_device::upd3301_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, UPD3301, "UPD3301", tag, owner, clock, "upd3301", __FILE__),
 	device_video_interface(mconfig, *this),
 	m_write_int(*this),

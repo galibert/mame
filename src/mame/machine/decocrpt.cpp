@@ -647,17 +647,17 @@ static void deco_decrypt(running_machine &machine,const char *rgntag,const UINT8
 			rom[i] = BIG_ENDIANIZE_INT16(rom[i]);
 }
 
-void deco56_decrypt_gfx(running_machine &machine, const char *tag)
+void deco56_decrypt_gfx(running_machine &machine, std::string tag)
 {
 	deco_decrypt(machine,tag,deco56_xor_table,deco56_address_table,deco56_swap_table, 0);
 }
 
-void deco74_decrypt_gfx(running_machine &machine, const char *tag)
+void deco74_decrypt_gfx(running_machine &machine, std::string tag)
 {
 	deco_decrypt(machine,tag,deco74_xor_table,deco74_address_table,deco74_swap_table, 0);
 }
 
-void deco56_remap_gfx(running_machine &machine, const char *tag)
+void deco56_remap_gfx(running_machine &machine, std::string tag)
 {
 	// Apply address remap, but not XOR/shift
 	deco_decrypt(machine,tag,deco56_xor_table,deco56_address_table,deco56_swap_table, 1);

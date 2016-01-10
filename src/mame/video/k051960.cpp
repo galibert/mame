@@ -125,7 +125,7 @@ GFXDECODE_MEMBER( k051960_device::gfxinfo_gradius3 )
 GFXDECODE_END
 
 
-k051960_device::k051960_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+k051960_device::k051960_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, K051960, "K051960 Sprite Generator", tag, owner, clock, "k051960", __FILE__),
 	device_gfx_interface(mconfig, *this, gfxinfo),
 	m_ram(nullptr),
@@ -171,7 +171,7 @@ void k051960_device::set_plane_order(device_t &device, int order)
 //  set_screen_tag - set screen we are attached to
 //-------------------------------------------------
 
-void k051960_device::set_screen_tag(device_t &device, device_t *owner, const char *tag)
+void k051960_device::set_screen_tag(device_t &device, device_t *owner, std::string tag)
 {
 	k051960_device &dev = dynamic_cast<k051960_device &>(device);
 	dev.m_screen_tag = tag;

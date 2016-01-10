@@ -471,7 +471,7 @@ inline void am9517a_device::end_of_process()
 //-------------------------------------------------
 
 
-am9517a_device::am9517a_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname)
+am9517a_device::am9517a_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname)
 	: device_t(mconfig, type, name, tag, owner, clock, shortname, __FILE__),
 		device_execute_interface(mconfig, *this),
 		m_icount(0),
@@ -498,7 +498,7 @@ am9517a_device::am9517a_device(const machine_config &mconfig, device_type type, 
 }
 
 
-am9517a_device::am9517a_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+am9517a_device::am9517a_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, AM9517A, "AM9517A", tag, owner, clock, "am9517a", __FILE__),
 		device_execute_interface(mconfig, *this),
 		m_icount(0),
@@ -525,7 +525,7 @@ am9517a_device::am9517a_device(const machine_config &mconfig, const char *tag, d
 {
 }
 
-upd71071_v53_device::upd71071_v53_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+upd71071_v53_device::upd71071_v53_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: am9517a_device(mconfig, V53_DMAU, "V53 DMAU", tag, owner, clock, "v53_dmau")
 {
 }

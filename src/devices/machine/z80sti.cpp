@@ -82,7 +82,7 @@ const int z80sti_device::PRESCALER[] = { 0, 4, 10, 16, 50, 64, 100, 200 };
 //  z80sti_device - constructor
 //-------------------------------------------------
 
-z80sti_device::z80sti_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+z80sti_device::z80sti_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, Z80STI, "Mostek MK3801", tag, owner, clock, "z80sti", __FILE__),
 		device_serial_interface(mconfig, *this),
 		device_z80daisy_interface(mconfig, *this),

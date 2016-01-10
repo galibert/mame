@@ -210,54 +210,54 @@ public:
 	// parsing wrappers
 	bool parse_command_line(int argc, char *argv[], std::string &error_string);
 	void parse_standard_inis(std::string &error_string);
-	bool parse_slot_devices(int argc, char *argv[], std::string &error_string, const char *name, const char *value);
+	bool parse_slot_devices(int argc, char *argv[], std::string &error_string, std::string name, std::string value);
 
 	// core options
-	const char *system_name() const { return value(OPTION_SYSTEMNAME); }
-	const char *software_name() const { return value(OPTION_SOFTWARENAME); }
+	std::string system_name() const { return value(OPTION_SYSTEMNAME); }
+	std::string software_name() const { return value(OPTION_SOFTWARENAME); }
 	const game_driver *system() const;
-	void set_system_name(const char *name);
+	void set_system_name(std::string name);
 
 	// core configuration options
 	bool read_config() const { return bool_value(OPTION_READCONFIG); }
 	bool write_config() const { return bool_value(OPTION_WRITECONFIG); }
 
 	// core search path options
-	const char *media_path() const { return value(OPTION_MEDIAPATH); }
-	const char *hash_path() const { return value(OPTION_HASHPATH); }
-	const char *sample_path() const { return value(OPTION_SAMPLEPATH); }
-	const char *art_path() const { return value(OPTION_ARTPATH); }
-	const char *ctrlr_path() const { return value(OPTION_CTRLRPATH); }
-	const char *ini_path() const { return value(OPTION_INIPATH); }
-	const char *font_path() const { return value(OPTION_FONTPATH); }
-	const char *cheat_path() const { return value(OPTION_CHEATPATH); }
-	const char *crosshair_path() const { return value(OPTION_CROSSHAIRPATH); }
+	std::string media_path() const { return value(OPTION_MEDIAPATH); }
+	std::string hash_path() const { return value(OPTION_HASHPATH); }
+	std::string sample_path() const { return value(OPTION_SAMPLEPATH); }
+	std::string art_path() const { return value(OPTION_ARTPATH); }
+	std::string ctrlr_path() const { return value(OPTION_CTRLRPATH); }
+	std::string ini_path() const { return value(OPTION_INIPATH); }
+	std::string font_path() const { return value(OPTION_FONTPATH); }
+	std::string cheat_path() const { return value(OPTION_CHEATPATH); }
+	std::string crosshair_path() const { return value(OPTION_CROSSHAIRPATH); }
 
 	// core directory options
-	const char *cfg_directory() const { return value(OPTION_CFG_DIRECTORY); }
-	const char *nvram_directory() const { return value(OPTION_NVRAM_DIRECTORY); }
-	const char *input_directory() const { return value(OPTION_INPUT_DIRECTORY); }
-	const char *state_directory() const { return value(OPTION_STATE_DIRECTORY); }
-	const char *snapshot_directory() const { return value(OPTION_SNAPSHOT_DIRECTORY); }
-	const char *diff_directory() const { return value(OPTION_DIFF_DIRECTORY); }
-	const char *comment_directory() const { return value(OPTION_COMMENT_DIRECTORY); }
+	std::string cfg_directory() const { return value(OPTION_CFG_DIRECTORY); }
+	std::string nvram_directory() const { return value(OPTION_NVRAM_DIRECTORY); }
+	std::string input_directory() const { return value(OPTION_INPUT_DIRECTORY); }
+	std::string state_directory() const { return value(OPTION_STATE_DIRECTORY); }
+	std::string snapshot_directory() const { return value(OPTION_SNAPSHOT_DIRECTORY); }
+	std::string diff_directory() const { return value(OPTION_DIFF_DIRECTORY); }
+	std::string comment_directory() const { return value(OPTION_COMMENT_DIRECTORY); }
 
 	// core state/playback options
-	const char *state() const { return value(OPTION_STATE); }
+	std::string state() const { return value(OPTION_STATE); }
 	bool autosave() const { return bool_value(OPTION_AUTOSAVE); }
-	const char *playback() const { return value(OPTION_PLAYBACK); }
-	const char *record() const { return value(OPTION_RECORD); }
-	const char *mng_write() const { return value(OPTION_MNGWRITE); }
-	const char *avi_write() const { return value(OPTION_AVIWRITE); }
+	std::string playback() const { return value(OPTION_PLAYBACK); }
+	std::string record() const { return value(OPTION_RECORD); }
+	std::string mng_write() const { return value(OPTION_MNGWRITE); }
+	std::string avi_write() const { return value(OPTION_AVIWRITE); }
 #ifdef MAME_DEBUG
 	bool dummy_write() const { return bool_value(OPTION_DUMMYWRITE); }
 #endif
-	const char *wav_write() const { return value(OPTION_WAVWRITE); }
-	const char *snap_name() const { return value(OPTION_SNAPNAME); }
-	const char *snap_size() const { return value(OPTION_SNAPSIZE); }
-	const char *snap_view() const { return value(OPTION_SNAPVIEW); }
+	std::string wav_write() const { return value(OPTION_WAVWRITE); }
+	std::string snap_name() const { return value(OPTION_SNAPNAME); }
+	std::string snap_size() const { return value(OPTION_SNAPSIZE); }
+	std::string snap_view() const { return value(OPTION_SNAPVIEW); }
 	bool snap_bilinear() const { return bool_value(OPTION_SNAPBILINEAR); }
-	const char *state_name() const { return value(OPTION_STATENAME); }
+	std::string state_name() const { return value(OPTION_STATENAME); }
 	bool burnin() const { return bool_value(OPTION_BURNIN); }
 
 	// core performance options
@@ -291,7 +291,7 @@ public:
 	float contrast() const { return float_value(OPTION_CONTRAST); }
 	float gamma() const { return float_value(OPTION_GAMMA); }
 	float pause_brightness() const { return float_value(OPTION_PAUSE_BRIGHTNESS); }
-	const char *effect() const { return value(OPTION_EFFECT); }
+	std::string effect() const { return value(OPTION_EFFECT); }
 
 	// core vector options
 	bool antialias() const { return bool_value(OPTION_ANTIALIAS); }
@@ -307,21 +307,21 @@ public:
 
 	// core input options
 	bool coin_lockout() const { return bool_value(OPTION_COIN_LOCKOUT); }
-	const char *ctrlr() const { return value(OPTION_CTRLR); }
+	std::string ctrlr() const { return value(OPTION_CTRLR); }
 	bool mouse() const { return bool_value(OPTION_MOUSE); }
 	bool joystick() const { return bool_value(OPTION_JOYSTICK); }
 	bool lightgun() const { return bool_value(OPTION_LIGHTGUN); }
 	bool multi_keyboard() const { return bool_value(OPTION_MULTIKEYBOARD); }
 	bool multi_mouse() const { return bool_value(OPTION_MULTIMOUSE); }
-	const char *paddle_device() const { return value(OPTION_PADDLE_DEVICE); }
-	const char *adstick_device() const { return value(OPTION_ADSTICK_DEVICE); }
-	const char *pedal_device() const { return value(OPTION_PEDAL_DEVICE); }
-	const char *dial_device() const { return value(OPTION_DIAL_DEVICE); }
-	const char *trackball_device() const { return value(OPTION_TRACKBALL_DEVICE); }
-	const char *lightgun_device() const { return value(OPTION_LIGHTGUN_DEVICE); }
-	const char *positional_device() const { return value(OPTION_POSITIONAL_DEVICE); }
-	const char *mouse_device() const { return value(OPTION_MOUSE_DEVICE); }
-	const char *joystick_map() const { return value(OPTION_JOYSTICK_MAP); }
+	std::string paddle_device() const { return value(OPTION_PADDLE_DEVICE); }
+	std::string adstick_device() const { return value(OPTION_ADSTICK_DEVICE); }
+	std::string pedal_device() const { return value(OPTION_PEDAL_DEVICE); }
+	std::string dial_device() const { return value(OPTION_DIAL_DEVICE); }
+	std::string trackball_device() const { return value(OPTION_TRACKBALL_DEVICE); }
+	std::string lightgun_device() const { return value(OPTION_LIGHTGUN_DEVICE); }
+	std::string positional_device() const { return value(OPTION_POSITIONAL_DEVICE); }
+	std::string mouse_device() const { return value(OPTION_MOUSE_DEVICE); }
+	std::string joystick_map() const { return value(OPTION_JOYSTICK_MAP); }
 	float joystick_deadzone() const { return float_value(OPTION_JOYSTICK_DEADZONE); }
 	float joystick_saturation() const { return float_value(OPTION_JOYSTICK_SATURATION); }
 	bool steadykey() const { return bool_value(OPTION_STEADYKEY); }
@@ -336,7 +336,7 @@ public:
 	bool debug() const { return bool_value(OPTION_DEBUG); }
 	bool verbose() const { return bool_value(OPTION_VERBOSE); }
 	bool oslog() const { return bool_value(OPTION_OSLOG); }
-	const char *debug_script() const { return value(OPTION_DEBUGSCRIPT); }
+	std::string debug_script() const { return value(OPTION_DEBUGSCRIPT); }
 	bool update_in_pause() const { return bool_value(OPTION_UPDATEINPAUSE); }
 
 	// core misc options
@@ -344,32 +344,32 @@ public:
 	bool drc_use_c() const { return bool_value(OPTION_DRC_USE_C); }
 	bool drc_log_uml() const { return bool_value(OPTION_DRC_LOG_UML); }
 	bool drc_log_native() const { return bool_value(OPTION_DRC_LOG_NATIVE); }
-	const char *bios() const { return value(OPTION_BIOS); }
+	std::string bios() const { return value(OPTION_BIOS); }
 	bool cheat() const { return bool_value(OPTION_CHEAT); }
 	bool skip_gameinfo() const { return bool_value(OPTION_SKIP_GAMEINFO); }
-	const char *ui_font() const { return value(OPTION_UI_FONT); }
-	const char *ram_size() const { return value(OPTION_RAMSIZE); }
+	std::string ui_font() const { return value(OPTION_UI_FONT); }
+	std::string ram_size() const { return value(OPTION_RAMSIZE); }
 
 	// core comm options
-	const char *comm_localhost() const { return value(OPTION_COMM_LOCAL_HOST); }
-	const char *comm_localport() const { return value(OPTION_COMM_LOCAL_PORT); }
-	const char *comm_remotehost() const { return value(OPTION_COMM_REMOTE_HOST); }
-	const char *comm_remoteport() const { return value(OPTION_COMM_REMOTE_PORT); }
+	std::string comm_localhost() const { return value(OPTION_COMM_LOCAL_HOST); }
+	std::string comm_localport() const { return value(OPTION_COMM_LOCAL_PORT); }
+	std::string comm_remotehost() const { return value(OPTION_COMM_REMOTE_HOST); }
+	std::string comm_remoteport() const { return value(OPTION_COMM_REMOTE_PORT); }
 
 	bool confirm_quit() const { return bool_value(OPTION_CONFIRM_QUIT); }
 	bool ui_mouse() const { return bool_value(OPTION_UI_MOUSE); }
 
-	const char *autoboot_command() const { return value(OPTION_AUTOBOOT_COMMAND); }
+	std::string autoboot_command() const { return value(OPTION_AUTOBOOT_COMMAND); }
 	int autoboot_delay() const { return int_value(OPTION_AUTOBOOT_DELAY); }
-	const char *autoboot_script() const { return value(OPTION_AUTOBOOT_SCRIPT); }
+	std::string autoboot_script() const { return value(OPTION_AUTOBOOT_SCRIPT); }
 
 	bool console() const { return bool_value(OPTION_CONSOLE); }
 
 	// FIXME: Couriersud: This should be in image_device_exit
 	void remove_device_options();
 
-	const char *main_value(std::string &buffer, const char *option) const;
-	const char *sub_value(std::string &buffer, const char *name, const char *subname) const;
+	std::string main_value(std::string &buffer, std::string option) const;
+	std::string sub_value(std::string &buffer, std::string name, std::string subname) const;
 	bool add_slot_options(bool isfirst);
 
 private:
@@ -378,7 +378,7 @@ private:
 	void update_slot_options();
 
 	// INI parsing helper
-	bool parse_one_ini(const char *basename, int priority, std::string *error_string = nullptr);
+	bool parse_one_ini(std::string basename, int priority, std::string *error_string = nullptr);
 
 	// cache frequently used options in members
 	void update_cached_options();

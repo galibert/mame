@@ -81,6 +81,7 @@
 // standard C++ includes
 #include <exception>
 #include <typeinfo>
+#include <string>
 
 
 //**************************************************************************
@@ -662,7 +663,7 @@ public:
 
 	// construct from member function with object pointer
 	template<class _FunctionClass>
-	delegate_base(typename traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object)
+	delegate_base(typename traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object)
 		: m_function(nullptr),
 			m_object(nullptr),
 			m_name(name),
@@ -675,7 +676,7 @@ public:
 
 	// construct from static function with object pointer
 	template<class _FunctionClass>
-	delegate_base(typename traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object)
+	delegate_base(typename traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object)
 		: m_function(reinterpret_cast<generic_static_func>(funcptr)),
 			m_object(nullptr),
 			m_name(name),
@@ -687,7 +688,7 @@ public:
 
 	// construct from static reference function with object reference
 	template<class _FunctionClass>
-	delegate_base(typename traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object)
+	delegate_base(typename traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object)
 		: m_function(reinterpret_cast<generic_static_func>(funcptr)),
 			m_object(nullptr),
 			m_name(name),
@@ -744,7 +745,7 @@ public:
 
 	// getters
 	bool has_object() const { return (object() != nullptr); }
-	const char *name() const { return m_name; }
+	std::string name() const { return m_name; }
 
 	// helpers
 	bool isnull() const { return (m_raw_function == nullptr && m_raw_mfp.isnull()); }
@@ -784,7 +785,7 @@ protected:
 	// internal state
 	generic_static_func         m_function;         // resolved static function pointer
 	delegate_generic_class *    m_object;           // resolved object to the post-cast object
-	const char *                m_name;             // name string
+	std::string                 m_name;             // name string
 	late_bind_func              m_latebinder;       // late binding helper
 	generic_static_func         m_raw_function;     // raw static function pointer
 	delegate_mfp                m_raw_mfp;          // raw member function pointer
@@ -812,10 +813,10 @@ public:
 	delegate() : basetype() { }
 	delegate(const basetype &src) : basetype(src) { }
 	delegate(const basetype &src, delegate_late_bind &object) : basetype(src, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #ifdef USE_STATIC_DELEGATE
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #endif
 	delegate &operator=(const basetype &src) { *static_cast<basetype *>(this) = src; return *this; }
 };
@@ -831,10 +832,10 @@ public:
 	delegate() : basetype() { }
 	delegate(const basetype &src) : basetype(src) { }
 	delegate(const basetype &src, delegate_late_bind &object) : basetype(src, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #ifdef USE_STATIC_DELEGATE
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #endif
 	delegate &operator=(const basetype &src) { *static_cast<basetype *>(this) = src; return *this; }
 };
@@ -850,10 +851,10 @@ public:
 	delegate() : basetype() { }
 	delegate(const basetype &src) : basetype(src) { }
 	delegate(const basetype &src, delegate_late_bind &object) : basetype(src, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #ifdef USE_STATIC_DELEGATE
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #endif
 	delegate &operator=(const basetype &src) { *static_cast<basetype *>(this) = src; return *this; }
 };
@@ -869,10 +870,10 @@ public:
 	delegate() : basetype() { }
 	delegate(const basetype &src) : basetype(src) { }
 	delegate(const basetype &src, delegate_late_bind &object) : basetype(src, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #ifdef USE_STATIC_DELEGATE
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #endif
 	delegate &operator=(const basetype &src) { *static_cast<basetype *>(this) = src; return *this; }
 };
@@ -888,10 +889,10 @@ public:
 	delegate() : basetype() { }
 	delegate(const basetype &src) : basetype(src) { }
 	delegate(const basetype &src, delegate_late_bind &object) : basetype(src, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #ifdef USE_STATIC_DELEGATE
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #endif
 	delegate &operator=(const basetype &src) { *static_cast<basetype *>(this) = src; return *this; }
 };
@@ -907,10 +908,10 @@ public:
 	delegate() : basetype() { }
 	delegate(const basetype &src) : basetype(src) { }
 	delegate(const basetype &src, delegate_late_bind &object) : basetype(src, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #ifdef USE_STATIC_DELEGATE
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #endif
 	delegate &operator=(const basetype &src) { *static_cast<basetype *>(this) = src; return *this; }
 };
@@ -926,10 +927,10 @@ public:
 	delegate() : basetype() { }
 	delegate(const basetype &src) : basetype(src) { }
 	delegate(const basetype &src, delegate_late_bind &object) : basetype(src, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #ifdef USE_STATIC_DELEGATE
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #endif
 	delegate &operator=(const basetype &src) { *static_cast<basetype *>(this) = src; return *this; }
 };
@@ -945,10 +946,10 @@ public:
 	delegate() : basetype() { }
 	delegate(const basetype &src) : basetype(src) { }
 	delegate(const basetype &src, delegate_late_bind &object) : basetype(src, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #ifdef USE_STATIC_DELEGATE
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #endif
 	delegate &operator=(const basetype &src) { *static_cast<basetype *>(this) = src; return *this; }
 };
@@ -964,10 +965,10 @@ public:
 	delegate() : basetype() { }
 	delegate(const basetype &src) : basetype(src) { }
 	delegate(const basetype &src, delegate_late_bind &object) : basetype(src, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #ifdef USE_STATIC_DELEGATE
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #endif
 	delegate &operator=(const basetype &src) { *static_cast<basetype *>(this) = src; return *this; }
 };
@@ -983,10 +984,10 @@ public:
 	delegate() : basetype() { }
 	delegate(const basetype &src) : basetype(src) { }
 	delegate(const basetype &src, delegate_late_bind &object) : basetype(src, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #ifdef USE_STATIC_DELEGATE
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #endif
 	delegate &operator=(const basetype &src) { *static_cast<basetype *>(this) = src; return *this; }
 };
@@ -1002,10 +1003,10 @@ public:
 	delegate() : basetype() { }
 	delegate(const basetype &src) : basetype(src) { }
 	delegate(const basetype &src, delegate_late_bind &object) : basetype(src, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #ifdef USE_STATIC_DELEGATE
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #endif
 	delegate &operator=(const basetype &src) { *static_cast<basetype *>(this) = src; return *this; }
 };
@@ -1021,10 +1022,10 @@ public:
 	delegate() : basetype() { }
 	delegate(const basetype &src) : basetype(src) { }
 	delegate(const basetype &src, delegate_late_bind &object) : basetype(src, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #ifdef USE_STATIC_DELEGATE
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #endif
 	delegate &operator=(const basetype &src) { *static_cast<basetype *>(this) = src; return *this; }
 };
@@ -1040,10 +1041,10 @@ public:
 	delegate() : basetype() { }
 	delegate(const basetype &src) : basetype(src) { }
 	delegate(const basetype &src, delegate_late_bind &object) : basetype(src, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::member_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #ifdef USE_STATIC_DELEGATE
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
-	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, const char *name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
+	template<class _FunctionClass> delegate(typename basetype::template traits<_FunctionClass>::static_ref_func_type funcptr, std::string name, _FunctionClass *object) : basetype(funcptr, name, object) { }
 #endif
 	delegate &operator=(const basetype &src) { *static_cast<basetype *>(this) = src; return *this; }
 };

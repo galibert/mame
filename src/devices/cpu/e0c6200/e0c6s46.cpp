@@ -45,7 +45,7 @@ ADDRESS_MAP_END
 
 
 // device definitions
-e0c6s46_device::e0c6s46_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+e0c6s46_device::e0c6s46_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: e0c6200_cpu_device(mconfig, E0C6S46, "E0C6S46", tag, owner, clock, ADDRESS_MAP_NAME(e0c6s46_program), ADDRESS_MAP_NAME(e0c6s46_data), "e0c6s46", __FILE__)
 	, m_vram1(*this, "vram1")
 	, m_vram2(*this, "vram2"), m_osc(0), m_svd(0), m_lcd_control(0), m_lcd_contrast(0)

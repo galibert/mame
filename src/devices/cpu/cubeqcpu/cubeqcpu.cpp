@@ -75,7 +75,7 @@ const device_type CQUESTROT = &device_creator<cquestrot_cpu_device>;
 const device_type CQUESTLIN = &device_creator<cquestlin_cpu_device>;
 
 
-cquestsnd_cpu_device::cquestsnd_cpu_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+cquestsnd_cpu_device::cquestsnd_cpu_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: cpu_device(mconfig, CQUESTSND, "Cube Quest Sound CPU", tag, owner, clock, "cquestsnd", __FILE__)
 	, m_program_config("program", ENDIANNESS_BIG, 64, 8, -3)
 	, m_dac_w(*this)
@@ -91,7 +91,7 @@ offs_t cquestsnd_cpu_device::disasm_disassemble(char *buffer, offs_t pc, const U
 }
 
 
-cquestrot_cpu_device::cquestrot_cpu_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+cquestrot_cpu_device::cquestrot_cpu_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: cpu_device(mconfig, CQUESTROT, "Cube Quest Rotate CPU", tag, owner, clock, "cquestrot", __FILE__)
 	, m_program_config("program", ENDIANNESS_BIG, 64, 9, -3)
 	, m_linedata_w(*this)
@@ -112,7 +112,7 @@ offs_t cquestrot_cpu_device::disasm_disassemble(char *buffer, offs_t pc, const U
 }
 
 
-cquestlin_cpu_device::cquestlin_cpu_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+cquestlin_cpu_device::cquestlin_cpu_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: cpu_device(mconfig, CQUESTLIN, "Cube Quest Line CPU", tag, owner, clock, "cquestlin", __FILE__)
 	, m_program_config("program", ENDIANNESS_BIG, 64, 8, -3)
 	, m_linedata_r(*this)

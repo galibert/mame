@@ -66,7 +66,7 @@ inline int atari_rle_objects_device::round_to_powerof2(int value)
 //  atari_rle_objects_device: Constructor
 //-------------------------------------------------
 
-atari_rle_objects_device::atari_rle_objects_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+atari_rle_objects_device::atari_rle_objects_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, ATARI_RLE_OBJECTS, "Atari RLE Motion Objects", tag, owner, clock, "atari_rle", __FILE__),
 		device_video_interface(mconfig, *this)
 {

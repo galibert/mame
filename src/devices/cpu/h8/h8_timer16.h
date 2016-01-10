@@ -73,8 +73,8 @@ public:
 	};
 
 
-	h8_timer16_channel_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
-	h8_timer16_channel_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source);
+	h8_timer16_channel_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
+	h8_timer16_channel_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source);
 
 	void set_info(int tgr_count, int tbr_count, const char *intc, int irq_base);
 
@@ -132,7 +132,7 @@ protected:
 
 class h8h_timer16_channel_device : public h8_timer16_channel_device {
 public:
-	h8h_timer16_channel_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	h8h_timer16_channel_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 	virtual ~h8h_timer16_channel_device();
 
 	void set_info(int tgr_count, int tbr_count, const char *intc, int irq_base);
@@ -146,7 +146,7 @@ protected:
 
 class h8s_timer16_channel_device : public h8_timer16_channel_device {
 public:
-	h8s_timer16_channel_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	h8s_timer16_channel_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 	virtual ~h8s_timer16_channel_device();
 
 	void set_info(int tgr_count, UINT8 _tier_mask, const char *intc, int irq_base,
@@ -164,7 +164,7 @@ protected:
 
 class h8_timer16_device : public device_t {
 public:
-	h8_timer16_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	h8_timer16_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 
 	void set_info(int timer_count, UINT8 default_tstr);
 

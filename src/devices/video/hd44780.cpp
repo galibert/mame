@@ -45,20 +45,20 @@ ROM_END
 //  hd44780_device - constructor
 //-------------------------------------------------
 
-hd44780_device::hd44780_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+hd44780_device::hd44780_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, HD44780, "HD44780 A00", tag, owner, clock, "hd44780_a00", __FILE__),
 	m_pixel_update_func(nullptr)
 {
 	set_charset_type(CHARSET_HD44780_A00);
 }
 
-hd44780_device::hd44780_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
+hd44780_device::hd44780_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
 	device_t(mconfig, type, name, tag, owner, clock, shortname, source),
 	m_pixel_update_func(nullptr)
 {
 }
 
-ks0066_f05_device::ks0066_f05_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+ks0066_f05_device::ks0066_f05_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	hd44780_device(mconfig, KS0066_F05, "KS0066 F05", tag, owner, clock, "ks0066_f05", __FILE__)
 {
 	set_charset_type(CHARSET_KS0066_F05);

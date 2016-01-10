@@ -71,31 +71,31 @@ machine_config_constructor wd7600_device::device_mconfig_additions() const
 	return MACHINE_CONFIG_NAME( wd7600 );
 }
 
-void wd7600_device::static_set_cputag(device_t &device, const char *tag)
+void wd7600_device::static_set_cputag(device_t &device, std::string tag)
 {
 	wd7600_device &chip = downcast<wd7600_device &>(device);
 	chip.m_cputag = tag;
 }
 
-void wd7600_device::static_set_isatag(device_t &device, const char *tag)
+void wd7600_device::static_set_isatag(device_t &device, std::string tag)
 {
 	wd7600_device &chip = downcast<wd7600_device &>(device);
 	chip.m_isatag = tag;
 }
 
-void wd7600_device::static_set_biostag(device_t &device, const char *tag)
+void wd7600_device::static_set_biostag(device_t &device, std::string tag)
 {
 	wd7600_device &chip = downcast<wd7600_device &>(device);
 	chip.m_biostag = tag;
 }
 
-void wd7600_device::static_set_keybctag(device_t &device, const char *tag)
+void wd7600_device::static_set_keybctag(device_t &device, std::string tag)
 {
 	wd7600_device &chip = downcast<wd7600_device &>(device);
 	chip.m_keybctag = tag;
 }
 
-wd7600_device::wd7600_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+wd7600_device::wd7600_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, WD7600, "WD 7600 chipset", tag, owner, clock, "wd7600", __FILE__),
 	m_read_ior(*this),
 	m_write_iow(*this),

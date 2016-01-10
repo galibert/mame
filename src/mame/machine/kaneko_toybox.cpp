@@ -53,7 +53,7 @@ mcu_subcmd  = kaneko16_mcu_ram[0x0014/2];    // sub-command parameter, happens o
 
 const device_type KANEKO_TOYBOX = &device_creator<kaneko_toybox_device>;
 
-kaneko_toybox_device::kaneko_toybox_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+kaneko_toybox_device::kaneko_toybox_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, KANEKO_TOYBOX, "Kaneko Toybox MCU", tag, owner, clock, "kaneko_toybox", __FILE__),
 		m_mcuram(*this, ":mcuram"),
 		m_gametype(GAME_NORMAL),

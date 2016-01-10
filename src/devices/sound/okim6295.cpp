@@ -86,7 +86,7 @@ ADDRESS_MAP_END
 //  okim6295_device - constructor
 //-------------------------------------------------
 
-okim6295_device::okim6295_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+okim6295_device::okim6295_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, OKIM6295, "OKI6295", tag, owner, clock, "okim6295", __FILE__),
 		device_sound_interface(mconfig, *this),
 		device_memory_interface(mconfig, *this),

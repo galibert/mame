@@ -64,7 +64,7 @@ MACHINE_CONFIG_END
 //  LIVE DEVICE
 //**************************************************************************
 
-mc68681_device::mc68681_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+mc68681_device::mc68681_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, MC68681, "MC68681 DUART", tag, owner, clock, "mc68681", __FILE__),
 	m_chanA(*this, CHANA_TAG),
 	m_chanB(*this, CHANB_TAG),
@@ -644,7 +644,7 @@ void mc68681_device::set_ISR_bits(int mask)
 
 // DUART channel class stuff
 
-mc68681_channel::mc68681_channel(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+mc68681_channel::mc68681_channel(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, MC68681_CHANNEL, "MC68681 DUART CHANNEL", tag, owner, clock, "mc68681_channel", __FILE__),
 	device_serial_interface(mconfig, *this),
 	MR1(0),

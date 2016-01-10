@@ -22,7 +22,7 @@ DEVICE_ADDRESS_MAP_START(map, 32, es1373_device)
 	AM_RANGE(0x00, 0x3f) AM_READWRITE  (reg_r,  reg_w)
 ADDRESS_MAP_END
 
-es1373_device::es1373_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+es1373_device::es1373_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: pci_device(mconfig, ES1373, "Creative Labs Ensoniq AudioPCI97 ES1373", tag, owner, clock, "es1373", __FILE__),
 		device_sound_interface(mconfig, *this), m_stream(nullptr),
 		m_eslog(nullptr), m_tempCount(0), m_timer(nullptr), m_memory_space(nullptr), m_cpu_tag(nullptr), m_cpu(nullptr),
@@ -30,7 +30,7 @@ es1373_device::es1373_device(const machine_config &mconfig, const char *tag, dev
 {
 }
 
-void es1373_device::set_irq_info(const char *tag, const int irq_num)
+void es1373_device::set_irq_info(std::string tag, const int irq_num)
 {
 	m_cpu_tag = tag;
 	m_irq_num = irq_num;

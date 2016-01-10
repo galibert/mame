@@ -89,7 +89,7 @@ const device_type PCI_BUS = &device_creator<pci_bus_device>;
 //-------------------------------------------------
 //  pci_bus_device - constructor
 //-------------------------------------------------
-pci_bus_device::pci_bus_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+pci_bus_device::pci_bus_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 		device_t(mconfig, PCI_BUS, "PCI Bus", tag, owner, clock, "pci_bus", __FILE__), m_busnum(0),
 		m_father(nullptr), m_address(0), m_devicenum(0), m_busnumber(0), m_busnumaddr(nullptr)
 {
@@ -314,7 +314,7 @@ pci_device_interface::~pci_device_interface()
 const device_type PCI_CONNECTOR = &device_creator<pci_connector>;
 
 
-pci_connector::pci_connector(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+pci_connector::pci_connector(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, PCI_CONNECTOR, "PCI device connector abstraction", tag, owner, clock, "pci_connector", __FILE__),
 	device_slot_interface(mconfig, *this)
 {

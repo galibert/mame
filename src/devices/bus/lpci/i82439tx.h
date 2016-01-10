@@ -27,10 +27,10 @@ class i82439tx_device :  public northbridge_device,
 {
 public:
 	// construction/destruction
-	i82439tx_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	i82439tx_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 
-	static void static_set_cpu(device_t &device, const char *tag) { dynamic_cast<i82439tx_device &>(device).m_cpu_tag = tag; }
-	static void static_set_region(device_t &device, const char *tag) { dynamic_cast<i82439tx_device &>(device).m_region_tag = tag; }
+	static void static_set_cpu(device_t &device, std::string tag) { dynamic_cast<i82439tx_device &>(device).m_cpu_tag = tag; }
+	static void static_set_region(device_t &device, std::string tag) { dynamic_cast<i82439tx_device &>(device).m_region_tag = tag; }
 
 	virtual UINT32 pci_read(pci_bus_device *pcibus, int function, int offset, UINT32 mem_mask) override;
 	virtual void pci_write(pci_bus_device *pcibus, int function, int offset, UINT32 data, UINT32 mem_mask) override;

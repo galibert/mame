@@ -19,7 +19,7 @@ DebuggerView::DebuggerView(const debug_view_type& type,
 	m_machine(machine)
 {
 	// I like setting the font per-view since it doesn't override the menuing fonts.
-	const char *const selectedFont(downcast<osd_options &>(m_machine->options()).debugger_font());
+	const char *const selectedFont(downcast<osd_options &>(m_machine->options()).debugger_font().c_str());
 	const float selectedFontSize(downcast<osd_options &>(m_machine->options()).debugger_font_size());
 	QFont viewFontRequest((!*selectedFont || !strcmp(selectedFont, OSDOPTVAL_AUTO)) ? "Courier New" : selectedFont);
 	viewFontRequest.setFixedPitch(true);

@@ -107,7 +107,7 @@ public:
 	// video options
 	bool centerh() const { return bool_value(SDLOPTION_CENTERH); }
 	bool centerv() const { return bool_value(SDLOPTION_CENTERV); }
-	const char *scale_mode() const { return value(SDLOPTION_SCALEMODE); }
+	std::string scale_mode() const { return value(SDLOPTION_SCALEMODE); }
 
 	// full screen options
 #ifdef SDLMAME_X11
@@ -116,22 +116,22 @@ public:
 
 	// keyboard mapping
 	bool keymap() const { return bool_value(SDLOPTION_KEYMAP); }
-	const char *keymap_file() const { return value(SDLOPTION_KEYMAP_FILE); }
+	std::string keymap_file() const { return value(SDLOPTION_KEYMAP_FILE); }
 
 	// joystick mapping
-	const char *joy_index(int index) const { std::string temp; return value(strformat(temp, "%s%d", SDLOPTION_JOYINDEX, index).c_str()); }
+	std::string joy_index(int index) const { std::string temp; return value(strformat(temp, "%s%d", SDLOPTION_JOYINDEX, index).c_str()); }
 	bool sixaxis() const { return bool_value(SDLOPTION_SIXAXIS); }
 
 #if (SDLMAME_SDL2)
-	const char *mouse_index(int index) const { std::string temp; return value(strformat(temp, "%s%d", SDLOPTION_MOUSEINDEX, index).c_str()); }
-	const char *keyboard_index(int index) const { std::string temp; return value(strformat(temp, "%s%d", SDLOPTION_KEYBINDEX, index).c_str()); }
+	std::string mouse_index(int index) const { std::string temp; return value(strformat(temp, "%s%d", SDLOPTION_MOUSEINDEX, index).c_str()); }
+	std::string keyboard_index(int index) const { std::string temp; return value(strformat(temp, "%s%d", SDLOPTION_KEYBINDEX, index).c_str()); }
 #endif
 
-	const char *video_driver() const { return value(SDLOPTION_VIDEODRIVER); }
-	const char *render_driver() const { return value(SDLOPTION_RENDERDRIVER); }
-	const char *audio_driver() const { return value(SDLOPTION_AUDIODRIVER); }
+	std::string video_driver() const { return value(SDLOPTION_VIDEODRIVER); }
+	std::string render_driver() const { return value(SDLOPTION_RENDERDRIVER); }
+	std::string audio_driver() const { return value(SDLOPTION_AUDIODRIVER); }
 #if USE_OPENGL
-	const char *gl_lib() const { return value(SDLOPTION_GL_LIB); }
+	std::string gl_lib() const { return value(SDLOPTION_GL_LIB); }
 #endif
 
 private:

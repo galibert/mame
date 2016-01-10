@@ -142,7 +142,7 @@ const device_type WD2010 = &device_creator<wd2010_device>;
 //  wd2010_device - constructor
 //-------------------------------------------------
 
-wd2010_device::wd2010_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+wd2010_device::wd2010_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 : device_t(mconfig, WD2010, "Western Digital WD2010", tag, owner, clock, "wd2010", __FILE__),
 m_out_intrq_cb(*this),
 m_out_bdrq_cb(*this),

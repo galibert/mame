@@ -71,7 +71,7 @@ DEVICE_ADDRESS_MAP_START(io_map, 32, voodoo_pci_device)
 	AM_RANGE(0x000, 0x0ff) AM_DEVREADWRITE("voodoo", voodoo_banshee_device, banshee_io_r, banshee_io_w)
 ADDRESS_MAP_END
 
-voodoo_pci_device::voodoo_pci_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+voodoo_pci_device::voodoo_pci_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: pci_device(mconfig, VOODOO_PCI, "Voodoo PCI", tag, owner, clock, "voodoo_pci", __FILE__),
 		m_voodoo(*this, "voodoo"), m_fbmem(2), m_tmumem0(0), m_tmumem1(0)
 {

@@ -5,7 +5,7 @@
 
 const device_type H83002 = &device_creator<h83002_device>;
 
-h83002_device::h83002_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+h83002_device::h83002_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	h8h_device(mconfig, H83002, "H8/3002", tag, owner, clock, "h83002", __FILE__, address_map_delegate(FUNC(h83002_device::map), this)),
 	intc(*this, "intc"),
 	adc(*this, "adc"),

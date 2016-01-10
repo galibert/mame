@@ -50,7 +50,7 @@ address_space_config::address_space_config()
  @param internal
  @param defmap
  */
-address_space_config::address_space_config(const char *name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, address_map_constructor internal, address_map_constructor defmap)
+address_space_config::address_space_config(std::string name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, address_map_constructor internal, address_map_constructor defmap)
 	: m_name(name),
 		m_endianness(endian),
 		m_databus_width(datawidth),
@@ -63,7 +63,7 @@ address_space_config::address_space_config(const char *name, endianness_t endian
 {
 }
 
-address_space_config::address_space_config(const char *name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, UINT8 logwidth, UINT8 pageshift, address_map_constructor internal, address_map_constructor defmap)
+address_space_config::address_space_config(std::string name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, UINT8 logwidth, UINT8 pageshift, address_map_constructor internal, address_map_constructor defmap)
 	: m_name(name),
 		m_endianness(endian),
 		m_databus_width(datawidth),
@@ -76,7 +76,7 @@ address_space_config::address_space_config(const char *name, endianness_t endian
 {
 }
 
-address_space_config::address_space_config(const char *name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, address_map_delegate internal, address_map_delegate defmap)
+address_space_config::address_space_config(std::string name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, address_map_delegate internal, address_map_delegate defmap)
 	: m_name(name),
 		m_endianness(endian),
 		m_databus_width(datawidth),
@@ -91,7 +91,7 @@ address_space_config::address_space_config(const char *name, endianness_t endian
 {
 }
 
-address_space_config::address_space_config(const char *name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, UINT8 logwidth, UINT8 pageshift, address_map_delegate internal, address_map_delegate defmap)
+address_space_config::address_space_config(std::string name, endianness_t endian, UINT8 datawidth, UINT8 addrwidth, INT8 addrshift, UINT8 logwidth, UINT8 pageshift, address_map_delegate internal, address_map_delegate defmap)
 	: m_name(name),
 		m_endianness(endian),
 		m_databus_width(datawidth),
@@ -144,9 +144,9 @@ void device_memory_interface::static_set_addrmap(device_t &device, address_space
 {
 	device_memory_interface *memory;
 	if (!device.interface(memory))
-		throw emu_fatalerror("MCFG_DEVICE_ADDRESS_MAP called on device '%s' with no memory interface", device.tag());
+		throw emu_fatalerror("MCFG_DEVICE_ADDRESS_MAP called on device '%s' with no memory interface", device.tag().c_str());
 	if (spacenum >= ARRAY_LENGTH(memory->m_address_map))
-		throw emu_fatalerror("MCFG_DEVICE_ADDRESS_MAP called on device '%s' with out-of-range space number %d", device.tag(), spacenum);
+		throw emu_fatalerror("MCFG_DEVICE_ADDRESS_MAP called on device '%s' with out-of-range space number %d", device.tag().c_str(), spacenum);
 	memory->m_address_map[spacenum] = map;
 }
 

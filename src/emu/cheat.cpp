@@ -102,8 +102,9 @@
 //  the format
 //-------------------------------------------------
 
-inline const char *number_and_format::format(std::string &str) const
+inline std::string number_and_format::format() const
 {
+	std::string str;
 	switch (m_format)
 	{
 		default:
@@ -123,7 +124,7 @@ inline const char *number_and_format::format(std::string &str) const
 			strprintf(str, "0x%X", (UINT32)m_value);
 			break;
 	}
-	return str.c_str();
+	return str;
 }
 
 
@@ -136,7 +137,7 @@ inline const char *number_and_format::format(std::string &str) const
 //  cheat_parameter - constructor
 //-------------------------------------------------
 
-cheat_parameter::cheat_parameter(cheat_manager &manager, symbol_table &symbols, const char *filename, xml_data_node &paramnode)
+cheat_parameter::cheat_parameter(cheat_manager &manager, symbol_table &symbols, std::string filename, xml_data_node &paramnode)
 	: m_value(0)
 {
 	// read the core attributes
@@ -149,11 +150,11 @@ cheat_parameter::cheat_parameter(cheat_manager &manager, symbol_table &symbols, 
 	{
 		// check for NULL text
 		if (itemnode->value == nullptr || itemnode->value[0] == 0)
-			throw emu_fatalerror("%s.xml(%d): item is missing text\n", filename, itemnode->line);
+			throw emu_fatalerror("%s.xml(%d): item is missing text\n", filename.c_str(), itemnode->line);
 
 		// check for non-existant value
 		if (xml_get_attribute(itemnode, "value") == nullptr)
-			throw emu_fatalerror("%s.xml(%d): item is value\n", filename, itemnode->line);
+			throw emu_fatalerror("%s.xml(%d): item is value\n", filename.c_str(), itemnode->line);
 
 		// extract the parameters
 		UINT64 value = xml_get_attribute_int(itemnode, "value", 0);
@@ -175,7 +176,7 @@ cheat_parameter::cheat_parameter(cheat_manager &manager, symbol_table &symbols, 
 //  text - return the current text for a parameter
 //-------------------------------------------------
 
-const char *cheat_parameter::text()
+std::string cheat_parameter::text()
 {
 	// are we a value cheat?
 	if (!has_itemlist())
@@ -206,15 +207,14 @@ void cheat_parameter::save(emu_file &cheatfile) const
 	cheatfile.printf("\t\t<parameter");
 
 	// if no items, just output min/max/step
-	std::string str;
 	if (!has_itemlist())
 	{
 		if (m_minval != 0)
-			cheatfile.printf(" min=\"%s\"", m_minval.format(str));
+			cheatfile.printf(" min=\"%s\"", m_minval.format().c_str());
 		if (m_maxval != 0)
-			cheatfile.printf(" max=\"%s\"", m_maxval.format(str));
+			cheatfile.printf(" max=\"%s\"", m_maxval.format().c_str());
 		if (m_stepval != 1)
-			cheatfile.printf(" step=\"%s\"", m_stepval.format(str));
+			cheatfile.printf(" step=\"%s\"", m_stepval.format().c_str());
 		cheatfile.printf("/>\n");
 	}
 
@@ -222,7 +222,7 @@ void cheat_parameter::save(emu_file &cheatfile) const
 	else
 	{
 		for (const item *curitem = m_itemlist.first(); curitem != nullptr; curitem = curitem->next())
-			cheatfile.printf("\t\t\t<item value=\"%s\">%s</item>\n", curitem->value().format(str), curitem->text());
+			cheatfile.printf("\t\t\t<item value=\"%s\">%s</item>\n", curitem->value().format().c_str(), curitem->text().c_str());
 		cheatfile.printf("\t\t</parameter>\n");
 	}
 }
@@ -316,19 +316,19 @@ bool cheat_parameter::set_next_state()
 //  cheat_script - constructor
 //-------------------------------------------------
 
-cheat_script::cheat_script(cheat_manager &manager, symbol_table &symbols, const char *filename, xml_data_node &scriptnode)
+cheat_script::cheat_script(cheat_manager &manager, symbol_table &symbols, std::string filename, xml_data_node &scriptnode)
 	: m_state(SCRIPT_STATE_RUN)
 {
 	// read the core attributes
-	const char *state = xml_get_attribute_string(&scriptnode, "state", "run");
-	if (strcmp(state, "on") == 0)
+	std::string state = xml_get_attribute_string(&scriptnode, "state", "run");
+	if (state ==  "on")
 		m_state = SCRIPT_STATE_ON;
-	else if (strcmp(state, "off") == 0)
+	else if (state == "off")
 		m_state = SCRIPT_STATE_OFF;
-	else if (strcmp(state, "change") == 0)
+	else if (state == "change")
 		m_state = SCRIPT_STATE_CHANGE;
-	else if (strcmp(state, "run") != 0)
-		throw emu_fatalerror("%s.xml(%d): invalid script state '%s'\n", filename, scriptnode.line, state);
+	else if (state != "run")
+		throw emu_fatalerror("%s.xml(%d): invalid script state '%s'\n", filename.c_str(), scriptnode.line, state.c_str());
 
 	// iterate over nodes within the script
 	for (xml_data_node *entrynode = scriptnode.child; entrynode != nullptr; entrynode = entrynode->next)
@@ -344,7 +344,7 @@ cheat_script::cheat_script(cheat_manager &manager, symbol_table &symbols, const 
 		// anything else is ignored
 		else
 		{
-			osd_printf_warning("%s.xml(%d): unknown script item '%s' will be lost if saved\n", filename, entrynode->line, entrynode->name);
+			osd_printf_warning("%s.xml(%d): unknown script item '%s' will be lost if saved\n", filename.c_str(), entrynode->line, entrynode->name);
 			continue;
 		}
 	}
@@ -398,25 +398,25 @@ void cheat_script::save(emu_file &cheatfile) const
 //  script_entry - constructor
 //-------------------------------------------------
 
-cheat_script::script_entry::script_entry(cheat_manager &manager, symbol_table &symbols, const char *filename, xml_data_node &entrynode, bool isaction)
+cheat_script::script_entry::script_entry(cheat_manager &manager, symbol_table &symbols, std::string filename, xml_data_node &entrynode, bool isaction)
 	: m_next(nullptr),
 		m_condition(&symbols),
 		m_expression(&symbols)
 {
-	const char *expression = nullptr;
+	std::string expression = nullptr;
 	try
 	{
 		// read the condition if present
 		expression = xml_get_attribute_string(&entrynode, "condition", nullptr);
-		if (expression != nullptr)
+		if (!expression.empty())
 			m_condition.parse(expression);
 
 		// if this is an action, parse the expression
 		if (isaction)
 		{
 			expression = entrynode.value;
-			if (expression == nullptr || expression[0] == 0)
-				throw emu_fatalerror("%s.xml(%d): missing expression in action tag\n", filename, entrynode.line);
+			if (expression.empty())
+				throw emu_fatalerror("%s.xml(%d): missing expression in action tag\n", filename.c_str(), entrynode.line);
 			m_expression.parse(expression);
 		}
 
@@ -424,21 +424,21 @@ cheat_script::script_entry::script_entry(cheat_manager &manager, symbol_table &s
 		else
 		{
 			// extract format
-			const char *format = xml_get_attribute_string(&entrynode, "format", nullptr);
-			if (format == nullptr || format[0] == 0)
-				throw emu_fatalerror("%s.xml(%d): missing format in output tag\n", filename, entrynode.line);
-			m_format.assign(format);
+			std::string format = xml_get_attribute_string(&entrynode, "format", nullptr);
+			if (format.empty())
+				throw emu_fatalerror("%s.xml(%d): missing format in output tag\n", filename.c_str(), entrynode.line);
+			m_format = format;
 
 			// extract other attributes
 			m_line = xml_get_attribute_int(&entrynode, "line", 0);
 			m_justify = JUSTIFY_LEFT;
-			const char *align = xml_get_attribute_string(&entrynode, "align", "left");
-			if (strcmp(align, "center") == 0)
+			std::string align = xml_get_attribute_string(&entrynode, "align", "left");
+			if (align == "center")
 				m_justify = JUSTIFY_CENTER;
-			else if (strcmp(align, "right") == 0)
+			else if (align == "right")
 				m_justify = JUSTIFY_RIGHT;
-			else if (strcmp(align, "left") != 0)
-				throw emu_fatalerror("%s.xml(%d): invalid alignment '%s' specified\n", filename, entrynode.line, align);
+			else if (align == "left")
+				throw emu_fatalerror("%s.xml(%d): invalid alignment '%s' specified\n", filename.c_str(), entrynode.line, align.c_str());
 
 			// then parse arguments
 			int totalargs = 0;
@@ -449,7 +449,7 @@ cheat_script::script_entry::script_entry(cheat_manager &manager, symbol_table &s
 				// verify we didn't overrun the argument count
 				totalargs += curarg.count();
 				if (totalargs > MAX_ARGUMENTS)
-					throw emu_fatalerror("%s.xml(%d): too many arguments (found %d, max is %d)\n", filename, argnode->line, totalargs, MAX_ARGUMENTS);
+					throw emu_fatalerror("%s.xml(%d): too many arguments (found %d, max is %d)\n", filename.c_str(), argnode->line, totalargs, MAX_ARGUMENTS);
 			}
 
 			// validate the format against the arguments
@@ -458,7 +458,7 @@ cheat_script::script_entry::script_entry(cheat_manager &manager, symbol_table &s
 	}
 	catch (expression_error &err)
 	{
-		throw emu_fatalerror("%s.xml(%d): error parsing cheat expression \"%s\" (%s)\n", filename, entrynode.line, expression, err.code_string());
+		throw emu_fatalerror("%s.xml(%d): error parsing cheat expression \"%s\" (%s)\n", filename.c_str(), entrynode.line, expression.c_str(), err.code_string().c_str());
 	}
 }
 
@@ -480,7 +480,7 @@ void cheat_script::script_entry::execute(cheat_manager &manager, UINT64 &arginde
 		}
 		catch (expression_error &err)
 		{
-			osd_printf_warning("Error executing conditional expression \"%s\": %s\n", m_condition.original_string(), err.code_string());
+			osd_printf_warning("Error executing conditional expression \"%s\": %s\n", m_condition.original_string().c_str(), err.code_string().c_str());
 			return;
 		}
 	}
@@ -494,7 +494,7 @@ void cheat_script::script_entry::execute(cheat_manager &manager, UINT64 &arginde
 		}
 		catch (expression_error &err)
 		{
-			osd_printf_warning("Error executing expression \"%s\": %s\n", m_expression.original_string(), err.code_string());
+			osd_printf_warning("Error executing expression \"%s\": %s\n", m_expression.original_string().c_str(), err.code_string().c_str());
 		}
 	}
 
@@ -527,15 +527,13 @@ void cheat_script::script_entry::execute(cheat_manager &manager, UINT64 &arginde
 
 void cheat_script::script_entry::save(emu_file &cheatfile) const
 {
-	std::string tempstring;
-
 	// output an action
 	if (m_format.empty())
 	{
 		cheatfile.printf("\t\t\t<action");
 		if (!m_condition.is_empty())
-			cheatfile.printf(" condition=\"%s\"", cheat_manager::quote_expression(tempstring, m_condition));
-		cheatfile.printf(">%s</action>\n", cheat_manager::quote_expression(tempstring, m_expression));
+			cheatfile.printf(" condition=\"%s\"", cheat_manager::quote_expression(m_condition).c_str());
+		cheatfile.printf(">%s</action>\n", cheat_manager::quote_expression(m_expression).c_str());
 	}
 
 	// output an output
@@ -543,7 +541,7 @@ void cheat_script::script_entry::save(emu_file &cheatfile) const
 	{
 		cheatfile.printf("\t\t\t<output format=\"%s\"", m_format.c_str());
 		if (!m_condition.is_empty())
-			cheatfile.printf(" condition=\"%s\"", cheat_manager::quote_expression(tempstring, m_condition));
+			cheatfile.printf(" condition=\"%s\"", cheat_manager::quote_expression(m_condition).c_str());
 		if (m_line != 0)
 			cheatfile.printf(" line=\"%d\"", m_line);
 		if (m_justify == JUSTIFY_CENTER)
@@ -570,7 +568,7 @@ void cheat_script::script_entry::save(emu_file &cheatfile) const
 //  has the correct number and type of arguments
 //-------------------------------------------------
 
-void cheat_script::script_entry::validate_format(const char *filename, int line)
+void cheat_script::script_entry::validate_format(std::string filename, int line)
 {
 	// first count arguments
 	int argsprovided = 0;
@@ -578,29 +576,29 @@ void cheat_script::script_entry::validate_format(const char *filename, int line)
 		argsprovided += curarg->count();
 
 	// now scan the string for valid argument usage
-	const char *p = strchr(m_format.c_str(), '%');
+	auto p = m_format.find('%');
 	int argscounted = 0;
-	while (p != nullptr)
+	while (p != std::string::npos)
 	{
 		// skip past any valid attributes
 		p++;
-		while (strchr("lh0123456789.-+ #", *p) != nullptr)
+		while (strchr("lh0123456789.-+ #", m_format[p]) != nullptr)
 			p++;
 
 		// look for a valid type
-		if (strchr("cdiouxX", *p) == nullptr)
-			throw emu_fatalerror("%s.xml(%d): invalid format specification \"%s\"\n", filename, line, m_format.c_str());
+		if (strchr("cdiouxX", m_format[p]) == nullptr)
+			throw emu_fatalerror("%s.xml(%d): invalid format specification \"%s\"\n", filename.c_str(), line, m_format.c_str());
 		argscounted++;
 
 		// look for the next one
-		p = strchr(p, '%');
+		p = m_format.find('%', p);
 	}
 
 	// did we match?
 	if (argscounted < argsprovided)
-		throw emu_fatalerror("%s.xml(%d): too many arguments provided (%d) for format \"%s\"\n", filename, line, argsprovided, m_format.c_str());
+		throw emu_fatalerror("%s.xml(%d): too many arguments provided (%d) for format \"%s\"\n", filename.c_str(), line, argsprovided, m_format.c_str());
 	if (argscounted > argsprovided)
-		throw emu_fatalerror("%s.xml(%d): not enough arguments provided (%d) for format \"%s\"\n", filename, line, argsprovided, m_format.c_str());
+		throw emu_fatalerror("%s.xml(%d): not enough arguments provided (%d) for format \"%s\"\n", filename.c_str(), line, argsprovided, m_format.c_str());
 }
 
 
@@ -608,7 +606,7 @@ void cheat_script::script_entry::validate_format(const char *filename, int line)
 //  output_argument - constructor
 //-------------------------------------------------
 
-cheat_script::script_entry::output_argument::output_argument(cheat_manager &manager, symbol_table &symbols, const char *filename, xml_data_node &argnode)
+cheat_script::script_entry::output_argument::output_argument(cheat_manager &manager, symbol_table &symbols, std::string filename, xml_data_node &argnode)
 	: m_next(nullptr),
 		m_expression(&symbols),
 		m_count(0)
@@ -617,9 +615,9 @@ cheat_script::script_entry::output_argument::output_argument(cheat_manager &mana
 	m_count = xml_get_attribute_int(&argnode, "count", 1);
 
 	// read the expression
-	const char *expression = argnode.value;
-	if (expression == nullptr || expression[0] == 0)
-		throw emu_fatalerror("%s.xml(%d): missing expression in argument tag\n", filename, argnode.line);
+	std::string expression = argnode.value;
+	if (expression.empty())
+		throw emu_fatalerror("%s.xml(%d): missing expression in argument tag\n", filename.c_str(), argnode.line);
 
 	// parse it
 	try
@@ -628,7 +626,7 @@ cheat_script::script_entry::output_argument::output_argument(cheat_manager &mana
 	}
 	catch (expression_error &err)
 	{
-		throw emu_fatalerror("%s.xml(%d): error parsing cheat expression \"%s\" (%s)\n", filename, argnode.line, expression, err.code_string());
+		throw emu_fatalerror("%s.xml(%d): error parsing cheat expression \"%s\" (%s)\n", filename.c_str(), argnode.line, expression.c_str(), err.code_string().c_str());
 	}
 }
 
@@ -648,7 +646,7 @@ int cheat_script::script_entry::output_argument::values(UINT64 &argindex, UINT64
 		}
 		catch (expression_error &err)
 		{
-			osd_printf_warning("Error executing argument expression \"%s\": %s\n", m_expression.original_string(), err.code_string());
+			osd_printf_warning("Error executing argument expression \"%s\": %s\n", m_expression.original_string().c_str(), err.code_string().c_str());
 		}
 	}
 	return m_count;
@@ -661,12 +659,10 @@ int cheat_script::script_entry::output_argument::values(UINT64 &argindex, UINT64
 
 void cheat_script::script_entry::output_argument::save(emu_file &cheatfile) const
 {
-	std::string tempstring;
-
 	cheatfile.printf("\t\t\t\t<argument");
 	if (m_count != 1)
 		cheatfile.printf(" count=\"%d\"", (int)m_count);
-	cheatfile.printf(">%s</argument>\n", cheat_manager::quote_expression(tempstring, m_expression));
+	cheatfile.printf(">%s</argument>\n", cheat_manager::quote_expression(m_expression).c_str());
 }
 
 
@@ -679,7 +675,7 @@ void cheat_script::script_entry::output_argument::save(emu_file &cheatfile) cons
 //  cheat_entry - constructor
 //-------------------------------------------------
 
-cheat_entry::cheat_entry(cheat_manager &manager, symbol_table &globaltable, const char *filename, xml_data_node &cheatnode)
+cheat_entry::cheat_entry(cheat_manager &manager, symbol_table &globaltable, std::string filename, xml_data_node &cheatnode)
 	: m_manager(manager),
 		m_next(nullptr),
 		m_symbols(&manager.machine(), &globaltable),
@@ -693,15 +689,15 @@ cheat_entry::cheat_entry(cheat_manager &manager, symbol_table &globaltable, cons
 		// pull the variable count out ahead of things
 		int tempcount = xml_get_attribute_int(&cheatnode, "tempvariables", DEFAULT_TEMP_VARIABLES);
 		if (tempcount < 1)
-			throw emu_fatalerror("%s.xml(%d): invalid tempvariables attribute (%d)\n", filename, cheatnode.line, tempcount);
+			throw emu_fatalerror("%s.xml(%d): invalid tempvariables attribute (%d)\n", filename.c_str(), cheatnode.line, tempcount);
 
 		// allocate memory for the cheat
 		m_numtemp = tempcount;
 
 		// get the description
-		const char *description = xml_get_attribute_string(&cheatnode, "desc", nullptr);
-		if (description == nullptr || description[0] == 0)
-			throw emu_fatalerror("%s.xml(%d): empty or missing desc attribute on cheat\n", filename, cheatnode.line);
+		std::string description = xml_get_attribute_string(&cheatnode, "desc", "");
+		if (description.empty())
+			throw emu_fatalerror("%s.xml(%d): empty or missing desc attribute on cheat\n", filename.c_str(), cheatnode.line);
 		m_description = description;
 
 		// create the symbol table
@@ -723,7 +719,7 @@ cheat_entry::cheat_entry(cheat_manager &manager, symbol_table &globaltable, cons
 			// only one comment is kept
 			commentnode = xml_get_sibling(commentnode->next, "comment");
 			if (commentnode != nullptr)
-				osd_printf_warning("%s.xml(%d): only one comment node is retained; ignoring additional nodes\n", filename, commentnode->line);
+				osd_printf_warning("%s.xml(%d): only one comment node is retained; ignoring additional nodes\n", filename.c_str(), commentnode->line);
 		}
 
 		// read the first parameter node
@@ -736,7 +732,7 @@ cheat_entry::cheat_entry(cheat_manager &manager, symbol_table &globaltable, cons
 			// only one parameter allowed
 			paramnode = xml_get_sibling(paramnode->next, "parameter");
 			if (paramnode != nullptr)
-				osd_printf_warning("%s.xml(%d): only one parameter node allowed; ignoring additional nodes\n", filename, paramnode->line);
+				osd_printf_warning("%s.xml(%d): only one parameter node allowed; ignoring additional nodes\n", filename.c_str(), paramnode->line);
 		}
 
 		// read the script nodes
@@ -748,7 +744,7 @@ cheat_entry::cheat_entry(cheat_manager &manager, symbol_table &globaltable, cons
 			// if we have a script already for this slot, it is an error
 			std::unique_ptr<cheat_script> &slot = script_for_state(curscript->state());
 			if (slot != nullptr)
-				osd_printf_warning("%s.xml(%d): only one on script allowed; ignoring additional scripts\n", filename, scriptnode->line);
+				osd_printf_warning("%s.xml(%d): only one on script allowed; ignoring additional scripts\n", filename.c_str(), scriptnode->line);
 			else
 				slot.reset(curscript);
 		}
@@ -1142,9 +1138,7 @@ void cheat_manager::reload()
 			// have the same shortname
 			if (image->software_entry() != nullptr)
 			{
-				std::string filename;
-				strprintf(filename, "%s%s%s", image->software_list_name(), PATH_SEPARATOR, image->basename());
-				load_cheats(filename.c_str());
+				load_cheats(image->software_list_name() + PATH_SEPARATOR + image->basename());
 				break;
 			}
 			// else we are loading outside the software list, try to load machine_basename/crc32.xml
@@ -1155,7 +1149,7 @@ void cheat_manager::reload()
 				{
 					std::string filename;
 					strprintf(filename, "%s%s%08X", machine().basename(), PATH_SEPARATOR, crc);
-					load_cheats(filename.c_str());
+					load_cheats(filename);
 					break;
 				}
 			}
@@ -1176,7 +1170,7 @@ void cheat_manager::reload()
 //  memory to the given filename
 //-------------------------------------------------
 
-bool cheat_manager::save_all(const char *filename)
+bool cheat_manager::save_all(std::string filename)
 {
 	// open the file with the proper name
 	emu_file cheatfile(machine().options().cheat_path(), OPEN_FLAG_WRITE | OPEN_FLAG_CREATE | OPEN_FLAG_CREATE_PATHS);
@@ -1267,9 +1261,9 @@ std::string &cheat_manager::get_output_astring(int row, int justify)
 //  document
 //-------------------------------------------------
 
-const char *cheat_manager::quote_expression(std::string &str, const parsed_expression &expression)
+std::string cheat_manager::quote_expression(const parsed_expression &expression)
 {
-	str.assign(expression.original_string());
+	std::string str = expression.original_string();
 
 	strreplace(str, " && ", " and ");
 	strreplace(str, " &&", " and ");
@@ -1296,7 +1290,7 @@ const char *cheat_manager::quote_expression(std::string &str, const parsed_expre
 	strreplace(str, "<< ", " lshift ");
 	strreplace(str, "<<", " lshift ");
 
-	return str.c_str();
+	return str;
 }
 
 
@@ -1367,7 +1361,7 @@ void cheat_manager::frame_update()
 //  and create the cheat entry list
 //-------------------------------------------------
 
-void cheat_manager::load_cheats(const char *filename)
+void cheat_manager::load_cheats(std::string filename)
 {
 	xml_data_node *rootnode = nullptr;
 	emu_file cheatfile(machine().options().cheat_path(), OPEN_FLAG_READ);
@@ -1379,7 +1373,7 @@ void cheat_manager::load_cheats(const char *filename)
 		// loop over all instrances of the files found in our search paths
 		while (filerr == FILERR_NONE)
 		{
-			osd_printf_verbose("Loading cheats file from %s\n", cheatfile.fullpath());
+			osd_printf_verbose("Loading cheats file from %s\n", cheatfile.fullpath().c_str());
 
 			// read the XML file into internal data structures
 			xml_parse_options options = { nullptr };
@@ -1389,17 +1383,17 @@ void cheat_manager::load_cheats(const char *filename)
 
 			// if unable to parse the file, just bail
 			if (rootnode == nullptr)
-				throw emu_fatalerror("%s.xml(%d): error parsing XML (%s)\n", filename, error.error_line, error.error_message);
+				throw emu_fatalerror("%s.xml(%d): error parsing XML (%s)\n", filename.c_str(), error.error_line, error.error_message);
 
 			// find the layout node
 			xml_data_node *mamecheatnode = xml_get_sibling(rootnode->child, "mamecheat");
 			if (mamecheatnode == nullptr)
-				throw emu_fatalerror("%s.xml: missing mamecheatnode node", filename);
+				throw emu_fatalerror("%s.xml: missing mamecheatnode node", filename.c_str());
 
 			// validate the config data version
 			int version = xml_get_attribute_int(mamecheatnode, "version", 0);
 			if (version != CHEAT_VERSION)
-				throw emu_fatalerror("%s.xml(%d): Invalid cheat XML file: unsupported version", filename, mamecheatnode->line);
+				throw emu_fatalerror("%s.xml(%d): Invalid cheat XML file: unsupported version", filename.c_str(), mamecheatnode->line);
 
 			// parse all the elements
 			for (xml_data_node *cheatnode = xml_get_sibling(mamecheatnode->child, "cheat"); cheatnode != nullptr; cheatnode = xml_get_sibling(cheatnode->next, "cheat"))
@@ -1411,9 +1405,9 @@ void cheat_manager::load_cheats(const char *filename)
 				cheat_entry *scannode = nullptr;
 				if (REMOVE_DUPLICATE_CHEATS)
 					for (scannode = m_cheatlist.first(); scannode != nullptr; scannode = scannode->next())
-						if (strcmp(scannode->description(), curcheat->description()) == 0)
+						if (scannode->description() == curcheat->description())
 						{
-							osd_printf_verbose("Ignoring duplicate cheat '%s' from file %s\n", curcheat->description(), cheatfile.fullpath());
+							osd_printf_verbose("Ignoring duplicate cheat '%s' from file %s\n", curcheat->description().c_str(), cheatfile.fullpath().c_str());
 							break;
 						}
 

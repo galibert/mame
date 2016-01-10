@@ -25,8 +25,7 @@
 
 media_auditor::media_auditor(const driver_enumerator &enumerator)
 	: m_enumerator(enumerator),
-		m_validation(AUDIT_VALIDATE_FULL),
-		m_searchpath(nullptr)
+		m_validation(AUDIT_VALIDATE_FULL)
 {
 }
 
@@ -46,7 +45,7 @@ media_auditor::summary media_auditor::audit_media(const char *validation)
 
 // temporary hack until romload is update: get the driver path and support it for
 // all searches
-const char *driverpath = m_enumerator.config().root_device().searchpath();
+std::string driverpath = m_enumerator.config().root_device().searchpath();
 
 	int found = 0;
 	int required = 0;
@@ -65,13 +64,13 @@ const char *driverpath = m_enumerator.config().root_device().searchpath();
 		{
 // temporary hack: add the driver path & region name
 std::string combinedpath = std::string(device->searchpath()).append(";").append(driverpath);
-if (device->shortname())
-	combinedpath.append(";").append(device->shortname());
-m_searchpath = combinedpath.c_str();
+if (!device->shortname().empty())
+	combinedpath += ';' + device->shortname();
+m_searchpath = combinedpath;
 
 			for (const rom_entry *rom = rom_first_file(region); rom; rom = rom_next_file(rom))
 			{
-				const char *name = ROM_GETNAME(rom);
+				std::string name = ROM_GETNAME(rom);
 				hash_collection hashes(ROM_GETHASHDATA(rom));
 				device_t *shared_device = find_shared_device(*device, name, hashes, ROM_GETLENGTH(rom));
 
@@ -180,7 +179,7 @@ media_auditor::summary media_auditor::audit_device(device_t *device, const char 
 //-------------------------------------------------
 //  audit_software
 //-------------------------------------------------
-media_auditor::summary media_auditor::audit_software(const char *list_name, software_info *swinfo, const char *validation)
+media_auditor::summary media_auditor::audit_software(std::string list_name, software_info *swinfo, const char *validation)
 {
 	// start fresh
 	m_record_list.reset();
@@ -188,21 +187,14 @@ media_auditor::summary media_auditor::audit_software(const char *list_name, soft
 	// store validation for later
 	m_validation = validation;
 
-	std::string combinedpath(swinfo->shortname());
-	combinedpath.append(";");
-	combinedpath.append(list_name);
-	combinedpath.append(PATH_SEPARATOR);
-	combinedpath.append(swinfo->shortname());
-	std::string locationtag(list_name);
-	locationtag.append("%");
-	locationtag.append(swinfo->shortname());
-	locationtag.append("%");
-	if (swinfo->parentname() != nullptr)
+	std::string combinedpath = swinfo->shortname() + ';' + list_name + PATH_SEPARATOR + swinfo->shortname();
+	std::string locationtag = list_name + '%' + swinfo->shortname() + '%';
+	if (!swinfo->parentname().empty())
 	{
-		locationtag.append(swinfo->parentname());
-		combinedpath.append(";").append(swinfo->parentname()).append(";").append(list_name).append(PATH_SEPARATOR).append(swinfo->parentname());
+		locationtag += swinfo->parentname();
+		combinedpath += ';' + swinfo->parentname() + ';' + list_name + PATH_SEPARATOR + swinfo->parentname();
 	}
-	m_searchpath = combinedpath.c_str();
+	m_searchpath = combinedpath;
 
 	int found = 0;
 	int required = 0;
@@ -233,7 +225,7 @@ media_auditor::summary media_auditor::audit_software(const char *list_name, soft
 				// audit a disk
 				else if (ROMREGION_ISDISKDATA(region))
 				{
-					record = audit_one_disk(rom, locationtag.c_str());
+					record = audit_one_disk(rom, locationtag);
 				}
 
 				// count the number of files that are found.
@@ -279,7 +271,7 @@ media_auditor::summary media_auditor::audit_samples()
 		// add the alternate path if present
 		samples_iterator iter(*device);
 		if (iter.altbasename() != nullptr)
-			searchpath.append(";").append(iter.altbasename());
+			searchpath += ';' + iter.altbasename();
 
 		// iterate over samples in this entry
 		for (const char *samplename = iter.first(); samplename != nullptr; samplename = iter.next())
@@ -291,14 +283,14 @@ media_auditor::summary media_auditor::audit_samples()
 
 			// look for the files
 			emu_file file(m_enumerator.options().sample_path(), OPEN_FLAG_READ | OPEN_FLAG_NO_PRELOAD);
-			path_iterator path(searchpath.c_str());
+			path_iterator path(searchpath);
 			std::string curpath;
 			while (path.next(curpath, samplename))
 			{
 				// attempt to access the file (.flac) or (.wav)
-				file_error filerr = file.open(curpath.c_str(), ".flac");
+				file_error filerr = file.open(curpath, ".flac");
 				if (filerr != FILERR_NONE)
-					filerr = file.open(curpath.c_str(), ".wav");
+					filerr = file.open(curpath, ".wav");
 
 				if (filerr == FILERR_NONE)
 				{
@@ -327,7 +319,7 @@ media_auditor::summary media_auditor::audit_samples()
 //  string format
 //-------------------------------------------------
 
-media_auditor::summary media_auditor::summarize(const char *name, std::string *output)
+media_auditor::summary media_auditor::summarize(std::string name, std::string *output)
 {
 	if (m_record_list.count() == 0)
 	{
@@ -347,7 +339,7 @@ media_auditor::summary media_auditor::summarize(const char *name, std::string *o
 		// output the game name, file name, and length (if applicable)
 		if (output != nullptr)
 		{
-			strcatprintf(*output,"%-12s: %s", name, record->name());
+			strcatprintf(*output,"%-12s: %s", name.c_str(), record->name().c_str());
 			if (record->expected_length() > 0)
 				strcatprintf(*output," (%" I64FMT "d bytes)", record->expected_length());
 			strcatprintf(*output," - ");
@@ -369,10 +361,9 @@ media_auditor::summary media_auditor::summarize(const char *name, std::string *o
 			case audit_record::SUBSTATUS_FOUND_BAD_CHECKSUM:
 				if (output != nullptr)
 				{
-					std::string tempstr;
 					strcatprintf(*output,"INCORRECT CHECKSUM:\n");
-					strcatprintf(*output,"EXPECTED: %s\n", record->expected_hashes().macro_string(tempstr));
-					strcatprintf(*output,"   FOUND: %s\n", record->actual_hashes().macro_string(tempstr));
+					strcatprintf(*output,"EXPECTED: %s\n", record->expected_hashes().macro_string().c_str());
+					strcatprintf(*output,"   FOUND: %s\n", record->actual_hashes().macro_string().c_str());
 				}
 				break;
 
@@ -387,7 +378,7 @@ media_auditor::summary media_auditor::summarize(const char *name, std::string *o
 					if (shared_device == nullptr)
 						strcatprintf(*output,"NOT FOUND\n");
 					else
-						strcatprintf(*output,"NOT FOUND (%s)\n", shared_device->shortname());
+						strcatprintf(*output,"NOT FOUND (%s)\n", shared_device->shortname().c_str());
 				}
 				best_new_status = NOTFOUND;
 				break;
@@ -436,9 +427,9 @@ audit_record *media_auditor::audit_one_rom(const rom_entry *rom)
 		// open the file if we can
 		file_error filerr;
 		if (has_crc)
-			filerr = file.open(curpath.c_str(), crc);
+			filerr = file.open(curpath, crc);
 		else
-			filerr = file.open(curpath.c_str());
+			filerr = file.open(curpath);
 
 		// if it worked, get the actual length and hashes, then stop
 		if (filerr == FILERR_NONE)
@@ -458,7 +449,7 @@ audit_record *media_auditor::audit_one_rom(const rom_entry *rom)
 //  audit_one_disk - validate a single disk entry
 //-------------------------------------------------
 
-audit_record *media_auditor::audit_one_disk(const rom_entry *rom, const char *locationtag)
+audit_record *media_auditor::audit_one_disk(const rom_entry *rom, std::string locationtag)
 {
 	// allocate and append a new record
 	audit_record &record = m_record_list.append(*global_alloc(audit_record(*rom, audit_record::MEDIA_DISK)));
@@ -540,7 +531,7 @@ void media_auditor::compute_status(audit_record &record, const rom_entry *rom, b
 //  shares a media entry with the same hashes
 //-------------------------------------------------
 
-device_t *media_auditor::find_shared_device(device_t &device, const char *name, const hash_collection &romhashes, UINT64 romlength)
+device_t *media_auditor::find_shared_device(device_t &device, std::string name, const hash_collection &romhashes, UINT64 romlength)
 {
 	bool dumped = !romhashes.flag(hash_collection::FLAG_NO_DUMP);
 
@@ -596,7 +587,7 @@ audit_record::audit_record(const rom_entry &media, media_type type)
 	m_exphashes.from_internal_string(ROM_GETHASHDATA(&media));
 }
 
-audit_record::audit_record(const char *name, media_type type)
+audit_record::audit_record(std::string name, media_type type)
 	: m_next(nullptr),
 		m_type(type),
 		m_status(STATUS_ERROR),

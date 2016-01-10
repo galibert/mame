@@ -303,7 +303,7 @@ const device_type ISA16_3C505 = &device_creator<threecom3c505_device> ;
 // threecom3c505_device - constructor
 //-------------------------------------------------
 
-threecom3c505_device::threecom3c505_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+threecom3c505_device::threecom3c505_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, ISA16_3C505, "3Com 3C505 Network Adaptor", tag, owner, clock, "3c505", __FILE__),
 	device_network_interface(mconfig, *this, 10.0f),
 	device_isa16_card_interface(mconfig, *this),
@@ -313,7 +313,7 @@ threecom3c505_device::threecom3c505_device(const machine_config &mconfig, const 
 {
 }
 
-threecom3c505_device::threecom3c505_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, UINT32 clock)
+threecom3c505_device::threecom3c505_device(const machine_config &mconfig, device_type type, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, type, "3Com 3C505 Network Adaptor", tag, owner, clock, "3c505", __FILE__),
 	device_network_interface(mconfig, *this, 10.0f),
 	device_isa16_card_interface(mconfig, *this),

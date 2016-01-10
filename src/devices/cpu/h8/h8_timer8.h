@@ -35,8 +35,8 @@ public:
 		DIV
 	};
 
-	h8_timer8_channel_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
-	h8_timer8_channel_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source);
+	h8_timer8_channel_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
+	h8_timer8_channel_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source);
 
 	void set_info(const char *intc, int irq_ca, int irq_cb, int irq_v, int div1, int div2, int div3, int div4, int div5, int div6);
 
@@ -101,7 +101,7 @@ protected:
 
 class h8h_timer8_channel_device : public h8_timer8_channel_device {
 public:
-	h8h_timer8_channel_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	h8h_timer8_channel_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 	virtual ~h8h_timer8_channel_device();
 
 	void set_info(const char *intc, int irq_ca, int irq_cb, int irq_v, const char *chain_tag, int chain_type, bool has_adte, bool has_ice);

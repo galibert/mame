@@ -13,7 +13,7 @@
 const device_type MSX_SLOT_SONY08 = &device_creator<msx_slot_sony08_device>;
 
 
-msx_slot_sony08_device::msx_slot_sony08_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+msx_slot_sony08_device::msx_slot_sony08_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, MSX_SLOT_SONY08, "MSX Internal SONY08", tag, owner, clock, "msx_slot_sony08", __FILE__)
 	, msx_internal_slot_interface()
 	, m_nvram(*this, "nvram")

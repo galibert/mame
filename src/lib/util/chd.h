@@ -327,13 +327,13 @@ public:
 	void set_parent_sha1(sha1_t parent);
 
 	// file create
-	chd_error create(const char *filename, UINT64 logicalbytes, UINT32 hunkbytes, UINT32 unitbytes, chd_codec_type compression[4]);
+	chd_error create(std::string filename, UINT64 logicalbytes, UINT32 hunkbytes, UINT32 unitbytes, chd_codec_type compression[4]);
 	chd_error create(core_file &file, UINT64 logicalbytes, UINT32 hunkbytes, UINT32 unitbytes, chd_codec_type compression[4]);
-	chd_error create(const char *filename, UINT64 logicalbytes, UINT32 hunkbytes, chd_codec_type compression[4], chd_file &parent);
+	chd_error create(std::string filename, UINT64 logicalbytes, UINT32 hunkbytes, chd_codec_type compression[4], chd_file &parent);
 	chd_error create(core_file &file, UINT64 logicalbytes, UINT32 hunkbytes, chd_codec_type compression[4], chd_file &parent);
 
 	// file open
-	chd_error open(const char *filename, bool writeable = false, chd_file *parent = nullptr);
+	chd_error open(std::string filename, bool writeable = false, chd_file *parent = nullptr);
 	chd_error open(core_file &file, bool writeable = false, chd_file *parent = nullptr);
 
 	// file close

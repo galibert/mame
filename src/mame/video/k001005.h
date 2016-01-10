@@ -103,10 +103,10 @@ class k001005_device : public device_t,
 								public device_video_interface
 {
 public:
-	k001005_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	k001005_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 	~k001005_device() {}
 
-	static void set_texel_chip(device_t &device, const char *tag);
+	static void set_texel_chip(device_t &device, std::string tag);
 
 	void draw(bitmap_rgb32 &bitmap, const rectangle &cliprect);
 	void swap_buffers();

@@ -81,7 +81,7 @@ class timer_device : public device_t
 {
 public:
 	// construction/destruction
-	timer_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	timer_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 
 	// inline configuration helpers
 	static void static_configure_generic(device_t &device, timer_device_expired_delegate callback);

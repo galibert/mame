@@ -95,7 +95,7 @@ inline void hd61830_device::writebyte(offs_t address, UINT8 data)
 //  hd61830_device - constructor
 //-------------------------------------------------
 
-hd61830_device::hd61830_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+hd61830_device::hd61830_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, HD61830, "HD61830 LCDC", tag, owner, clock, "hd61830", __FILE__),
 	device_memory_interface(mconfig, *this),
 	device_video_interface(mconfig, *this),

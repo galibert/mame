@@ -5,7 +5,7 @@
 const device_type NSCSI_BUS = &device_creator<nscsi_bus_device>;
 const device_type NSCSI_CONNECTOR = &device_creator<nscsi_connector>;
 
-nscsi_bus_device::nscsi_bus_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+nscsi_bus_device::nscsi_bus_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, NSCSI_BUS, "NSCSI Bus", tag, owner, clock, "nscsi_bus", __FILE__), data(0), ctrl(0)
 {
 	devcnt = 0;
@@ -132,7 +132,7 @@ void nscsi_bus_device::device_config_complete()
 }
 
 
-nscsi_connector::nscsi_connector(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+nscsi_connector::nscsi_connector(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, NSCSI_CONNECTOR, "NSCSI Connector Abstraction", tag, owner, clock, "nscsi_connector", __FILE__),
 	device_slot_interface(mconfig, *this)
 {
@@ -151,7 +151,7 @@ nscsi_device *nscsi_connector::get_device()
 	return dynamic_cast<nscsi_device *>(get_card_device());
 }
 
-nscsi_device::nscsi_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
+nscsi_device::nscsi_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
 	device_t(mconfig, type, name, tag, owner, clock, shortname, source),
 	device_slot_card_interface(mconfig, *this)
 {
@@ -175,7 +175,7 @@ void nscsi_device::device_start()
 	save_item(NAME(scsi_id));
 }
 
-nscsi_full_device::nscsi_full_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
+nscsi_full_device::nscsi_full_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
 	nscsi_device(mconfig, type, name, tag, owner, clock, shortname, source)
 {
 }

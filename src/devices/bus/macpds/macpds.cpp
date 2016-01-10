@@ -26,7 +26,7 @@ const device_type MACPDS_SLOT = &device_creator<macpds_slot_device>;
 //-------------------------------------------------
 //  macpds_slot_device - constructor
 //-------------------------------------------------
-macpds_slot_device::macpds_slot_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+macpds_slot_device::macpds_slot_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 		device_t(mconfig, MACPDS_SLOT, "Mac 68000 Processor-Direct Slot", tag, owner, clock, "macpds_slot", __FILE__),
 		device_slot_interface(mconfig, *this),
 	m_macpds_tag(nullptr),
@@ -34,13 +34,13 @@ macpds_slot_device::macpds_slot_device(const machine_config &mconfig, const char
 {
 }
 
-macpds_slot_device::macpds_slot_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
+macpds_slot_device::macpds_slot_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
 		device_t(mconfig, type, name, tag, owner, clock, shortname, source),
 		device_slot_interface(mconfig, *this), m_macpds_tag(nullptr), m_macpds_slottag(nullptr)
 {
 }
 
-void macpds_slot_device::static_set_macpds_slot(device_t &device, const char *tag, const char *slottag)
+void macpds_slot_device::static_set_macpds_slot(device_t &device, std::string tag, const char *slottag)
 {
 	macpds_slot_device &macpds_card = dynamic_cast<macpds_slot_device &>(device);
 	macpds_card.m_macpds_tag = tag;
@@ -64,7 +64,7 @@ void macpds_slot_device::device_start()
 
 const device_type MACPDS = &device_creator<macpds_device>;
 
-void macpds_device::static_set_cputag(device_t &device, const char *tag)
+void macpds_device::static_set_cputag(device_t &device, std::string tag)
 {
 	macpds_device &macpds = downcast<macpds_device &>(device);
 	macpds.m_cputag = tag;
@@ -78,12 +78,12 @@ void macpds_device::static_set_cputag(device_t &device, const char *tag)
 //  macpds_device - constructor
 //-------------------------------------------------
 
-macpds_device::macpds_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+macpds_device::macpds_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 		device_t(mconfig, MACPDS, "MACPDS", tag, owner, clock, "macpds", __FILE__), m_maincpu(nullptr), m_cputag(nullptr)
 {
 }
 
-macpds_device::macpds_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
+macpds_device::macpds_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source) :
 		device_t(mconfig, type, name, tag, owner, clock, shortname, source), m_maincpu(nullptr), m_cputag(nullptr)
 {
 }
@@ -121,7 +121,7 @@ void macpds_device::install_device(offs_t start, offs_t end, read16_delegate rha
 	m_maincpu->space(AS_PROGRAM).install_readwrite_handler(start, end, rhandler, whandler, mask);
 }
 
-void macpds_device::install_bank(offs_t start, offs_t end, offs_t mask, offs_t mirror, const char *tag, UINT8 *data)
+void macpds_device::install_bank(offs_t start, offs_t end, offs_t mask, offs_t mirror, std::string tag, UINT8 *data)
 {
 //  printf("install_bank: %s @ %x->%x mask %x mirror %x\n", tag, start, end, mask, mirror);
 	m_maincpu = machine().device<cpu_device>(m_cputag);
@@ -164,7 +164,7 @@ device_macpds_card_interface::~device_macpds_card_interface()
 {
 }
 
-void device_macpds_card_interface::static_set_macpds_tag(device_t &device, const char *tag, const char *slottag)
+void device_macpds_card_interface::static_set_macpds_tag(device_t &device, std::string tag, const char *slottag)
 {
 	device_macpds_card_interface &macpds_card = dynamic_cast<device_macpds_card_interface &>(device);
 	macpds_card.m_macpds_tag = tag;
@@ -177,7 +177,7 @@ void device_macpds_card_interface::set_macpds_device()
 	m_macpds->add_macpds_card(this);
 }
 
-void device_macpds_card_interface::install_bank(offs_t start, offs_t end, offs_t mask, offs_t mirror, const char *tag, UINT8 *data)
+void device_macpds_card_interface::install_bank(offs_t start, offs_t end, offs_t mask, offs_t mirror, std::string tag, UINT8 *data)
 {
 	char bank[256];
 

@@ -64,7 +64,7 @@ const device_type ACIA6850 = &device_creator<acia6850_device>;
 //  acia6850_device - constructor
 //-------------------------------------------------
 
-acia6850_device::acia6850_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+acia6850_device::acia6850_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, ACIA6850, "6850 ACIA", tag, owner, clock, "acia6850", __FILE__),
 	m_txd_handler(*this),
 	m_rts_handler(*this),
@@ -88,7 +88,7 @@ acia6850_device::acia6850_device(const machine_config &mconfig, const char *tag,
 {
 }
 
-acia6850_device::acia6850_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
+acia6850_device::acia6850_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
 	: device_t(mconfig, type, name, tag, owner, clock, shortname, source),
 	m_txd_handler(*this),
 	m_rts_handler(*this),

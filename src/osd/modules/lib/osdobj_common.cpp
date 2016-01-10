@@ -166,9 +166,6 @@ osd_common_t::osd_common_t(osd_options &options)
 
 osd_common_t::~osd_common_t()
 {
-	for(unsigned int i= 0; i < m_video_names.size(); ++i)
-		osd_free(const_cast<char*>(m_video_names[i]));
-	//m_video_options,reset();
 	osd_output::pop(this);
 }
 
@@ -211,7 +208,7 @@ void osd_common_t::register_options()
 	const char *names[20];
 	int num;
 	m_mod_man.get_module_names(OSD_FONT_PROVIDER, 20, &num, names);
-	std::vector<const char *> dnames;
+	std::vector<std::string> dnames;
 	for (int i = 0; i < num; i++)
 		dnames.push_back(names[i]);
 	update_option(OSD_FONT_PROVIDER, dnames);
@@ -244,24 +241,22 @@ void osd_common_t::register_options()
 	update_option(OSDOPTION_VIDEO, m_video_names);
 }
 
-void osd_common_t::update_option(const char * key, std::vector<const char *> &values)
+void osd_common_t::update_option(std::string key, const std::vector<std::string> &values)
 {
-	std::string current_value(m_options.description(key));
-	std::string new_option_value("");
+	std::string current_value = m_options.description(key);
+	std::string new_option_value;
 	for (unsigned int index = 0; index < values.size(); index++)
 	{
-		std::string t(values[index]);
 		if (new_option_value.length() > 0)
 		{
 			if( index != (values.size()-1))
-				new_option_value.append(", ");
+				new_option_value += ", ";
 			else
-				new_option_value.append(" or ");
+				new_option_value += " or ";
 		}
-		new_option_value.append(t);
+		new_option_value += values[index];
 	}
-	// TODO: core_strdup() is leaked
-	m_options.set_description(key, core_strdup(current_value.append(new_option_value).c_str()));
+	m_options.set_description(key, current_value + new_option_value);
 }
 
 
@@ -455,7 +450,7 @@ void osd_common_t::customize_input_type_list(simple_list<input_type_entry> &type
 //  font with the given name
 //-------------------------------------------------
 
-osd_font *osd_common_t::font_open(const char *name, int &height)
+osd_font *osd_common_t::font_open(std::string name, int &height)
 {
 	return NULL;
 }
@@ -499,9 +494,9 @@ void *osd_common_t::get_slider_list()
 //  handled by the core
 //-------------------------------------------------
 
-bool osd_common_t::execute_command(const char *command)
+bool osd_common_t::execute_command(std::string command)
 {
-	if (strcmp(command, OSDCOMMAND_LIST_NETWORK_ADAPTERS) == 0)
+	if (command == OSDCOMMAND_LIST_NETWORK_ADAPTERS)
 	{
 		osd_module *om = select_module_options(options(), OSD_NETDEV_PROVIDER);
 
@@ -514,7 +509,7 @@ bool osd_common_t::execute_command(const char *command)
 
 		return true;
 	}
-	else if (strcmp(command, OSDCOMMAND_LIST_MIDI_DEVICES) == 0)
+	else if (command == OSDCOMMAND_LIST_MIDI_DEVICES)
 	{
 		osd_module *om = select_module_options(options(), OSD_MIDI_PROVIDER);
 		midi_module *pm = select_module_options<midi_module *>(options(), OSD_MIDI_PROVIDER);
@@ -578,7 +573,7 @@ bool osd_common_t::window_init()
 
 bool osd_common_t::no_sound()
 {
-	return (strcmp(options().sound(),"none")==0) ? true : false;
+	return options().sound() == "none";
 }
 
 void osd_common_t::video_register()
@@ -633,8 +628,8 @@ void osd_common_t::osd_exit()
 	exit_subsystems();
 }
 
-void osd_common_t::video_options_add(const char *name, void *type)
+void osd_common_t::video_options_add(std::string name, void *type)
 {
 	//m_video_options.add(name, type, false);
-	m_video_names.push_back(core_strdup(name));
+	m_video_names.push_back(name);
 }

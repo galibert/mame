@@ -128,7 +128,7 @@ machine_config_constructor z80scc_device::device_mconfig_additions() const
 //  z80scc_device - constructor
 //-------------------------------------------------
 
-z80scc_device::z80scc_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, UINT32 variant, const char *shortname, const char *source)
+z80scc_device::z80scc_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, UINT32 variant, const char *shortname, const char *source)
 	: device_t(mconfig, type, name, tag, owner, clock, shortname, source),
 	device_z80daisy_interface(mconfig, *this),
 	m_chanA(*this, CHANA_TAG),
@@ -158,7 +158,7 @@ z80scc_device::z80scc_device(const machine_config &mconfig, device_type type, co
 		elem = 0;
 }
 
-z80scc_device::z80scc_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+z80scc_device::z80scc_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, Z80SCC, "Z80 SCC", tag, owner, clock, "z80scc", __FILE__),
 		device_z80daisy_interface(mconfig, *this),
 		m_chanA(*this, CHANA_TAG),
@@ -188,28 +188,28 @@ z80scc_device::z80scc_device(const machine_config &mconfig, const char *tag, dev
 		elem = 0;
 }
 
-scc8030_device::scc8030_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+scc8030_device::scc8030_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: z80scc_device(mconfig, SCC8030, "SCC 8030", tag, owner, clock, TYPE_SCC8030, "scc8030", __FILE__){ }
 
-scc80C30_device::scc80C30_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+scc80C30_device::scc80C30_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: z80scc_device(mconfig, SCC80C30, "SCC 80C30", tag, owner, clock, TYPE_SCC80C30, "scc80C30", __FILE__){ }
 
-scc80230_device::scc80230_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+scc80230_device::scc80230_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: z80scc_device(mconfig, SCC80230, "SCC 80230", tag, owner, clock, TYPE_SCC80230, "scc80230", __FILE__){ }
 
-scc8530_device::scc8530_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+scc8530_device::scc8530_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 : z80scc_device(mconfig, SCC8530N, "SCC 8530", tag, owner, clock, TYPE_SCC8530, "scc8530", __FILE__){ }
 
-scc85C30_device::scc85C30_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+scc85C30_device::scc85C30_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: z80scc_device(mconfig, SCC85C30, "SCC 85C30", tag, owner, clock, TYPE_SCC85C30, "scc85C30", __FILE__){ }
 
-scc85230_device::scc85230_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+scc85230_device::scc85230_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: z80scc_device(mconfig, SCC85230, "SCC 85230", tag, owner, clock, TYPE_SCC85230, "scc85230", __FILE__){ }
 
-scc85233_device::scc85233_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+scc85233_device::scc85233_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: z80scc_device(mconfig, SCC85233, "SCC 85233", tag, owner, clock, TYPE_SCC85233, "scc85233", __FILE__){ }
 
-scc8523L_device::scc8523L_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+scc8523L_device::scc8523L_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: z80scc_device(mconfig, SCC8523L, "SCC 8523L", tag, owner, clock, TYPE_SCC8523L, "scc8523L", __FILE__){ }
 
 //-------------------------------------------------
@@ -668,7 +668,7 @@ WRITE8_MEMBER( z80scc_device::ba_cd_inv_w )
 //  SCC_channel - constructor
 //-------------------------------------------------
 
-z80scc_channel::z80scc_channel(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+z80scc_channel::z80scc_channel(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, Z80SCC_CHANNEL, "Z80 SCC channel", tag, owner, clock, "z80scc_channel", __FILE__),
 		device_serial_interface(mconfig, *this),
 		m_rx_error(0),

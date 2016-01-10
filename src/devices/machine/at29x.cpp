@@ -54,7 +54,7 @@ enum
     Constructor for all variants
 */
 
-at29x_device::at29x_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
+at29x_device::at29x_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
 	: device_t(mconfig, type, name, tag, owner, clock, shortname, source),
 	device_nvram_interface(mconfig, *this),
 	m_memory_size(0),   // bytes
@@ -70,7 +70,7 @@ at29x_device::at29x_device(const machine_config &mconfig, device_type type, cons
 /*
     Constructor for AT29C020
 */
-at29c020_device::at29c020_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+at29c020_device::at29c020_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: at29x_device(mconfig, AT29C020, "ATMEL 29C020 256K x 8 FEEPROM", tag, owner, clock, "at29c020", __FILE__)
 {
 	m_memory_size = 256*1024;
@@ -81,7 +81,7 @@ at29c020_device::at29c020_device(const machine_config &mconfig, const char *tag,
 /*
     Constructor for AT29C040
 */
-at29c040_device::at29c040_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+at29c040_device::at29c040_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: at29x_device(mconfig, AT29C040, "ATMEL 29C040 512K x 8 FEEPROM", tag, owner, clock, "at29c040", __FILE__)
 {
 	m_memory_size = 512*1024;
@@ -92,7 +92,7 @@ at29c040_device::at29c040_device(const machine_config &mconfig, const char *tag,
 /*
     Constructor for AT29C040A
 */
-at29c040a_device::at29c040a_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+at29c040a_device::at29c040a_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: at29x_device(mconfig, AT29C040A, "ATMEL 29C040A 512K x 8 FEEPROM", tag, owner, clock, "at29c040a", __FILE__)
 {
 	m_memory_size = 512*1024;

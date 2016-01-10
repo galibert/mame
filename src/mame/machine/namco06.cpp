@@ -176,7 +176,7 @@ WRITE8_MEMBER( namco_06xx_device::ctrl_w )
 
 const device_type NAMCO_06XX = &device_creator<namco_06xx_device>;
 
-namco_06xx_device::namco_06xx_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+namco_06xx_device::namco_06xx_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, NAMCO_06XX, "Namco 06xx", tag, owner, clock, "namco06xx", __FILE__),
 	m_control(0),
 	m_nmicpu(*this),

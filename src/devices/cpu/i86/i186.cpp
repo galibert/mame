@@ -120,7 +120,7 @@ const UINT8 i80186_cpu_device::m_i80186_timing[] =
 const device_type I80186 = &device_creator<i80186_cpu_device>;
 const device_type I80188 = &device_creator<i80188_cpu_device>;
 
-i80188_cpu_device::i80188_cpu_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+i80188_cpu_device::i80188_cpu_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: i80186_cpu_device(mconfig, I80188, "I80188", tag, owner, clock, "i80188", __FILE__, 8)
 {
 	memcpy(m_timing, m_i80186_timing, sizeof(m_i80186_timing));
@@ -128,7 +128,7 @@ i80188_cpu_device::i80188_cpu_device(const machine_config &mconfig, const char *
 	static_set_irq_acknowledge_callback(*this, device_irq_acknowledge_delegate(FUNC(i80186_cpu_device::int_callback), this));
 }
 
-i80186_cpu_device::i80186_cpu_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+i80186_cpu_device::i80186_cpu_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: i8086_common_cpu_device(mconfig, I80186, "I80186", tag, owner, clock, "i80186", __FILE__)
 	, m_program_config("program", ENDIANNESS_LITTLE, 16, 20, 0)
 	, m_io_config("io", ENDIANNESS_LITTLE, 16, 16, 0)
@@ -142,7 +142,7 @@ i80186_cpu_device::i80186_cpu_device(const machine_config &mconfig, const char *
 	static_set_irq_acknowledge_callback(*this, device_irq_acknowledge_delegate(FUNC(i80186_cpu_device::int_callback), this));
 }
 
-i80186_cpu_device::i80186_cpu_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source, int data_bus_size)
+i80186_cpu_device::i80186_cpu_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source, int data_bus_size)
 	: i8086_common_cpu_device(mconfig, type, name, tag, owner, clock, shortname, source)
 	, m_program_config("program", ENDIANNESS_LITTLE, data_bus_size, 20, 0)
 	, m_io_config("io", ENDIANNESS_LITTLE, data_bus_size, 16, 0)

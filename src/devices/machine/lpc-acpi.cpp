@@ -36,7 +36,7 @@ DEVICE_ADDRESS_MAP_START(map, 32, lpc_acpi_device)
 	AM_RANGE(0x70, 0x73) AM_READWRITE8 (sw_irq_gen_r,     sw_irq_gen_w,     0x000000ff)
 ADDRESS_MAP_END
 
-lpc_acpi_device::lpc_acpi_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+lpc_acpi_device::lpc_acpi_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: lpc_device(mconfig, LPC_ACPI, "LPC ACPI", tag, owner, clock, "lpc_acpi", __FILE__)
 {
 }

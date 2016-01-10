@@ -17,7 +17,7 @@ const device_type PLA = &device_creator<pla_device>;
 //  pla_device - constructor
 //-------------------------------------------------
 
-pla_device::pla_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+pla_device::pla_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, PLA, "PLA", tag, owner, clock, "pla", __FILE__),
 		m_format(PLA_FMT_JEDBIN),
 		m_inputs(0),

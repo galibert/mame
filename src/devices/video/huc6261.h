@@ -31,10 +31,10 @@ class huc6261_device :  public device_t,
 {
 public:
 	// construction/destruction
-	huc6261_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	huc6261_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 
-	static void set_vdc1_tag(device_t &device, const char *tag) { downcast<huc6261_device &>(device).m_huc6270_a_tag = tag; }
-	static void set_vdc2_tag(device_t &device, const char *tag) { downcast<huc6261_device &>(device).m_huc6270_b_tag = tag; }
+	static void set_vdc1_tag(device_t &device, std::string tag) { downcast<huc6261_device &>(device).m_huc6270_a_tag = tag; }
+	static void set_vdc2_tag(device_t &device, std::string tag) { downcast<huc6261_device &>(device).m_huc6270_b_tag = tag; }
 
 	void video_update(bitmap_rgb32 &bitmap, const rectangle &cliprect);
 	DECLARE_READ16_MEMBER( read );

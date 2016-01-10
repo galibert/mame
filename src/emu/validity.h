@@ -49,8 +49,8 @@ public:
 	bool check_all();
 
 	// helpers for devices
-	void validate_tag(const char *tag);
-	int region_length(const char *tag) { return m_region_map.find(tag)->second; }
+	void validate_tag(std::string tag);
+	int region_length(std::string tag) { return m_region_map.find(tag)->second; }
 
 	// generic registry of already-checked stuff
 	bool already_checked(const char *string) { return m_already_checked.insert(string).second; }

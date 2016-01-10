@@ -25,10 +25,10 @@ class vt82c496_device :  public device_t
 {
 public:
 	// construction/destruction
-	vt82c496_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	vt82c496_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock);
 
-	static void static_set_cpu(device_t &device, const char *tag) { dynamic_cast<vt82c496_device &>(device).m_cpu_tag = tag; }
-	static void static_set_region(device_t &device, const char *tag) { dynamic_cast<vt82c496_device &>(device).m_region_tag = tag; }
+	static void static_set_cpu(device_t &device, std::string tag) { dynamic_cast<vt82c496_device &>(device).m_cpu_tag = tag; }
+	static void static_set_region(device_t &device, std::string tag) { dynamic_cast<vt82c496_device &>(device).m_region_tag = tag; }
 
 	DECLARE_READ8_MEMBER(read);
 	DECLARE_WRITE8_MEMBER(write);

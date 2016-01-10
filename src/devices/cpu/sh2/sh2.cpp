@@ -169,7 +169,7 @@ static ADDRESS_MAP_START( sh7032_map, AS_PROGRAM, 32, sh1_device )
 	AM_RANGE(0x05fffe00, 0x05ffffff) AM_READWRITE16(sh7032_r,sh7032_w,0xffffffff) // SH-7032H internal i/o
 ADDRESS_MAP_END
 
-sh2_device::sh2_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+sh2_device::sh2_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: cpu_device(mconfig, SH2, "SH-2", tag, owner, clock, "sh2", __FILE__)
 	, m_program_config("program", ENDIANNESS_BIG, 32, 32, 0, ADDRESS_MAP_NAME(sh7604_map))
 	, m_decrypted_program_config("decrypted_opcodes", ENDIANNESS_BIG, 32, 32, 0)
@@ -202,7 +202,7 @@ void sh2_device::device_stop()
 }
 
 
-sh2_device::sh2_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source, int cpu_type, address_map_constructor internal_map, int addrlines )
+sh2_device::sh2_device(const machine_config &mconfig, device_type type, const char *name, std::string tag, device_t *owner, UINT32 clock, const char *shortname, const char *source, int cpu_type, address_map_constructor internal_map, int addrlines )
 	: cpu_device(mconfig, type, name, tag, owner, clock, shortname, source)
 	, m_program_config("program", ENDIANNESS_BIG, 32, addrlines, 0, internal_map)
 	, m_decrypted_program_config("decrypted_opcodes", ENDIANNESS_BIG, 32, addrlines, 0)
@@ -228,12 +228,12 @@ sh2_device::sh2_device(const machine_config &mconfig, device_type type, const ch
 	m_isdrc = (mconfig.options().drc() && !mconfig.m_force_no_drc) ? true : false;
 }
 
-sh2a_device::sh2a_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+sh2a_device::sh2a_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: sh2_device(mconfig, SH1, "SH-2A", tag, owner, clock, "sh2a", __FILE__, CPU_TYPE_SH2, ADDRESS_MAP_NAME(sh7021_map), 28 )
 {
 }
 
-sh1_device::sh1_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+sh1_device::sh1_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: sh2_device(mconfig, SH1, "SH-1", tag, owner, clock, "sh1", __FILE__, CPU_TYPE_SH1, ADDRESS_MAP_NAME(sh7032_map), 28 )
 {
 }

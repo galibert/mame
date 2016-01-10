@@ -24,7 +24,7 @@ static void network_load(running_machine &machine, int config_type, xml_data_nod
 	{
 		for (node = xml_get_sibling(parentnode->child, "device"); node; node = xml_get_sibling(node->next, "device"))
 		{
-			const char *tag = xml_get_attribute_string(node, "tag", nullptr);
+			std::string tag = xml_get_attribute_string(node, "tag", nullptr);
 
 			if ((tag != nullptr) && (tag[0] != '\0'))
 			{

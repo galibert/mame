@@ -483,7 +483,7 @@ void sdl_osd_interface::init(running_machine &machine)
 	// call our parent
 	osd_common_t::init(machine);
 
-	const char *stemp;
+	std::string stemp;
 
 	// determine if we are benchmarking, and adjust options appropriately
 	int bench = options().bench();
@@ -499,35 +499,35 @@ void sdl_osd_interface::init(running_machine &machine)
 
 	// Some driver options - must be before audio init!
 	stemp = options().audio_driver();
-	if (stemp != NULL && strcmp(stemp, OSDOPTVAL_AUTO) != 0)
+	if (!stemp.empty() && stemp != OSDOPTVAL_AUTO)
 	{
-		osd_printf_verbose("Setting SDL audiodriver '%s' ...\n", stemp);
-		osd_setenv(SDLENV_AUDIODRIVER, stemp, 1);
+		osd_printf_verbose("Setting SDL audiodriver '%s' ...\n", stemp.c_str());
+		osd_setenv(SDLENV_AUDIODRIVER, stemp.c_str(), 1);
 	}
 
 	stemp = options().video_driver();
-	if (stemp != NULL && strcmp(stemp, OSDOPTVAL_AUTO) != 0)
+	if (!stemp.empty() && stemp != OSDOPTVAL_AUTO)
 	{
-		osd_printf_verbose("Setting SDL videodriver '%s' ...\n", stemp);
-		osd_setenv(SDLENV_VIDEODRIVER, stemp, 1);
+		osd_printf_verbose("Setting SDL videodriver '%s' ...\n", stemp.c_str());
+		osd_setenv(SDLENV_VIDEODRIVER, stemp.c_str(), 1);
 	}
 
 #if (SDLMAME_SDL2)
 		stemp = options().render_driver();
-		if (stemp != NULL)
+		if (!stemp.empty())
 		{
-			if (strcmp(stemp, OSDOPTVAL_AUTO) != 0)
+			if (stemp != OSDOPTVAL_AUTO)
 			{
-				osd_printf_verbose("Setting SDL renderdriver '%s' ...\n", stemp);
-				//osd_setenv(SDLENV_RENDERDRIVER, stemp, 1);
-				SDL_SetHint(SDL_HINT_RENDER_DRIVER, stemp);
+				osd_printf_verbose("Setting SDL renderdriver '%s' ...\n", stemp.c_str());
+				//osd_setenv(SDLENV_RENDERDRIVER, stemp.c_str(), 1);
+				SDL_SetHint(SDL_HINT_RENDER_DRIVER, stemp.c_str());
 			}
 			else
 			{
 #if defined(SDLMAME_WIN32)
 				// OpenGL renderer has less issues with mode switching on windows
 				osd_printf_verbose("Setting SDL renderdriver '%s' ...\n", "opengl");
-				//osd_setenv(SDLENV_RENDERDRIVER, stemp, 1);
+				//osd_setenv(SDLENV_RENDERDRIVER, stemp.c_str(), 1);
 				SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 #endif
 			}
@@ -541,10 +541,10 @@ void sdl_osd_interface::init(running_machine &machine)
 	/* FIXME: move lib loading code from drawogl.c here */
 
 	stemp = options().gl_lib();
-	if (stemp != NULL && strcmp(stemp, OSDOPTVAL_AUTO) != 0)
+	if (!stemp.empty() && stemp != OSDOPTVAL_AUTO)
 	{
-		osd_setenv("SDL_VIDEO_GL_DRIVER", stemp, 1);
-		osd_printf_verbose("Setting SDL_VIDEO_GL_DRIVER = '%s' ...\n", stemp);
+		osd_setenv("SDL_VIDEO_GL_DRIVER", stemp.c_str(), 1);
+		osd_printf_verbose("Setting SDL_VIDEO_GL_DRIVER = '%s' ...\n", stemp.c_str());
 	}
 #endif
 
@@ -553,9 +553,9 @@ void sdl_osd_interface::init(running_machine &machine)
 
 	osd_num_processors = 0;
 
-	if (strcmp(stemp, "auto") != 0)
+	if (stemp != "auto")
 	{
-		osd_num_processors = atoi(stemp);
+		osd_num_processors = atoi(stemp.c_str());
 		if (osd_num_processors < 1)
 		{
 			osd_printf_warning("numprocessors < 1 doesn't make much sense. Assuming auto ...\n");

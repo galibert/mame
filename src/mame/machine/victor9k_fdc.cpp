@@ -217,7 +217,7 @@ machine_config_constructor victor_9000_fdc_t::device_mconfig_additions() const
 //  victor_9000_fdc_t - constructor
 //-------------------------------------------------
 
-victor_9000_fdc_t::victor_9000_fdc_t(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
+victor_9000_fdc_t::victor_9000_fdc_t(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock) :
 	device_t(mconfig, VICTOR_9000_FDC, "Victor 9000 FDC", tag, owner, clock, "victor9k_fdc", __FILE__),
 	m_irq_cb(*this),
 	m_syn_cb(*this),

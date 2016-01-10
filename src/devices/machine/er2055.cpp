@@ -33,7 +33,7 @@ ADDRESS_MAP_END
 //  er2055_device - constructor
 //-------------------------------------------------
 
-er2055_device::er2055_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+er2055_device::er2055_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, ER2055, "ER2055 EAROM", tag, owner, clock, "er2055", __FILE__),
 		device_memory_interface(mconfig, *this),
 		device_nvram_interface(mconfig, *this),

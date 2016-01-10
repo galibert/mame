@@ -112,9 +112,9 @@ class integer_symbol_entry : public symbol_entry
 {
 public:
 	// construction/destruction
-	integer_symbol_entry(symbol_table &table, const char *name, symbol_table::read_write rw, UINT64 *ptr = nullptr);
-	integer_symbol_entry(symbol_table &table, const char *name, UINT64 constval);
-	integer_symbol_entry(symbol_table &table, const char *name, void *ref, symbol_table::getter_func getter, symbol_table::setter_func setter);
+	integer_symbol_entry(symbol_table &table, std::string name, symbol_table::read_write rw, UINT64 *ptr = nullptr);
+	integer_symbol_entry(symbol_table &table, std::string name, UINT64 constval);
+	integer_symbol_entry(symbol_table &table, std::string name, void *ref, symbol_table::getter_func getter, symbol_table::setter_func setter);
 
 	// symbol access
 	virtual bool is_lval() const override;
@@ -138,7 +138,7 @@ class function_symbol_entry : public symbol_entry
 {
 public:
 	// construction/destruction
-	function_symbol_entry(symbol_table &table, const char *name, void *ref, int minparams, int maxparams, symbol_table::execute_func execute);
+	function_symbol_entry(symbol_table &table, std::string name, void *ref, int minparams, int maxparams, symbol_table::execute_func execute);
 
 	// symbol access
 	virtual bool is_lval() const override;
@@ -203,7 +203,7 @@ const char *expression_error::code_string() const
 //  symbol_entry - constructor
 //-------------------------------------------------
 
-symbol_entry::symbol_entry(symbol_table &table, symbol_type type, const char *name, void *ref)
+symbol_entry::symbol_entry(symbol_table &table, symbol_type type, std::string name, void *ref)
 	: m_next(nullptr),
 		m_table(table),
 		m_type(type),
@@ -231,7 +231,7 @@ symbol_entry::~symbol_entry()
 //  integer_symbol_entry - constructor
 //-------------------------------------------------
 
-integer_symbol_entry::integer_symbol_entry(symbol_table &table, const char *name, symbol_table::read_write rw, UINT64 *ptr)
+integer_symbol_entry::integer_symbol_entry(symbol_table &table, std::string name, symbol_table::read_write rw, UINT64 *ptr)
 	: symbol_entry(table, SMT_INTEGER, name, (ptr == nullptr) ? &m_value : ptr),
 		m_getter(internal_getter),
 		m_setter((rw == symbol_table::READ_ONLY) ? nullptr : internal_setter),
@@ -240,7 +240,7 @@ integer_symbol_entry::integer_symbol_entry(symbol_table &table, const char *name
 }
 
 
-integer_symbol_entry::integer_symbol_entry(symbol_table &table, const char *name, UINT64 constval)
+integer_symbol_entry::integer_symbol_entry(symbol_table &table, std::string name, UINT64 constval)
 	: symbol_entry(table, SMT_INTEGER, name, &m_value),
 		m_getter(internal_getter),
 		m_setter(nullptr),
@@ -249,7 +249,7 @@ integer_symbol_entry::integer_symbol_entry(symbol_table &table, const char *name
 }
 
 
-integer_symbol_entry::integer_symbol_entry(symbol_table &table, const char *name, void *ref, symbol_table::getter_func getter, symbol_table::setter_func setter)
+integer_symbol_entry::integer_symbol_entry(symbol_table &table, std::string name, void *ref, symbol_table::getter_func getter, symbol_table::setter_func setter)
 	: symbol_entry(table, SMT_INTEGER, name, ref),
 		m_getter(getter),
 		m_setter(setter),
@@ -322,7 +322,7 @@ void integer_symbol_entry::internal_setter(symbol_table &table, void *symref, UI
 //  function_symbol_entry - constructor
 //-------------------------------------------------
 
-function_symbol_entry::function_symbol_entry(symbol_table &table, const char *name, void *ref, int minparams, int maxparams, symbol_table::execute_func execute)
+function_symbol_entry::function_symbol_entry(symbol_table &table, std::string name, void *ref, int minparams, int maxparams, symbol_table::execute_func execute)
 	: symbol_entry(table, SMT_FUNCTION, name, ref),
 		m_minparams(minparams),
 		m_maxparams(maxparams),
@@ -412,7 +412,7 @@ void symbol_table::configure_memory(void *param, valid_func valid, read_func rea
 //  add - add a new UINT64 pointer symbol
 //-------------------------------------------------
 
-void symbol_table::add(const char *name, read_write rw, UINT64 *ptr)
+void symbol_table::add(std::string name, read_write rw, UINT64 *ptr)
 {
 	m_symlist.remove(name);
 	m_symlist.append(name, *global_alloc(integer_symbol_entry(*this, name, rw, ptr)));
@@ -423,7 +423,7 @@ void symbol_table::add(const char *name, read_write rw, UINT64 *ptr)
 //  add - add a new value symbol
 //-------------------------------------------------
 
-void symbol_table::add(const char *name, UINT64 value)
+void symbol_table::add(std::string name, UINT64 value)
 {
 	m_symlist.remove(name);
 	m_symlist.append(name, *global_alloc(integer_symbol_entry(*this, name, value)));
@@ -434,7 +434,7 @@ void symbol_table::add(const char *name, UINT64 value)
 //  add - add a new register symbol
 //-------------------------------------------------
 
-void symbol_table::add(const char *name, void *ref, getter_func getter, setter_func setter)
+void symbol_table::add(std::string name, void *ref, getter_func getter, setter_func setter)
 {
 	m_symlist.remove(name);
 	m_symlist.append(name, *global_alloc(integer_symbol_entry(*this, name, ref, getter, setter)));
@@ -445,7 +445,7 @@ void symbol_table::add(const char *name, void *ref, getter_func getter, setter_f
 //  add - add a new function symbol
 //-------------------------------------------------
 
-void symbol_table::add(const char *name, void *ref, int minparams, int maxparams, execute_func execute)
+void symbol_table::add(std::string name, void *ref, int minparams, int maxparams, execute_func execute)
 {
 	m_symlist.remove(name);
 	m_symlist.append(name, *global_alloc(function_symbol_entry(*this, name, ref, minparams, maxparams, execute)));
@@ -457,7 +457,7 @@ void symbol_table::add(const char *name, void *ref, int minparams, int maxparams
 //  looking in the parent if needed
 //-------------------------------------------------
 
-symbol_entry *symbol_table::find_deep(const char *symbol)
+symbol_entry *symbol_table::find_deep(std::string symbol)
 {
 	// walk up the table hierarchy to find the owner
 	for (symbol_table *symtable = this; symtable != nullptr; symtable = symtable->m_parent)
@@ -474,7 +474,7 @@ symbol_entry *symbol_table::find_deep(const char *symbol)
 //  value - return the value of a symbol
 //-------------------------------------------------
 
-UINT64 symbol_table::value(const char *symbol)
+UINT64 symbol_table::value(std::string symbol)
 {
 	symbol_entry *entry = find_deep(symbol);
 	return (entry != nullptr) ? entry->value() : 0;
@@ -485,7 +485,7 @@ UINT64 symbol_table::value(const char *symbol)
 //  set_value - set the value of a symbol
 //-------------------------------------------------
 
-void symbol_table::set_value(const char *symbol, UINT64 value)
+void symbol_table::set_value(std::string symbol, UINT64 value)
 {
 	symbol_entry *entry = find_deep(symbol);
 	if (entry != nullptr)
@@ -498,7 +498,7 @@ void symbol_table::set_value(const char *symbol, UINT64 value)
 //  memory name/space/offset combination is valid
 //-------------------------------------------------
 
-expression_error::error_code symbol_table::memory_valid(const char *name, expression_space space)
+expression_error::error_code symbol_table::memory_valid(std::string name, expression_space space)
 {
 	// walk up the table hierarchy to find the owner
 	for (symbol_table *symtable = this; symtable != nullptr; symtable = symtable->m_parent)
@@ -516,7 +516,7 @@ expression_error::error_code symbol_table::memory_valid(const char *name, expres
 //  memory_value - return a value read from memory
 //-------------------------------------------------
 
-UINT64 symbol_table::memory_value(const char *name, expression_space space, UINT32 offset, int size)
+UINT64 symbol_table::memory_value(std::string name, expression_space space, UINT32 offset, int size)
 {
 	// walk up the table hierarchy to find the owner
 	for (symbol_table *symtable = this; symtable != nullptr; symtable = symtable->m_parent)
@@ -535,7 +535,7 @@ UINT64 symbol_table::memory_value(const char *name, expression_space space, UINT
 //  set_memory_value - write a value to memory
 //-------------------------------------------------
 
-void symbol_table::set_memory_value(const char *name, expression_space space, UINT32 offset, int size, UINT64 value)
+void symbol_table::set_memory_value(std::string name, expression_space space, UINT32 offset, int size, UINT64 value)
 {
 	// walk up the table hierarchy to find the owner
 	for (symbol_table *symtable = this; symtable != nullptr; symtable = symtable->m_parent)
@@ -558,7 +558,7 @@ void symbol_table::set_memory_value(const char *name, expression_space space, UI
 //  parsed_expression - constructor
 //-------------------------------------------------
 
-parsed_expression::parsed_expression(symbol_table *symtable, const char *expression, UINT64 *result)
+parsed_expression::parsed_expression(symbol_table *symtable, std::string expression, UINT64 *result)
 	: m_symtable(symtable),
 	m_token_stack_ptr(0)
 {
@@ -576,7 +576,7 @@ parsed_expression::parsed_expression(symbol_table *symtable, const char *express
 //  parse - parse an expression into tokens
 //-------------------------------------------------
 
-void parsed_expression::parse(const char *expression)
+void parsed_expression::parse(std::string expression)
 {
 	// copy the string and reset our parsing state
 	m_original_string.assign(expression);
@@ -703,8 +703,8 @@ void parsed_expression::print_tokens(FILE *out)
 void parsed_expression::parse_string_into_tokens()
 {
 	// loop until done
-	const char *stringstart = m_original_string.c_str();
-	const char *string = stringstart;
+	std::string stringstart = m_original_string.c_str();
+	std::string string = stringstart;
 	while (string[0] != 0)
 	{
 		// ignore any whitespace
@@ -857,10 +857,10 @@ void parsed_expression::parse_string_into_tokens()
 //  expanded operator
 //-------------------------------------------------
 
-void parsed_expression::parse_symbol_or_number(parse_token &token, const char *&string)
+void parsed_expression::parse_symbol_or_number(parse_token &token, std::string &string)
 {
 	// accumulate a lower-case version of the symbol
-	const char *stringstart = string;
+	std::string stringstart = string;
 	std::string buffer;
 	while (1)
 	{
@@ -962,7 +962,7 @@ void parsed_expression::parse_symbol_or_number(parse_token &token, const char *&
 //  given base
 //-------------------------------------------------
 
-void parsed_expression::parse_number(parse_token &token, const char *string, int base, expression_error::error_code errcode)
+void parsed_expression::parse_number(parse_token &token, std::string string, int base, expression_error::error_code errcode)
 {
 	// parse the actual value
 	UINT64 value = 0;
@@ -970,7 +970,7 @@ void parsed_expression::parse_number(parse_token &token, const char *string, int
 	{
 		// look up the number's value, stopping if not valid
 		static const char numbers[] = "0123456789abcdef";
-		const char *ptr = strchr(numbers, tolower((UINT8)*string));
+		std::string ptr = strchr(numbers, tolower((UINT8)*string));
 		if (ptr == nullptr)
 			break;
 
@@ -997,7 +997,7 @@ void parsed_expression::parse_number(parse_token &token, const char *string, int
 //  character constant
 //-------------------------------------------------
 
-void parsed_expression::parse_quoted_char(parse_token &token, const char *&string)
+void parsed_expression::parse_quoted_char(parse_token &token, std::string &string)
 {
 	// accumulate the value of the character token
 	string++;
@@ -1029,7 +1029,7 @@ void parsed_expression::parse_quoted_char(parse_token &token, const char *&strin
 //  string constant
 //-------------------------------------------------
 
-void parsed_expression::parse_quoted_string(parse_token &token, const char *&string)
+void parsed_expression::parse_quoted_string(parse_token &token, std::string &string)
 {
 	// accumulate a copy of the quoted string
 	string++;
@@ -1061,12 +1061,12 @@ void parsed_expression::parse_quoted_string(parse_token &token, const char *&str
 //  forms of memory operators
 //-------------------------------------------------
 
-void parsed_expression::parse_memory_operator(parse_token &token, const char *string)
+void parsed_expression::parse_memory_operator(parse_token &token, std::string string)
 {
 	// if there is a '.', it means we have a name
-	const char *startstring = string;
-	const char *namestring = nullptr;
-	const char *dot = strrchr(string, '.');
+	std::string startstring = string;
+	std::string namestring = nullptr;
+	std::string dot = strrchr(string, '.');
 	if (dot != nullptr)
 	{
 		namestring = m_stringlist.append(*global_alloc(expression_string(string, dot - string)));

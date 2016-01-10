@@ -242,7 +242,7 @@ Hang Pilot (uses an unknown but similar video board)                12W         
 class gticlub_state : public driver_device
 {
 public:
-	gticlub_state(const machine_config &mconfig, device_type type, const char *tag)
+	gticlub_state(const machine_config &mconfig, device_type type, std::string tag)
 		: driver_device(mconfig, type, tag),
 		m_maincpu(*this, "maincpu"),
 		m_audiocpu(*this, "audiocpu"),

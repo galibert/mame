@@ -29,7 +29,7 @@ const device_type DIABLO = &device_creator<diablo_image_device>;
 //  diablo_image_device - constructor
 //-------------------------------------------------
 
-diablo_image_device::diablo_image_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+diablo_image_device::diablo_image_device(const machine_config &mconfig, std::string tag, device_t *owner, UINT32 clock)
 	: device_t(mconfig, DIABLO, "Diablo", tag, owner, clock, "diablo_image", __FILE__),
 		device_image_interface(mconfig, *this),
 		m_chd(nullptr),

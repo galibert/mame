@@ -15,6 +15,7 @@
 
 #include "osdcore.h"
 #include <string.h>
+#include <string>
 
 
 /***************************************************************************
@@ -54,15 +55,13 @@ char *core_strdup(const char *str);
 
 
 /* additional string compare helper (up to 16 characters at the moment) */
-int core_strwildcmp(const char *sp1, const char *sp2);
+bool core_strwildeq(std::string sp1, std::string sp2);
 
 
 /* I64 printf helper */
 char *core_i64_format(UINT64 value, UINT8 mindigits, bool is_octal);
 char *core_i64_hex_format(UINT64 value, UINT8 mindigits);
 char *core_i64_oct_format(UINT64 value, UINT8 mindigits);
-
-#include <string>
 
 int strvprintf(std::string &str, const char *format, va_list args);
 int strcatvprintf(std::string &str, const char *format, va_list args);

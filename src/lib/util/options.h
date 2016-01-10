@@ -70,17 +70,17 @@ public:
 		friend class simple_list<entry>;
 
 		// construction/destruction
-		entry(const char *name, const char *description, UINT32 flags = 0, const char *defvalue = nullptr);
+		entry(std::string name, std::string description, UINT32 flags = 0, std::string defvalue = nullptr);
 
 	public:
 		// getters
 		entry *next() const { return m_next; }
-		const char *name(int index = 0) const { return (index < ARRAY_LENGTH(m_name) && !m_name[index].empty()) ? m_name[index].c_str() : nullptr; }
-		const char *description() const { return m_description; }
-		const char *value() const { return m_data.c_str(); }
-		const char *default_value() const { return m_defdata.c_str(); }
-		const char *minimum() const { return m_minimum.c_str(); }
-		const char *maximum() const { return m_maximum.c_str(); }
+		std::string name(int index = 0) const { return (index < ARRAY_LENGTH(m_name) && !m_name[index].empty()) ? m_name[index] : ""; }
+		std::string description() const { return m_description; }
+		std::string value() const { return m_data; }
+		std::string default_value() const { return m_defdata; }
+		std::string minimum() const { return m_minimum; }
+		std::string maximum() const { return m_maximum; }
 		UINT32 seqid() const { return m_seqid; }
 		int type() const { return (m_flags & OPTION_TYPE_MASK); }
 		UINT32 flags() const { return m_flags; }
@@ -91,9 +91,9 @@ public:
 		int priority() const { return m_priority; }
 
 		// setters
-		void set_value(const char *newvalue, int priority);
-		void set_default_value(const char *defvalue);
-		void set_description(const char *description);
+		void set_value(std::string newvalue, int priority);
+		void set_default_value(std::string defvalue);
+		void set_description(std::string description);
 		void set_flag(UINT32 mask, UINT32 flag);
 		void revert(int priority);
 
@@ -104,7 +104,7 @@ public:
 		UINT32                  m_seqid;            // sequence ID; bumped on each change
 		bool                    m_error_reported;   // have we reported an error on this option yet?
 		int                     m_priority;         // priority of the data set
-		const char *            m_description;      // description for this item
+		std::string             m_description;      // description for this item
 		std::string             m_name[4];          // up to 4 names for the item
 		std::string             m_data;             // data for this item
 		std::string             m_defdata;          // default data for this item
@@ -127,14 +127,14 @@ public:
 
 	// getters
 	entry *first() const { return m_entrylist.first(); }
-	const char *command() const { return m_command.c_str(); }
+	std::string command() const { return m_command; }
 
 	// configuration
-	void add_entry(const char *name, const char *description, UINT32 flags = 0, const char *defvalue = nullptr, bool override_existing = false);
+	void add_entry(std::string name, std::string description, UINT32 flags = 0, std::string defvalue = nullptr, bool override_existing = false);
 	void add_entry(const options_entry &data, bool override_existing = false) { add_entry(data.name, data.description, data.flags, data.defvalue, override_existing); }
 	void add_entries(const options_entry *entrylist, bool override_existing = false);
-	void set_default_value(const char *name, const char *defvalue);
-	void set_description(const char *name, const char *description);
+	void set_default_value(std::string name, std::string defvalue);
+	void set_description(std::string name, std::string description);
 	void remove_entry(entry &delentry);
 
 	// parsing/input
@@ -145,25 +145,25 @@ public:
 	void revert(int priority = OPTION_PRIORITY_MAXIMUM);
 
 	// output
-	const char *output_ini(std::string &buffer, const core_options *diff = nullptr);
-	const char *output_help(std::string &buffer);
+	std::string output_ini(const core_options *diff = nullptr);
+	std::string output_help();
 
 	// reading
-	const char *value(const char *option) const;
-	const char *description(const char *option) const;
-	int priority(const char *option) const;
-	bool bool_value(const char *name) const { return (atoi(value(name)) != 0); }
-	int int_value(const char *name) const { return atoi(value(name)); }
-	float float_value(const char *name) const { return atof(value(name)); }
-	UINT32 seqid(const char *name) const;
-	bool exists(const char *name) const;
+	std::string value(std::string option) const;
+	std::string description(std::string option) const;
+	int priority(std::string option) const;
+	bool bool_value(std::string name) const { return (atoi(value(name).c_str()) != 0); }
+	int int_value(std::string name) const { return atoi(value(name).c_str()); }
+	float float_value(std::string name) const { return atof(value(name).c_str()); }
+	UINT32 seqid(std::string name) const;
+	bool exists(std::string name) const;
 
 	// setting
-	void set_command(const char *command);
-	bool set_value(const char *name, const char *value, int priority, std::string &error_string);
-	bool set_value(const char *name, int value, int priority, std::string &error_string);
-	bool set_value(const char *name, float value, int priority, std::string &error_string);
-	void set_flag(const char *name, UINT32 mask, UINT32 flags);
+	void set_command(std::string command);
+	bool set_value(std::string name, std::string value, int priority, std::string &error_string);
+	bool set_value(std::string name, int value, int priority, std::string &error_string);
+	bool set_value(std::string name, float value, int priority, std::string &error_string);
+	void set_flag(std::string name, UINT32 mask, UINT32 flags);
 
 	// misc
 	static const char *unadorned(int x = 0) { return s_option_unadorned[MIN(x, MAX_UNADORNED_OPTIONS)]; }
@@ -174,7 +174,7 @@ private:
 	void reset();
 	void append_entry(entry &newentry);
 	void copyfrom(const core_options &src);
-	bool validate_and_set_data(entry &curentry, const char *newdata, int priority, std::string &error_string);
+	bool validate_and_set_data(entry &curentry, std::string newdata, int priority, std::string &error_string);
 
 	// internal state
 	simple_list<entry>      m_entrylist;            // head of list of entries
