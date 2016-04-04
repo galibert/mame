@@ -3228,6 +3228,17 @@ end
 
 ---------------------------------------------------
 --
+--@src/devices/machine/iwmfdc.h,MACHINES["IWMFDC"] = true
+---------------------------------------------------
+if (MACHINES["IWMFDC"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/machine/iwmfdc.cpp",
+		MAME_DIR .. "src/devices/machine/iwmfdc.h",
+	}
+end
+
+---------------------------------------------------
+--
 --@src/devices/machine/diablo_hd.h,MACHINES["DIABLO_HD"] = true
 ---------------------------------------------------
 if (MACHINES["DIABLO_HD"]~=null) then
