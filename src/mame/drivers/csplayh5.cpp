@@ -27,6 +27,34 @@
       IDE and RS232c ports
       xtal 27 MHz
 
+serial: prescaler (spr) = a0
+        baud rate (sbrr0) = 2
+
+H8 typing:
+  - at least h8h
+  - watchdog at ffffffaa/ffffffa8 = a500 5a00  ok 3002 3044
+  - ffffffaf/ad/ac = 05 18 23                  ok 3002 3044 (refresh controller)
+  - p6ddr |= 06
+  - p6dr  |= 02
+  - p8ddr =  fe
+  - p8dr  =  ff
+  - p9ddr =  c3
+  - p9dr  =  cf
+  - paddr =  ff
+  - padr  =  1f
+  - pbddr =  3f
+  - pbdr  =  19
+  - abwcr =  06
+  - ipra  =  1f  a4/a3/a2/a1/a0
+  - iprb  =  e8  b7/b6/b5/b3
+  - ier   =  00
+  - iscr  =  10
+  - tstr  =  e0
+  - tsnc  =  e0
+  - tmdr  =  80
+  (etc)
+
+
 ***********************************************************************************************************/
 
 #include "emu.h"
@@ -40,7 +68,6 @@
 #include "video/v9938.h"
 #include "audio/nichisnd.h"
 
-#define USE_H8 0
 #define DVD_CLOCK XTAL(27'000'000)
 
 class csplayh5_state : public driver_device
@@ -69,10 +96,7 @@ public:
 	DECLARE_WRITE16_MEMBER(csplayh5_mux_w);
 	DECLARE_WRITE16_MEMBER(tmp68301_parallel_port_w);
 
-	#if USE_H8
-	DECLARE_READ16_MEMBER(test_r);
 	DECLARE_WRITE_LINE_MEMBER(ide_irq);
-	#endif
 
 	DECLARE_DRIVER_INIT(csplayh1);
 
@@ -107,9 +131,6 @@ public:
 	void csplayh5_sub_io_map(address_map &map);
 	void csplayh5_sub_map(address_map &map);
 };
-
-
-
 
 
 READ16_MEMBER(csplayh5_state::csplayh5_mux_r)
@@ -148,22 +169,13 @@ void csplayh5_state::csplayh5_map(address_map &map)
 	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));  // TMP68301 Registers
 }
 
-#if USE_H8
-READ16_MEMBER(csplayh5_state::test_r)
-{
-	return machine().rand();
-}
-
 void csplayh5_state::csplayh5_sub_map(address_map &map)
 {
 	map(0x000000, 0x01ffff).rom();
 
-	map(0x02000a, 0x02000b).r(this, FUNC(csplayh5_state::test_r));
 //  map(0x020008, 0x02000f).rw("ide", FUNC(ide_controller_device::read_cs0), FUNC(ide_controller_device::write_cs0));
 
-	map(0x040018, 0x040019).r(this, FUNC(csplayh5_state::test_r));
 	map(0x040028, 0x04002f).rw("ide", FUNC(ide_controller_device::read_cs0), FUNC(ide_controller_device::write_cs0)); // correct?
-	map(0x040036, 0x040037).r(this, FUNC(csplayh5_state::test_r));
 
 	map(0x078000, 0x07ffff).mirror(0xf80000).ram(); //.share("nvram");
 }
@@ -171,9 +183,7 @@ void csplayh5_state::csplayh5_sub_map(address_map &map)
 
 void csplayh5_state::csplayh5_sub_io_map(address_map &map)
 {
-	map(0x0a, 0x0b).r(this, FUNC(csplayh5_state::test_r));
 }
-#endif
 
 
 static INPUT_PORTS_START( csplayh5 )
@@ -341,12 +351,10 @@ WRITE_LINE_MEMBER(csplayh5_state::csplayh5_vdp0_interrupt)
 	   interrupts seem to be fired quite randomly */
 }
 
-#if USE_H8
 WRITE_LINE_MEMBER(csplayh5_state::ide_irq)
 {
 	printf("h8 ide alive %d\n",state);
 }
-#endif
 
 WRITE16_MEMBER(csplayh5_state::tmp68301_parallel_port_w)
 {
@@ -363,24 +371,21 @@ WRITE16_MEMBER(csplayh5_state::tmp68301_parallel_port_w)
 MACHINE_CONFIG_START(csplayh5_state::csplayh5)
 
 	/* basic machine hardware */
-	MCFG_CPU_ADD("maincpu",M68000,16000000) /* TMP68301-16 */
+	MCFG_CPU_ADD("maincpu",M68000,16000000) /* TMP68301-16, gives a 6250bps serial */
 	MCFG_CPU_PROGRAM_MAP(csplayh5_map)
 	MCFG_CPU_IRQ_ACKNOWLEDGE_DEVICE("tmp68301", tmp68301_device, irq_callback)
 
 	MCFG_TIMER_DRIVER_ADD_SCANLINE("scantimer", csplayh5_state, csplayh5_irq, "screen", 0, 1)
 
-	MCFG_DEVICE_ADD("tmp68301", TMP68301, 0)
-	MCFG_TMP68301_CPU("maincpu")
+	MCFG_TMP68301_ADD("tmp68301", "maincpu")
 	MCFG_TMP68301_OUT_PARALLEL_CB(WRITE16(csplayh5_state, tmp68301_parallel_port_w))
 
-#if USE_H8
 	MCFG_CPU_ADD("subcpu", H83002, DVD_CLOCK/2)    /* unknown divider */
 	MCFG_CPU_PROGRAM_MAP(csplayh5_sub_map)
 	MCFG_CPU_IO_MAP(csplayh5_sub_io_map)
 
 	MCFG_IDE_CONTROLLER_ADD("ide", ata_devices, "hdd", nullptr, true) // dvd
 	MCFG_ATA_INTERFACE_IRQ_HANDLER(WRITELINE(csplayh5_state, ide_irq))
-#endif
 
 	MCFG_NVRAM_ADD_0FILL("nvram")
 
@@ -401,11 +406,9 @@ MACHINE_CONFIG_END
 
 void csplayh5_state::general_init(int patchaddress, int patchvalue)
 {
-	#if !USE_H8
 	uint16_t *MAINROM = (uint16_t *)m_region_maincpu->base();
 	/* patch DVD comms check */
 	MAINROM[patchaddress] = patchvalue;
-	#endif
 
 	//uint8_t *SNDROM = m_region_:nichisnd:audiorom->base();
 

@@ -20,10 +20,12 @@
 #include "machine/tmp68301.h"
 
 DEFINE_DEVICE_TYPE(TMP68301, tmp68301_device, "tmp68301", "Toshiba TMP68301")
+DEFINE_DEVICE_TYPE(TMP68301_SERIAL, tmp68301_serial_device, "tmp68301_serial", "Toshiba TMP68301 Serial Port")
+DEFINE_DEVICE_TYPE(TMP68301_RS232, tmp68301_rs232_device, "tmp68301_rs232", "Toshiba TMP68301 RS232 Port")
 
 void tmp68301_device::tmp68301_regs(address_map &map)
 {
-//  AM_RANGE(0x000,0x3ff) AM_RAM
+//  map(0x000, 0x3ff).ram();
 	map(0x080, 0x093).rw(this, FUNC(tmp68301_device::icr_r), FUNC(tmp68301_device::icr_w)).umask16(0x00ff);
 
 	map(0x094, 0x095).rw(this, FUNC(tmp68301_device::imr_r), FUNC(tmp68301_device::imr_w));
@@ -34,8 +36,33 @@ void tmp68301_device::tmp68301_regs(address_map &map)
 	map(0x10a, 0x10b).rw(this, FUNC(tmp68301_device::pdr_r), FUNC(tmp68301_device::pdr_w));
 
 	/* Serial Port */
-	map(0x18e, 0x18f).rw(this, FUNC(tmp68301_device::scr_r), FUNC(tmp68301_device::scr_w));
+	map(0x181,0x181).rw(m_ser0, FUNC(tmp68301_serial_device::smr_r),  FUNC(tmp68301_serial_device::smr_w));
+	map(0x183,0x183).rw(m_ser0, FUNC(tmp68301_serial_device::scmr_r), FUNC(tmp68301_serial_device::scmr_w));
+	map(0x185,0x185).rw(m_ser0, FUNC(tmp68301_serial_device::sbrr_r), FUNC(tmp68301_serial_device::sbrr_w));
+	map(0x187,0x187).rw(m_ser0, FUNC(tmp68301_serial_device::ssr_r),  FUNC(tmp68301_serial_device::ssr_w));
+	map(0x189,0x189).rw(m_ser0, FUNC(tmp68301_serial_device::sdr_r),  FUNC(tmp68301_serial_device::sdr_w));
+
+	map(0x18d, 0x18d).rw(this, FUNC(tmp68301_device::spr_r), FUNC(tmp68301_device::spr_w));
+	map(0x18f, 0x18f).rw(this, FUNC(tmp68301_device::scr_r), FUNC(tmp68301_device::scr_w));
+
+	map(0x191,0x191).rw(m_ser0, FUNC(tmp68301_serial_device::smr_r),  FUNC(tmp68301_serial_device::smr_w));
+	map(0x193,0x193).rw(m_ser0, FUNC(tmp68301_serial_device::scmr_r), FUNC(tmp68301_serial_device::scmr_w));
+	map(0x195,0x195).rw(m_ser0, FUNC(tmp68301_serial_device::sbrr_r), FUNC(tmp68301_serial_device::sbrr_w));
+	map(0x197,0x197).rw(m_ser0, FUNC(tmp68301_serial_device::ssr_r),  FUNC(tmp68301_serial_device::ssr_w));
+	map(0x199,0x199).rw(m_ser0, FUNC(tmp68301_serial_device::sdr_r),  FUNC(tmp68301_serial_device::sdr_w));
+
+	map(0x1a1,0x1a1).rw(m_ser0, FUNC(tmp68301_serial_device::smr_r),  FUNC(tmp68301_serial_device::smr_w));
+	map(0x1a3,0x1a3).rw(m_ser0, FUNC(tmp68301_serial_device::scmr_r), FUNC(tmp68301_serial_device::scmr_w));
+	map(0x1a5,0x1a5).rw(m_ser0, FUNC(tmp68301_serial_device::sbrr_r), FUNC(tmp68301_serial_device::sbrr_w));
+	map(0x1a7,0x1a7).rw(m_ser0, FUNC(tmp68301_serial_device::ssr_r),  FUNC(tmp68301_serial_device::ssr_w));
+	map(0x1a9,0x1a9).rw(m_ser0, FUNC(tmp68301_serial_device::sdr_r),  FUNC(tmp68301_serial_device::sdr_w));
 }
+
+MACHINE_CONFIG_START(tmp68301_device::device_add_mconfig)
+	MCFG_TMP68301_RS232_ADD ("ser0")
+	MCFG_TMP68301_SERIAL_ADD("ser1")
+	MCFG_TMP68301_SERIAL_ADD("ser2")
+MACHINE_CONFIG_END
 
 // IRQ Mask register, 0x94
 READ16_MEMBER(tmp68301_device::imr_r)
@@ -57,24 +84,6 @@ READ16_MEMBER(tmp68301_device::iisr_r)
 WRITE16_MEMBER(tmp68301_device::iisr_w)
 {
 	COMBINE_DATA(&m_iisr);
-}
-
-// Serial Control Register (TODO: 8-bit wide)
-READ16_MEMBER(tmp68301_device::scr_r)
-{
-	return m_scr;
-}
-
-WRITE16_MEMBER(tmp68301_device::scr_w)
-{
-	/*
-	    *--- ---- CKSE
-	    --*- ---- RES
-	    ---- ---* INTM
-	*/
-
-	COMBINE_DATA(&m_scr);
-	m_scr &= 0xa1;
 }
 
 /* Parallel direction: 1 = output, 0 = input */
@@ -123,18 +132,20 @@ tmp68301_device::tmp68301_device(const machine_config &mconfig, const char *tag,
 		m_cpu(*this, finder_base::DUMMY_TAG),
 		m_in_parallel_cb(*this),
 		m_out_parallel_cb(*this),
+	    m_ser0(*this, "ser0"),
+	    m_ser1(*this, "ser1"),
+	    m_ser2(*this, "ser2"),
 		m_imr(0),
 		m_iisr(0),
-		m_scr(0),
 		m_pdir(0),
 		m_pdr(0),
-	  m_space_config("regs", ENDIANNESS_LITTLE, 16, 10, 0, address_map_constructor(), address_map_constructor(FUNC(tmp68301_device::tmp68301_regs), this))
+		m_scr(0),
+	    m_space_config("regs", ENDIANNESS_LITTLE, 16, 10, 0, address_map_constructor(), address_map_constructor(FUNC(tmp68301_device::tmp68301_regs), this))
 {
 	memset(m_regs, 0, sizeof(m_regs));
 	memset(m_icr, 0, sizeof(m_icr));
 	memset(m_irq_vector, 0, sizeof(m_irq_vector));
 }
-
 
 //-------------------------------------------------
 //  device_start - device-specific startup
@@ -154,9 +165,9 @@ void tmp68301_device::device_start()
 	save_item(NAME(m_irq_vector));
 	save_item(NAME(m_imr));
 	save_item(NAME(m_iisr));
+	save_item(NAME(m_pdr));
 	save_item(NAME(m_scr));
 	save_item(NAME(m_pdir));
-	save_item(NAME(m_pdr));
 }
 
 //-------------------------------------------------
@@ -167,6 +178,13 @@ void tmp68301_device::device_reset()
 {
 	m_iisr = 0;
 	m_imr = 0x7f7; // mask all irqs
+	m_scr = 0x00;
+	m_spr = 0x00;
+
+	double prescaled_clock = double(m_cpu->unscaled_clock())/256;
+	m_ser0->set_prescaled_clock(prescaled_clock);
+	m_ser1->set_prescaled_clock(prescaled_clock);
+	m_ser2->set_prescaled_clock(prescaled_clock);	
 }
 
 //-------------------------------------------------
@@ -206,7 +224,7 @@ inline void tmp68301_device::write_word(offs_t address, uint16_t data)
 IRQ_CALLBACK_MEMBER(tmp68301_device::irq_callback)
 {
 	int vector = m_irq_vector[irqline];
-//  logerror("%s: irq callback returns %04X for level %x\n",machine().describe_context(),vector,int_level);
+//  logerror("irq callback returns %04X for level %x\n",machine().describe_context(),vector,int_level);
 	return vector;
 }
 
@@ -277,14 +295,14 @@ void tmp68301_device::update_timer( int i )
 		break;
 	}
 
-//  logerror("%s: TMP68301 Timer %d, duration %lf, max %04X\n",machine().describe_context(),i,duration,max);
+//  logerror("TMP68301 Timer %d, duration %lf, max %04X\n",machine().describe_context(),i,duration,max);
 
 	if (!(TCR & 0x0002))                // CS
 	{
 		if (duration != attotime::zero)
 			m_tmp68301_timer[i]->adjust(duration,i);
 		else
-			logerror("%s: TMP68301 error, timer %d duration is 0\n",machine().describe_context(),i);
+			logerror("TMP68301 error, timer %d duration is 0\n",machine().describe_context(),i);
 	}
 }
 
@@ -390,3 +408,187 @@ WRITE16_MEMBER( tmp68301_device::regs_w )
 void tmp68301_device::external_interrupt_0()    { update_irq_state(EXT_IRQ0); }
 void tmp68301_device::external_interrupt_1()    { update_irq_state(EXT_IRQ1); }
 void tmp68301_device::external_interrupt_2()    { update_irq_state(EXT_IRQ2); }
+
+
+// Serial subsystem
+
+tmp68301_serial_device::tmp68301_serial_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
+	tmp68301_serial_device(mconfig, TMP68301_SERIAL, tag, owner, clock)
+{
+}
+
+tmp68301_serial_device::tmp68301_serial_device(const machine_config &mconfig, device_type &type, const char *tag, device_t *owner, uint32_t clock) :
+	device_t(mconfig, type, tag, owner, clock),
+	m_cpu(*this, "^"),
+	tx_cb(*this)
+{
+}
+
+tmp68301_rs232_device::tmp68301_rs232_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
+	tmp68301_serial_device(mconfig, TMP68301_SERIAL, tag, owner, clock),
+	rts_cb(*this),
+	dtr_cb(*this)
+{
+}
+
+void tmp68301_serial_device::device_start()
+{
+	prescaled_clock = 0;
+	clock_interval = attotime::never;
+}
+
+void tmp68301_serial_device::device_reset()
+{
+	smr  = 0xc2;
+	scmr = 0x10;
+	ssr  = 0x04;
+	sbrr = 0x00;
+	clock_interval = attotime::never;
+}
+
+void tmp68301_rs232_device::device_start()
+{
+	tmp68301_serial_device::device_start();
+}
+
+void tmp68301_rs232_device::device_reset()
+{
+	tmp68301_serial_device::device_reset();
+}
+
+READ8_MEMBER(tmp68301_device::scr_r)
+{
+	return m_scr;
+}
+
+WRITE8_MEMBER(tmp68301_device::scr_w)
+{
+	logerror("scr_w %02x clock=%s reset=%s serial_int=%s (%06x)\n", data,
+			 data & 0x80 ? "internal" : "external",
+			 data & 0x40 ? "on" : "off",
+			 data & 0x01 ? "off" : "on",
+			 m_cpu->pc());
+
+	/*
+	    *--- ---- CKSE
+	    --*- ---- RES
+	    ---- ---* INTM
+	*/
+
+	m_scr = data & 0xa1;
+	recalc_serial_clock();
+}
+
+READ8_MEMBER(tmp68301_device::spr_r)
+{
+	logerror("spr_r (%06x)\n", m_cpu->pc());
+	return m_spr;
+}
+
+WRITE8_MEMBER(tmp68301_device::spr_w)
+{
+	logerror("spr_w %02x (%06x)\n", data, m_cpu->pc());
+	m_spr = data;
+	recalc_serial_clock();
+}
+
+void tmp68301_device::recalc_serial_clock()
+{
+	double prescaled_clock = m_scr & 0x20 ? 0 : m_spr ? double(m_cpu->unscaled_clock())/m_spr : double(clock())/256;
+	m_ser0->set_prescaled_clock(prescaled_clock);
+	m_ser1->set_prescaled_clock(prescaled_clock);
+	m_ser2->set_prescaled_clock(prescaled_clock);
+}
+
+READ8_MEMBER(tmp68301_serial_device::smr_r)
+{
+	logerror("smr_r (%06x)\n", m_cpu->pc());
+	return smr;
+}
+
+WRITE8_MEMBER(tmp68301_serial_device::smr_w)
+{
+	logerror("smr_w %02x rx_int=%s tx_int=%s er_int=%s mode=%d%c%c (%06x)\n",
+			 tag(), data,
+			 data & 0x80 ? "off" : "on",
+			 data & 0x02 ? "off" : "on",
+			 data & 0x40 ? "off" : "on",
+			 5 + ((data >> 2) & 3),
+			 data & 0x10 ? data & 0x20 ? 'o' : 'e' : 'n',
+			 data & 0x01 ? '2' : '1',
+			 m_cpu->pc());
+	smr = data;
+}
+
+READ8_MEMBER(tmp68301_serial_device::scmr_r)
+{
+	logerror("scmr_r (%06x)\n", m_cpu->pc());
+	return scmr;
+}
+
+WRITE8_MEMBER(tmp68301_serial_device::scmr_w)
+{
+	logerror("scmr_w %02x ers=%s break=%s rx=%s tx=%s rts=%s dtr=%s (%06x)\n", data,
+			 data & 0x10 ? "reset" : "off",
+			 data & 0x08 ? "on" : "off",
+			 data & 0x04 ? "on" : "off",
+			 data & 0x01 ? "on" : "off",
+			 data & 0x20 ? "low" : "high",
+			 data & 0x02 ? "low" : "high",
+			 m_cpu->pc());
+	scmr = data;
+}
+
+READ8_MEMBER(tmp68301_serial_device::sbrr_r)
+{
+	logerror("sbrr_r (%06x)\n", m_cpu->pc());
+	return sbrr;
+}
+
+WRITE8_MEMBER(tmp68301_serial_device::sbrr_w)
+{
+	logerror("sbrr_w %02x (%06x)\n", data, m_cpu->pc());
+	sbrr = data;
+	clock_update();
+}
+
+READ8_MEMBER(tmp68301_serial_device::ssr_r)
+{
+	logerror("ssr_r (%06x)\n", m_cpu->pc());
+	return ssr;
+}
+
+WRITE8_MEMBER(tmp68301_serial_device::ssr_w)
+{
+	logerror("ssr_w %02x (%06x)\n", data, m_cpu->pc());
+	ssr = data;
+}
+
+READ8_MEMBER(tmp68301_serial_device::sdr_r)
+{
+	logerror("sdr_r (%06x)\n", m_cpu->pc());
+	return 0x00;
+}
+
+WRITE8_MEMBER(tmp68301_serial_device::sdr_w)
+{
+	logerror("sdr_w %02x (%06x)\n", data, m_cpu->pc());
+}
+
+void tmp68301_serial_device::set_prescaled_clock(double clock)
+{
+	prescaled_clock = clock;
+	clock_update();
+}
+
+void tmp68301_serial_device::clock_update()
+{
+	if(!prescaled_clock || !sbrr || (sbrr & (sbrr - 1))) {
+		clock_interval = attotime::never;
+		return;
+	}
+
+	double base_rate = prescaled_clock / sbrr;
+	clock_interval = attotime::from_seconds(1/base_rate);
+	logerror("Baud rate %gHz\n", base_rate/8);
+}
