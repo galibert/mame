@@ -1294,6 +1294,8 @@ Notes:
 #define MAIN_C450_IRQ   0x20
 #define MAIN_C451_IRQ   0x40
 
+#define RECORD 0
+
 enum { MODEL, FLUSH };
 
 enum { RENDER_MAX_ENTRIES = 1000, POLY_MAX_ENTRIES = 10000 };
@@ -1496,7 +1498,7 @@ public:
 	int16_t m_matrices[256][9];
 	int32_t m_vectors[256][3];
 	int32_t m_light_vector[3];
-	uint16_t m_scaling;
+	uint16_t m_scaling, m_model_offset;
 	int32_t m_spv[3];
 	int16_t m_spm[3];
 
@@ -1586,6 +1588,7 @@ public:
 	void c435_matrix_vector_mul();
 	void c435_state_set();
 	void c435_scaling_set();
+	void c435_model_offset_set();
 	void c435_render();
 	void c435_flush();
 
@@ -1597,6 +1600,7 @@ public:
 	void render_project(poly_vertex &pv);
 	void render_one_model(const namcos23_render_entry *re);
 	void render_run(bitmap_rgb32 &bitmap);
+
 	void timecrs2v4a(machine_config &config);
 	void ss23e2(machine_config &config);
 	void gorgon(machine_config &config);
@@ -1613,7 +1617,55 @@ public:
 	void s23iobrdiomap(address_map &map);
 	void s23iobrdmap(address_map &map);
 	void timecrs2iobrdmap(address_map &map);
+
+	FILE *m_record_file;
+	void record_start();
+	void record_vsync();
+	void record_command(const uint16_t *cmd, int size);
+	void record_state_change(uint16_t type, const uint16_t *param);
 };
+
+void namcos23_state::record_start()
+{
+	if(RECORD) {
+		if(!m_record_file) {
+			char name[4096];
+			sprintf(name, "videolog-%s.txt", machine().system().name);
+			m_record_file = fopen(name, "w");
+		}
+		if(m_record_file)
+			fprintf(m_record_file, "start\n");
+	}
+}
+
+void namcos23_state::record_vsync()
+{
+	if(m_record_file) {
+		fprintf(m_record_file, "vsync\n");
+		fflush(m_record_file);
+	}
+}
+
+void namcos23_state::record_command(const uint16_t *cmd, int size)
+{
+	if(m_record_file) {
+		fprintf(m_record_file, "cmd");
+		for(int i=0; i<size; i++)
+			fprintf(m_record_file, " %04x", cmd[i]);
+		fprintf(m_record_file, "\n");
+	}
+}
+
+void namcos23_state::record_state_change(uint16_t type, const uint16_t *param)
+{
+	if(m_record_file) {
+		fprintf(m_record_file, "state %04x -", type);
+		for(int i=0; i<c435_get_state_entry_size(type); i++)
+			fprintf(m_record_file, " %04x", param[i]);
+		fprintf(m_record_file, "\n");
+	}
+}
+
 
 
 uint8_t namcos23_state::nthbyte(const uint32_t *pSource, int offs)
@@ -1735,6 +1787,7 @@ void namcos23_state::c435_state_set_projection_matrix_line(const uint16_t *param
 
 void namcos23_state::c435_state_set(uint16_t type, const uint16_t *param)
 {
+	record_state_change(type, param);
 	switch(type) {
 	case 0x0001: c435_state_set_interrupt(param); break;
 	case 0x00c8: c435_state_set_projection_matrix_line(param); break;
@@ -1794,18 +1847,16 @@ void namcos23_state::c435_matrix_matrix_mul() // 0.0
 		logerror("WARNING: c435_matrix_matrix_mul with +2=%04x\n", m_c435_buffer[3]);
 
 	int16_t *t        = c435_getm(m_c435_buffer[1]);
-	const int16_t *m2 = c435_getm(m_c435_buffer[2]);
-	const int16_t *m1 = c435_getm(m_c435_buffer[4]);
+	const int16_t *m1 = c435_getm(m_c435_buffer[2]);
+	const int16_t *m2 = c435_getm(m_c435_buffer[4]);
 
-	t[0] = int16_t((m1[0]*m2[0] + m1[1]*m2[1] + m1[2]*m2[2]) >> 14);
-	t[1] = int16_t((m1[0]*m2[3] + m1[1]*m2[4] + m1[2]*m2[5]) >> 14);
-	t[2] = int16_t((m1[0]*m2[6] + m1[1]*m2[7] + m1[2]*m2[8]) >> 14);
-	t[3] = int16_t((m1[3]*m2[0] + m1[4]*m2[1] + m1[5]*m2[2]) >> 14);
-	t[4] = int16_t((m1[3]*m2[3] + m1[4]*m2[4] + m1[5]*m2[5]) >> 14);
-	t[5] = int16_t((m1[3]*m2[6] + m1[4]*m2[7] + m1[5]*m2[8]) >> 14);
-	t[6] = int16_t((m1[6]*m2[0] + m1[7]*m2[1] + m1[8]*m2[2]) >> 14);
-	t[7] = int16_t((m1[6]*m2[3] + m1[7]*m2[4] + m1[8]*m2[5]) >> 14);
-	t[8] = int16_t((m1[6]*m2[6] + m1[7]*m2[7] + m1[8]*m2[8]) >> 14);
+	for(int i=0; i<3; i++)
+		for(int j=0; j<3; j++) {
+			int sum = 0;
+			for(int k=0; k<3; k++)
+				sum += m1[3*j+k] * m2[i+3*k];
+			t[i+3*j] = int16_t(sum >> 14);
+		}
 }
 
 void namcos23_state::c435_matrix_vector_mul() // 0.1
@@ -1878,6 +1929,15 @@ void namcos23_state::c435_scaling_set() // 4.4
 	m_scaling = m_c435_buffer[1];
 }
 
+void namcos23_state::c435_model_offset_set() // 4.7
+{
+	if((m_c435_buffer[0] & 0xff) != 1) {
+		logerror("WARNING: c435_model_offset_set with size %d\n", m_c435_buffer[0] & 0xff);
+		return;
+	}
+	m_model_offset = m_c435_buffer[1];
+}
+
 void namcos23_state::c435_state_set() // 4.f
 {
 	if((m_c435_buffer[0] & 0xff) == 0) {
@@ -1896,43 +1956,43 @@ void namcos23_state::c435_state_set() // 4.f
 
 void namcos23_state::c435_render() // 8
 {
-	if((m_c435_buffer[0] & 0xf) != 3) {
-		logerror("WARNING: c435_render with size %d, header %04x\n", m_c435_buffer[0] & 0xf, m_c435_buffer[0]);
-		return;
-	}
-
 	render_t &render = m_render;
 	bool use_scaling = m_c435_buffer[0] & 0x0080;
+	uint16_t model_offset = m_c435_buffer[0] & 0x0040 ? 0x100 : 0;
 
 	logerror("render model %x %swith matrix %x and vector %x\n", m_c435_buffer[1], use_scaling ? "scaled " : "", m_c435_buffer[2], m_c435_buffer[3]);
 
-	if(render.count[render.cur] >= RENDER_MAX_ENTRIES) {
-		logerror("WARNING: render buffer full\n");
-		return;
-	}
-
+	int mv_offset = m_c435_buffer[0] & 0xf;
 	// Vector and matrix may be inverted
-	const int16_t *m = c435_getm(m_c435_buffer[2]);
-	const int32_t *v = c435_getv(m_c435_buffer[3]);
+	const int16_t *m = c435_getm(m_c435_buffer[mv_offset-1]);
+	const int32_t *v = c435_getv(m_c435_buffer[mv_offset]);
 
-	namcos23_render_entry *re = render.entries[render.cur] + render.count[render.cur];
-	re->type = MODEL;
-	re->model.model = m_c435_buffer[1];
-	re->model.scaling = use_scaling ? m_scaling / 16384.0 : 1.0;
-	memcpy(re->model.m, m, sizeof(re->model.m));
-	memcpy(re->model.v, v, sizeof(re->model.v));
-	//  re->model.v[2] *= 768/420.0;
+	for(int i=1; i<mv_offset-1; i++) {
+		if(render.count[render.cur] >= RENDER_MAX_ENTRIES) {
+			logerror("WARNING: render buffer full\n");
+			return;
+		}
 
-	if(0)
-		logerror("Render %04x (%f %f %f %f %f %f %f %f %f) (%f %f %f) %f\n",
-				re->model.model,
-				re->model.m[0]/16384.0, re->model.m[1]/16384.0, re->model.m[2]/16384.0,
-				re->model.m[3]/16384.0, re->model.m[4]/16384.0, re->model.m[5]/16384.0,
-				re->model.m[6]/16384.0, re->model.m[7]/16384.0, re->model.m[8]/16384.0,
-				re->model.v[0]/16384.0, re->model.v[1]/16384.0, re->model.v[2]/16384.0,
-				re->model.scaling);
+		logerror("render model %x %swith matrix %x and vector %x mo %d\n", m_c435_buffer[i] + model_offset, m_c435_buffer[0] & 0x0080 ? "scaled " : "", m_c435_buffer[mv_offset-1], m_c435_buffer[mv_offset], model_offset);
 
-	render.count[render.cur]++;
+		namcos23_render_entry *re = render.entries[render.cur] + render.count[render.cur];
+		re->type = MODEL;
+		re->model.model = m_c435_buffer[i] + model_offset;
+		re->model.scaling = use_scaling ? m_scaling / 16384.0 : 1.0;
+		memcpy(re->model.m, m, sizeof(re->model.m));
+		memcpy(re->model.v, v, sizeof(re->model.v));
+		//	re->model.v[2] *= 768/420.0;
+
+		if(0)
+			logerror("Render %04x (%f %f %f %f %f %f %f %f %f) (%f %f %f) %f\n",
+					 re->model.model,
+					 re->model.m[0]/16384.0, re->model.m[1]/16384.0, re->model.m[2]/16384.0,
+					 re->model.m[3]/16384.0, re->model.m[4]/16384.0, re->model.m[5]/16384.0,
+					 re->model.m[6]/16384.0, re->model.m[7]/16384.0, re->model.m[8]/16384.0,
+					 re->model.v[0]/16384.0, re->model.v[1]/16384.0, re->model.v[2]/16384.0,
+					 re->model.scaling);
+		render.count[render.cur]++;
+	}
 }
 
 void namcos23_state::c435_flush() // c
@@ -1961,6 +2021,9 @@ void namcos23_state::c435_pio_w(uint16_t data)
 	if(m_c435_buffer_pos < psize+1)
 		return;
 
+	if((h & 0xff00) != 0x4f00)
+		record_command(m_c435_buffer, m_c435_buffer_pos);
+
 	bool known = true;
 	switch(h & 0xc000) {
 	case 0x0000:
@@ -1976,6 +2039,7 @@ void namcos23_state::c435_pio_w(uint16_t data)
 	case 0x4000:
 		switch(h & 0x3f00) {
 		case 0x0400: c435_scaling_set(); break;
+		case 0x0700: c435_model_offset_set(); break;
 		case 0x0f00: c435_state_set(); break;
 		default: known = false; break;
 		}
@@ -2127,7 +2191,7 @@ void namcos23_state::render_one_model(const namcos23_render_entry *re)
 		return;
 	}
 
-	if(re->model.model == 3486)
+	if((re->model.model & 0xff0) != 0x110)
 		return;
 
 	uint32_t adr = m_ptrom[re->model.model];
@@ -2170,6 +2234,11 @@ void namcos23_state::render_one_model(const namcos23_render_entry *re)
 			uint32_t v3 = m_ptrom[adr++];
 
 			render_apply_transform(u32_to_s24(v1), u32_to_s24(v2), u32_to_s24(v3), re, pv[i]);
+			logerror("render model x=%f y=%f z=%f\n", pv[i].x, pv[i].y, pv[i].p[0]);
+
+			if(pv[i].p[0] < 0)
+				pv[i].p[0] = -pv[i].p[0];
+
 			pv[i].p[1] = (((v1 >> 20) & 0xf00) | ((v2 >> 24 & 0xff))) + 0.5;
 			pv[i].p[2] = (((v1 >> 16) & 0xf00) | ((v3 >> 24 & 0xff))) + 0.5f + tbase;
 
@@ -2412,6 +2481,7 @@ uint32_t namcos23_state::screen_update(screen_device &screen, bitmap_rgb32 &bitm
 {
 	update_mixer();
 	bitmap.fill(m_c404.bgcolor, cliprect);
+	bitmap.fill(0xc0c0c0c0, cliprect);
 
 	render_run(bitmap);
 
@@ -2472,6 +2542,7 @@ INTERRUPT_GEN_MEMBER(namcos23_state::interrupt)
 		update_main_interrupts(m_main_irqcause | MAIN_VBLANK_IRQ);
 	}
 
+	record_vsync();
 	m_render.cur = !m_render.cur;
 	m_render.count[m_render.cur] = 0;
 }
@@ -3471,11 +3542,13 @@ void namcos23_state::machine_start()
 	m_c361.timer->adjust(attotime::never);
 
 	m_maincpu->add_fastram(0, m_mainram.bytes()-1, false, reinterpret_cast<uint32_t *>(memshare("mainram")->ptr()));
+	m_record_file = NULL;
 }
 
 
 void namcos23_state::machine_reset()
 {
+	record_start();
 	m_vblank_count = 0;
 	m_c435_buffer_pos = 0;
 	m_subcpu->set_input_line(INPUT_LINE_RESET, ASSERT_LINE);
