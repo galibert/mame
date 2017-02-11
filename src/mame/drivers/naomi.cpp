@@ -1708,8 +1708,8 @@ void naomi_state::naomi_map(address_map &map)
 	map(0x01000000, 0x01ffffff).mirror(0x02000000).r(this, FUNC(naomi_state::naomi_g2bus_r));
 
 	/* Area 1 */
-	map(0x04000000, 0x04ffffff).mirror(0x02000000).ram().share("dc_texture_ram");      // texture memory 64 bit access
-	map(0x05000000, 0x05ffffff).mirror(0x02000000).ram().share("frameram"); // apparently this actually accesses the same memory as the 64-bit texture memory access, but in a different format, keep it apart for now
+	map(0x04000000, 0x04ffffff).rw(m_powervr2, FUNC(powervr2_device::tex64_r), FUNC(powervr2_device::tex64_w));
+	map(0x05000000, 0x05ffffff).rw(m_powervr2, FUNC(powervr2_device::tex32_r), FUNC(powervr2_device::tex32_w));
 
 	/* Area 2*/
 	map(0x08000000, 0x09ffffff).mirror(0x02000000).noprw(); // 'Unassigned'
@@ -1720,9 +1720,9 @@ void naomi_state::naomi_map(address_map &map)
 	/* Area 4 */
 	map(0x10000000, 0x107fffff).mirror(0x02000000).w(m_powervr2, FUNC(powervr2_device::ta_fifo_poly_w));
 	map(0x10800000, 0x10ffffff).w(m_powervr2, FUNC(powervr2_device::ta_fifo_yuv_w));
-	map(0x11000000, 0x11ffffff).w(m_powervr2, FUNC(powervr2_device::ta_texture_directpath0_w)); // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE0 register - cannot be written directly, only through dma / store queue)
+	map(0x11000000, 0x11ffffff).w(m_powervr2, FUNC(powervr2_device::texture_path0_w)); // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE0 register - cannot be written directly, only through dma / store queue)
 	/*       0x12000000 -0x13ffffff Mirror area of  0x10000000 -0x11ffffff */
-	map(0x13000000, 0x13ffffff).w(m_powervr2, FUNC(powervr2_device::ta_texture_directpath1_w)); // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE1 register - cannot be written directly, only through dma / store queue)
+	map(0x13000000, 0x13ffffff).w(m_powervr2, FUNC(powervr2_device::texture_path1_w)); // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE1 register - cannot be written directly, only through dma / store queue)
 
 	/* Area 5 */
 	//AM_RANGE(0x14000000, 0x17ffffff) AM_NOP // MPX Ext.
@@ -1769,12 +1769,12 @@ void naomi2_state::naomi2_map(address_map &map)
 	map(0x025f7c00, 0x025f7cff).m(m_powervr2_slave, FUNC(powervr2_device::pd_dma_map));
 	map(0x025f8000, 0x025f9fff).m(m_powervr2_slave, FUNC(powervr2_device::ta_map));
 //  AM_RANGE(0x025f6800, 0x025f69ff) AM_READWRITE(dc_sysctrl_r, dc_sysctrl_w ) // second PVR DMA!
-//  AM_RANGE(0x025f7c00, 0x025f7cff) AM_DEVREADWRITE32("powervr2", powervr2_device, pvr_ctrl_r, pvr_ctrl_w, 0xffffffffffffffffU)
-//  AM_RANGE(0x005f8000, 0x005f9fff) AM_MIRROR(0x02000000) AM_DEVICE32("powervr2", powervr2_device, ta_map, 0xffffffffffffffffU)
+//  AM_RANGE(0x025f7c00, 0x025f7cff) AM_DEVREADWRITE32(m_powervr2, powervr2_device, pvr_ctrl_r, pvr_ctrl_w, 0xffffffffffffffffU)
+//  AM_RANGE(0x005f8000, 0x005f9fff) AM_MIRROR(0x02000000) AM_DEVICE32(m_powervr2, powervr2_device, ta_map, 0xffffffffffffffffU)
 
 	/* Area 1 */
-	map(0x04000000, 0x04ffffff).ram().share("dc_texture_ram");      // texture memory 64 bit access
-	map(0x05000000, 0x05ffffff).ram().share("frameram"); // apparently this actually accesses the same memory as the 64-bit texture memory access, but in a different format, keep it apart for now
+	map(0x04000000, 0x04ffffff).rw(m_powervr2, FUNC(powervr2_device::tex64_r), FUNC(powervr2_device::tex64_w));
+	map(0x05000000, 0x05ffffff).rw(m_powervr2, FUNC(powervr2_device::tex32_r), FUNC(powervr2_device::tex32_w));
 	map(0x06000000, 0x06ffffff).ram().share("textureram2");   // 64 bit access 2nd PVR RAM
 	map(0x07000000, 0x07ffffff).ram().share("frameram2");// 32 bit access 2nd PVR RAM
 
@@ -1791,9 +1791,9 @@ void naomi2_state::naomi2_map(address_map &map)
 	/* Area 4 */
 	map(0x10000000, 0x107fffff).w(m_powervr2, FUNC(powervr2_device::ta_fifo_poly_w));
 	map(0x10800000, 0x10ffffff).w(m_powervr2, FUNC(powervr2_device::ta_fifo_yuv_w));
-	map(0x11000000, 0x11ffffff).w(m_powervr2, FUNC(powervr2_device::ta_texture_directpath0_w)); // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE0 register - cannot be written directly, only through dma / store queue)
+	map(0x11000000, 0x11ffffff).w(m_powervr2, FUNC(powervr2_device::texture_path0_w)); // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE0 register - cannot be written directly, only through dma / store queue)
 	/*       0x12000000 -0x13ffffff Mirror area of  0x10000000 -0x11ffffff */
-	map(0x13000000, 0x13ffffff).w(m_powervr2, FUNC(powervr2_device::ta_texture_directpath1_w)); // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE1 register - cannot be written directly, only through dma / store queue)
+	map(0x13000000, 0x13ffffff).w(m_powervr2, FUNC(powervr2_device::texture_path1_w)); // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE1 register - cannot be written directly, only through dma / store queue)
 
 	/* Area 5 */
 	//AM_RANGE(0x14000000, 0x17ffffff) AM_NOP // MPX Ext.
@@ -1941,8 +1941,8 @@ void atomiswave_state::aw_map(address_map &map)
 	map(0x00800000, 0x00ffffff).rw(this, FUNC(atomiswave_state::sh4_soundram_r), FUNC(atomiswave_state::sh4_soundram_w));           // sound RAM (8 MB)
 
 	/* Area 1 - half the texture memory, like dreamcast, not naomi */
-	map(0x04000000, 0x047fffff).ram().mirror(0x00800000).share("dc_texture_ram");      // texture memory 64 bit access
-	map(0x05000000, 0x057fffff).ram().mirror(0x00800000).share("frameram"); // apparently this actually accesses the same memory as the 64-bit texture memory access, but in a different format, keep it apart for now
+	map(0x04000000, 0x04ffffff).rw(m_powervr2, FUNC(powervr2_device::tex64_r), FUNC(powervr2_device::tex64_w));
+	map(0x05000000, 0x05ffffff).rw(m_powervr2, FUNC(powervr2_device::tex32_r), FUNC(powervr2_device::tex32_w));
 
 	/* Area 2*/
 	map(0x08000000, 0x0bffffff).noprw(); // 'Unassigned'
@@ -1959,10 +1959,9 @@ void atomiswave_state::aw_map(address_map &map)
 	/* Area 4 - half the texture memory, like dreamcast, not naomi */
 	map(0x10000000, 0x107fffff).mirror(0x02000000).w(m_powervr2, FUNC(powervr2_device::ta_fifo_poly_w));
 	map(0x10800000, 0x10ffffff).w(m_powervr2, FUNC(powervr2_device::ta_fifo_yuv_w));
-	map(0x11000000, 0x117fffff).w(m_powervr2, FUNC(powervr2_device::ta_texture_directpath0_w)).mirror(0x00800000);  // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE0 register - cannot be written directly, only through dma / store queue
+	map(0x11000000, 0x117fffff).w(m_powervr2, FUNC(powervr2_device::texture_path0_w)).mirror(0x00800000);  // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE0 register - cannot be written directly, only through dma / store queue
 	/*       0x12000000 -0x13ffffff Mirror area of  0x10000000 -0x11ffffff */
-	map(0x13000000, 0x137fffff).w(m_powervr2, FUNC(powervr2_device::ta_texture_directpath1_w)).mirror(0x00800000); // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE1 register - cannot be written directly, only through dma / store queue
-
+	map(0x13000000, 0x137fffff).w(m_powervr2, FUNC(powervr2_device::texture_path1_w)).mirror(0x00800000); // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE1 register - cannot be written directly, only through dma / store queue
 
 	/* Area 5 */
 	//AM_RANGE(0x14000000, 0x17ffffff) AM_NOP // MPX Ext.

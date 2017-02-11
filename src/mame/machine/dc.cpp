@@ -396,6 +396,8 @@ WRITE64_MEMBER(dc_state::dc_sysctrl_w )
 	dc_sysctrl_regs[reg] = dat; // 5f6800+off*4=dat
 	switch (reg)
 	{
+		case SB_LMMODE0: logerror("lmmode0 %08x\n", dat); m_powervr2->set_texture_path_mode(0, dat & 1); break;
+		case SB_LMMODE1: logerror("lmmode1 %08x\n", dat); m_powervr2->set_texture_path_mode(1, dat & 1); break;
 		case SB_C2DST:
 			if(((old & 1) == 0) && (dat & 1)) // 0 -> 1
 			{

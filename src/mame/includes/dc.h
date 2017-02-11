@@ -21,8 +21,6 @@ class dc_state : public driver_device
 	public:
 		dc_state(const machine_config &mconfig, device_type type, const char *tag)
 		: driver_device(mconfig, type, tag),
-		dc_framebuffer_ram(*this, "frameram"),
-		dc_texture_ram(*this, "dc_texture_ram"),
 		dc_sound_ram(*this, "dc_sound_ram"),
 		dc_ram(*this, "dc_ram"),
 		m_maincpu(*this, "maincpu"),
@@ -31,9 +29,6 @@ class dc_state : public driver_device
 		m_maple(*this, "maple_dc"),
 		m_naomig1(*this, "rom_board"),
 		m_aica(*this, "aica") { }
-
-	required_shared_ptr<uint64_t> dc_framebuffer_ram; // '32-bit access area'
-	required_shared_ptr<uint64_t> dc_texture_ram; // '64-bit access area'
 
 	required_shared_ptr<uint32_t> dc_sound_ram;
 	required_shared_ptr<uint64_t> dc_ram;

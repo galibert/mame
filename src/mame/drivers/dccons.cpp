@@ -380,15 +380,15 @@ void dc_cons_state::dc_map(address_map &map)
 	map(0x00700000, 0x00707fff).rw(this, FUNC(dc_cons_state::dc_aica_reg_r), FUNC(dc_cons_state::dc_aica_reg_w));
 	map(0x00710000, 0x0071000f).mirror(0x02000000).rw("aicartc", FUNC(aicartc_device::read), FUNC(aicartc_device::write)).umask64(0x0000ffff0000ffff);
 	map(0x00800000, 0x009fffff).rw(this, FUNC(dc_cons_state::sh4_soundram_r), FUNC(dc_cons_state::sh4_soundram_w));
-//  AM_RANGE(0x01000000, 0x01ffffff) G2 Ext Device #1
-//  AM_RANGE(0x02700000, 0x02707fff) AICA reg mirror
-//  AM_RANGE(0x02800000, 0x02ffffff) AICA wave mem mirror
+//  map(0x01000000, 0x01ffffff) G2 Ext Device #1
+//  map(0x02700000, 0x02707fff) AICA reg mirror
+//  map(0x02800000, 0x02ffffff) AICA wave mem mirror
 
-//  AM_RANGE(0x03000000, 0x03ffffff) G2 Ext Device #2
+//  map(0x03000000, 0x03ffffff) G2 Ext Device #2
 
 	/* Area 1 */
-	map(0x04000000, 0x04ffffff).ram().share("dc_texture_ram");      // texture memory 64 bit access
-	map(0x05000000, 0x05ffffff).ram().share("frameram"); // apparently this actually accesses the same memory as the 64-bit texture memory access, but in a different format, keep it apart for now
+	map(0x04000000, 0x04ffffff).rw(m_powervr2, FUNC(powervr2_device::tex64_r), FUNC(powervr2_device::tex64_w));
+	map(0x05000000, 0x05ffffff).rw(m_powervr2, FUNC(powervr2_device::tex32_r), FUNC(powervr2_device::tex32_w));
 
 	/* Area 3 */
 	map(0x0c000000, 0x0cffffff).ram().share("dc_ram");
@@ -399,13 +399,13 @@ void dc_cons_state::dc_map(address_map &map)
 	/* Area 4 */
 	map(0x10000000, 0x107fffff).w(m_powervr2, FUNC(powervr2_device::ta_fifo_poly_w));
 	map(0x10800000, 0x10ffffff).w(m_powervr2, FUNC(powervr2_device::ta_fifo_yuv_w));
-	map(0x11000000, 0x117fffff).w(m_powervr2, FUNC(powervr2_device::ta_texture_directpath0_w)).mirror(0x00800000);  // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE0 register - cannot be written directly, only through dma / store queue
+	map(0x11000000, 0x117fffff).w(m_powervr2, FUNC(powervr2_device::texture_path0_w)).mirror(0x00800000);  // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE0 register - cannot be written directly, only through dma / store queue
 
 	map(0x12000000, 0x127fffff).w(m_powervr2, FUNC(powervr2_device::ta_fifo_poly_w));
 	map(0x12800000, 0x12ffffff).w(m_powervr2, FUNC(powervr2_device::ta_fifo_yuv_w));
-	map(0x13000000, 0x137fffff).w(m_powervr2, FUNC(powervr2_device::ta_texture_directpath1_w)).mirror(0x00800000); // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE1 register - cannot be written directly, only through dma / store queue
+	map(0x13000000, 0x137fffff).w(m_powervr2, FUNC(powervr2_device::texture_path1_w)).mirror(0x00800000); // access to texture / framebuffer memory (either 32-bit or 64-bit area depending on SB_LMMODE1 register - cannot be written directly, only through dma / store queue
 
-//  AM_RANGE(0x14000000, 0x17ffffff) G2 Ext Device #3
+//  map(0x14000000, 0x17ffffff) G2 Ext Device #3
 
 	map(0x8c000000, 0x8cffffff).ram().share("dc_ram");  // another RAM mirror
 
