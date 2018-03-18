@@ -21,30 +21,33 @@
       0 0aaa aaaa  $a
       0 1aaa aaaa  $a(xn)
       1 0aaa aaaa  $a(xn+)
-      1 100b bbbb  (xn+$b)
-      1 101b bbbb  (bxn+$b)
-      1 110b bbbb  [xn+$b]
-      1 111b bbbb  [bxn+$b]
+      1 100b bbbb  (bxn+$b)
+      1 101b bbbb  (xn+$b)
+      1 110b bbbb  [bxn+$b]
+      1 111b bbbb  [xn+$b]
 
 
 
     3322 2222 2222 1111 1111 1100 0000 0000
     1098 7654 3210 9876 5432 1098 7654 3210
 
-    0000 00aa aaao ooyy yyyy yyyx xxxx xxxx lab
+    0000 00aa aaa0 00yy yyyy yyyx xxxx xxxx lab adx, ady (e)
+    0000 00aa aaa0 11yy yyyy yyyx xxxx xxxx lab adx, ady
+    0000 00aa aaa1 00yy yyyy yyyx xxxx xxxx lab adx, ady
 
-    0000 00aa aaa0 11yy yyyy yyyx xxxx xxxx lab adx (e), ady
-    0000 00aa aaa1 00yy yyyy yyyx xxxx xxxx lab adx, ady (e)
-
-    0001 11aa aaa0 10yy yyyy yyyx xxxx xxxx mov adx, ady
-    0001 11aa aaa0 11yy yyyy yyyx xxxx xxxx mov adx (e), ady
-    0001 11aa aaa1 00yy yyyy yyyx xxxx xxxx mov adx, ady (e)
+    0001 11aa aaa0 00yy yyyy yyyx xxxx xxxx mov adx, ady
+    0001 11aa aaa0 01yy yyyy yyyx xxxx xxxx mov adx, ady (e)
+    0001 11aa aaa0 10yy yyyy yyyx xxxx xxxx mov adx (e), ady
+    0001 11aa aaa0 11yy yyyy yyyx xxxx xxxx mov adx, ady
+    0001 11aa aaa1 00yy yyyy yyyx xxxx xxxx mov adx, ady
     0001 11aa aaa1 01yy yyyy yyyx xxxx xxxx mov adx (o), ady
-    0001 11aa aaa1 1100 0rrr rrry yyyy yyyy mov r, ady (e)
-    0001 11aa aaa1 1100 1rrr rrry yyyy yyyy mov r, ady
-    0001 11aa aaa1 1101 1rrr rrrx xxxx xxxx mov adx (e), r
-    0001 11aa aaa1 1110 0rrr rrrx xxxx xxxx mov adx, r
-    0001 11aa aaa1 1110 1rrr rrrx xxxx xxxx mov adx (o), r
+
+    0001 11aa aaa1 1100 0rrr rrry yyyy yyyy mov r, ady
+    0001 11aa aaa1 1100 1rrr rrry yyyy yyyy mov r, ady (e)
+    0001 11aa aaa1 1101 0rrr rrry yyyy yyyy mov ady, r
+    0001 11aa aaa1 1101 1rrr rrry yyyy yyyy mov ady, r
+    0001 11aa aaa1 1110 0rrr rrry yyyy yyyy mov ady (e), r
+    0001 11aa aaa1 1110 1rrr rrry yyyy yyyy mov ady (o), r
     0001 11aa aaa1 1111 0rrr rrr. ..ss ssss mov s, r
 
     0011 10rr vvvv vvvv vvvv vvvv vvvv vvvv lipl/lia/lib/lid #v
@@ -109,24 +112,28 @@ std::string mb86233_disassembler::regs(u32 reg)
 	return regnames[reg & 0x3f];
 }
 
-std::string mb86233_disassembler::memory(u32 reg, bool x1)
+std::string mb86233_disassembler::memory(u32 reg, bool x1, bool bank)
 {
 	std::ostringstream stream;
 
 	switch(reg & 0x180) {
 	case 0x000:
-		if((reg & 0x7f) < 10)
-			util::stream_format(stream, "$%d", reg & 0x7f );
+		if(bank)
+			util::stream_format(stream, "$0x%x", 0x200 | (reg & 0x7f));
+		else if((reg & 0x7f) < 10)
+			util::stream_format(stream, "$%d", reg & 0x7f);
 		else
-			util::stream_format(stream, "$0x%x", reg & 0x7f );
+			util::stream_format(stream, "$0x%x", reg & 0x7f);
 		break;
 
 	case 0x080:
-		if(reg & 0x7f) {
-			if((reg & 0x7f) < 10)
-				util::stream_format(stream, "$%d", reg & 0x7f );
+		if(bank || (reg & 0x7f)) {
+			if(bank)
+				util::stream_format(stream, "$0x%x", 0x200 | (reg & 0x7f));
+			else if((reg & 0x7f) < 10)
+				util::stream_format(stream, "$%d", reg & 0x7f);
 			else
-				util::stream_format(stream, "$0x%x", reg & 0x7f );
+				util::stream_format(stream, "$0x%x", reg & 0x7f);
 		}
 
 		stream << '(';
@@ -139,8 +146,14 @@ std::string mb86233_disassembler::memory(u32 reg, bool x1)
 		break;
 
 	case 0x100:
-		if(reg & 0x7f)
-			util::stream_format(stream, "$0x%x", reg & 0x7f );
+		if(bank || (reg & 0x7f)) {
+			if(bank)
+				util::stream_format(stream, "$0x%x", 0x200 | (reg & 0x7f));
+			else if((reg & 0x7f) < 10)
+				util::stream_format(stream, "$%d", reg & 0x7f);
+			else
+				util::stream_format(stream, "$0x%x", reg & 0x7f);
+		}
 
 		stream << '(';
 
@@ -152,7 +165,7 @@ std::string mb86233_disassembler::memory(u32 reg, bool x1)
 		break;
 
 	case 0x180:
-		stream << (reg & 0x40 ? "$[" : "$(");
+		stream << (reg & 0x40 ? "[" : "(");
 		if(x1) {
 			if(!(reg & 0x20))
 				util::stream_format(stream, "bx1");
@@ -179,6 +192,10 @@ std::string mb86233_disassembler::memory(u32 reg, bool x1)
 		}
 
 		stream << (reg & 0x40 ? ']' : ')');
+
+		if(bank)
+			stream << "+0x200";
+
 		break;
 	}
 
@@ -211,6 +228,7 @@ std::string mb86233_disassembler::alu0_func(u32 alu)
 		// 12
 	case 0x13: util::stream_format(stream, "d=b+a"); break;
 	case 0x14: util::stream_format(stream, "d=b-a"); break;
+		// 15
 	case 0x16: util::stream_format(stream, "lsrd"); break;
 	case 0x17: util::stream_format(stream, "lsld"); break;
 	case 0x18: util::stream_format(stream, "asrd"); break;
@@ -243,19 +261,19 @@ offs_t mb86233_disassembler::disassemble(std::ostream &stream, offs_t pc, const 
 
 		switch(op) {
 		case 0:
-			util::stream_format(stream, "lab %s, %s (io)", memory(r1, false), memory(r2, true));
+			util::stream_format(stream, "lab %s, %s (e)", memory(r1, false, false), memory(r2, true, false));
 			break;
 
 		case 3:
-			util::stream_format(stream, "lab %s, %s", memory(r1, false), memory(r2, true));
+			util::stream_format(stream, "lab %s, %s", memory(r1, false, false), memory(r2, true, true));
 			break;
 
 		case 4:
-			util::stream_format(stream, "lab %s, %s (e)", memory(r1, false), memory(r2, true));
+			util::stream_format(stream, "lab %s, %s", memory(r1, false, true), memory(r2, true, false));
 			break;
 
 		default:
-			util::stream_format(stream, "lab {%d} %s, %s", op, memory(r1, false), memory(r2, true));
+			util::stream_format(stream, "lab {%d} %s, %s", op, memory(r1, false, false), memory(r2, true, false));
 			break;
 		}
 		break;
@@ -278,53 +296,53 @@ offs_t mb86233_disassembler::disassemble(std::ostream &stream, offs_t pc, const 
 
 		switch(op) {
 		case 0:
-			util::stream_format(stream, "mov %s, %s", memory(r1, false), memory(r2, true));
+			util::stream_format(stream, "mov %s, %s (e)", memory(r1, false, false), memory(r2, true, false));
 			break;
 
 		case 1:
-			util::stream_format(stream, "mov %s, %s (io)", memory(r1, false), memory(r2, true));
+			util::stream_format(stream, "mov %s, %s (e)", memory(r1, false, true), memory(r2, true, false));
 			break;
 
 		case 2:
-			util::stream_format(stream, "mov %s (io), %s", memory(r1, false), memory(r2, true));
+			util::stream_format(stream, "mov %s (e), %s", memory(r1, false, false), memory(r2, true, false));
 			break;
 
 		case 3:
-			util::stream_format(stream, "mov %s, %s (e)", memory(r1, false), memory(r2, true));
+			util::stream_format(stream, "mov %s, %s", memory(r1, false, false), memory(r2, true, true));
 			break;
 
 		case 4:
-			util::stream_format(stream, "mov %s (e), %s", memory(r1, false), memory(r2, true));
+			util::stream_format(stream, "mov %s, %s", memory(r1, false, true), memory(r2, true, false));
 			break;
 
 		case 5:
-			util::stream_format(stream, "mov %s (o), %s", memory(r1, false), memory(r2, true));
+			util::stream_format(stream, "mov %s (o), %s", memory(r1, false, false), memory(r2, true, false));
 			break;
 
 		case 7: {
 			switch(r2 >> 6) {
 			case 0:
-				util::stream_format(stream, "mov %s, %s", regs(r2 & 0x3f), memory(r1, true));
+				util::stream_format(stream, "mov %s, %s", regs(r2 & 0x3f), memory(r1, true, false));
 				break;
 
 			case 1:
-				util::stream_format(stream, "mov %s, %s (io)", regs(r2 & 0x3f), memory(r1, true));
+				util::stream_format(stream, "mov %s, %s (e)", regs(r2 & 0x3f), memory(r1, true, false));
 				break;
 
 			case 2:
-				util::stream_format(stream, "mov %s (e), %s", memory(r1, false), regs(r2 & 0x3f));
+				util::stream_format(stream, "mov %s, %s", memory(r1, true, true), regs(r2 & 0x3f));
 				break;
 
 			case 3:
-				util::stream_format(stream, "mov %s, %s", memory(r1, false), regs(r2 & 0x3f));
+				util::stream_format(stream, "mov %s, %s", memory(r1, true, false), regs(r2 & 0x3f));
 				break;
 
 			case 4:
-				util::stream_format(stream, "mov %s (io), %s", memory(r1, false), regs(r2 & 0x3f));
+				util::stream_format(stream, "mov %s (e), %s", memory(r1, true, false), regs(r2 & 0x3f));
 				break;
 
 			case 5:
-				util::stream_format(stream, "mov %s (o), %s", memory(r1, false), regs(r2 & 0x3f));
+				util::stream_format(stream, "mov %s (o), %s", memory(r1, true, false), regs(r2 & 0x3f));
 				break;
 
 			case 6:
@@ -335,13 +353,13 @@ offs_t mb86233_disassembler::disassemble(std::ostream &stream, offs_t pc, const 
 				break;
 
 			default:
-				util::stream_format(stream, "mov {r2 %d} %s, %s", r2 >> 6, memory(r1, true), regs(r2 & 0x3f));
+				util::stream_format(stream, "mov {r2 %d} %s, %s", r2 >> 6, memory(r1, false, false), regs(r2 & 0x3f));
 				break;
 			}
 			break;
 		}
 		default:
-			util::stream_format(stream, "mov {%d} %s, %s", op, memory(r1, false), memory(r2, true));
+			util::stream_format(stream, "mov {%d} %s, %s", op, memory(r1, false, false), memory(r2, true, false));
 			break;
 		}
 		break;
@@ -424,7 +442,7 @@ offs_t mb86233_disassembler::disassemble(std::ostream &stream, offs_t pc, const 
 			if(opcode & 0x4000)
 				util::stream_format(stream, "%s", regs(opcode & 0x1f));
 			else
-				util::stream_format(stream, "(%s)", memory(opcode & 0x1ff, false));
+				util::stream_format(stream, "(%s)", memory(opcode & 0x1ff, false, false));
 			break;
 
 		case 2:
@@ -436,7 +454,7 @@ offs_t mb86233_disassembler::disassemble(std::ostream &stream, offs_t pc, const 
 			if(opcode & 0x4000)
 				util::stream_format(stream, "%s", regs(opcode & 0x1f));
 			else
-				util::stream_format(stream, "(%s)", memory(opcode & 0x1ff, false));
+				util::stream_format(stream, "(%s)", memory(opcode & 0x1ff, false, false));
 			break;
 
 		case 5:
@@ -444,7 +462,7 @@ offs_t mb86233_disassembler::disassemble(std::ostream &stream, offs_t pc, const 
 			break;
 
 		case 6:
-			util::stream_format(stream, "ldif %s %s, %s", condition(cond, invert), memory(data & 0x1ff, false), regs((data >> 9) & 0x3f));
+			util::stream_format(stream, "ldif %s %s, %s", condition(cond, invert), memory(data & 0x1ff, false, false), regs((data >> 9) & 0x3f));
 			break;
 
 		case 7:

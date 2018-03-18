@@ -484,19 +484,19 @@ TGP_FUNCTION( model1_state::track_read_quad )
 
 	logerror("TGP track_read_quad %d (%x)\n", a, m_pushpc);
 
-	offd = m_tgp_data[0x20+m_tgp_vr_select] + 16*a;
-	fifoout_push(m_tgp_data[offd]);
-	fifoout_push(m_tgp_data[offd+1]);
-	fifoout_push(m_tgp_data[offd+2]);
-	fifoout_push(m_tgp_data[offd+3]);
-	fifoout_push(m_tgp_data[offd+4]);
-	fifoout_push(m_tgp_data[offd+5]);
-	fifoout_push(m_tgp_data[offd+6]);
-	fifoout_push(m_tgp_data[offd+7]);
-	fifoout_push(m_tgp_data[offd+8]);
-	fifoout_push(m_tgp_data[offd+9]);
-	fifoout_push(m_tgp_data[offd+10]);
-	fifoout_push(m_tgp_data[offd+11]);
+	offd = m_tgp_data->as_u32(0x20+m_tgp_vr_select) + 16*a;
+	fifoout_push(m_tgp_data->as_u32(offd));
+	fifoout_push(m_tgp_data->as_u32(offd+1));
+	fifoout_push(m_tgp_data->as_u32(offd+2));
+	fifoout_push(m_tgp_data->as_u32(offd+3));
+	fifoout_push(m_tgp_data->as_u32(offd+4));
+	fifoout_push(m_tgp_data->as_u32(offd+5));
+	fifoout_push(m_tgp_data->as_u32(offd+6));
+	fifoout_push(m_tgp_data->as_u32(offd+7));
+	fifoout_push(m_tgp_data->as_u32(offd+8));
+	fifoout_push(m_tgp_data->as_u32(offd+9));
+	fifoout_push(m_tgp_data->as_u32(offd+10));
+	fifoout_push(m_tgp_data->as_u32(offd+11));
 	next_fn();
 }
 
@@ -516,19 +516,19 @@ TGP_FUNCTION( model1_state::intercept )
 	float dy = y2-y1;
 	float dz = z2-z1;
 
-	idx = m_tgp_data[0x10] + 2*idx;
-	uint32_t count = m_tgp_data[idx];
-	uint32_t adr = m_tgp_data[idx+1];
+	idx = m_tgp_data->as_u32(0x10) + 2*idx;
+	uint32_t count = m_tgp_data->as_u32(idx);
+	uint32_t adr = m_tgp_data->as_u32(idx+1);
 	uint32_t ret = 1;
 
 	for(unsigned int j=0; j<count; j++) {
 		float point[4][3];
 		for(int pt=0; pt<4; pt++)
 			for(int dim=0; dim<3; dim++)
-				point[pt][dim] = u2f(m_tgp_data[adr++]);
+				point[pt][dim] = u2f(m_tgp_data->as_u32(adr++));
 		float plane[4];
 		for(int dim=0; dim<4; dim++)
-			plane[dim] = u2f(m_tgp_data[adr++]);
+			plane[dim] = u2f(m_tgp_data->as_u32(adr++));
 		adr++; // 0, 1 or 2...
 
 		float den = dx * plane[0] + dy * plane[1] + dz * plane[2];
@@ -796,10 +796,10 @@ TGP_FUNCTION( model1_state::track_read_tri )
 
 	logerror("TGP track_read_tri %d (%x)\n", a, m_pushpc);
 
-	offd = m_tgp_data[0x20+m_tgp_vr_select] + 16*a;
-	fifoout_push(m_tgp_data[offd+12]);
-	fifoout_push(m_tgp_data[offd+13]);
-	fifoout_push(m_tgp_data[offd+14]);
+	offd = m_tgp_data->as_u32(0x20+m_tgp_vr_select) + 16*a;
+	fifoout_push(m_tgp_data->as_u32(offd+12));
+	fifoout_push(m_tgp_data->as_u32(offd+13));
+	fifoout_push(m_tgp_data->as_u32(offd+14));
 	next_fn();
 }
 
@@ -853,11 +853,11 @@ TGP_FUNCTION( model1_state::matrix_sdir )
 	next_fn();
 }
 
-TGP_FUNCTION( model1_state::fsqrt )
+TGP_FUNCTION( model1_state::fisqrt )
 {
 	float a = fifoin_pop_f();
-	logerror("TGP fsqrt %f (%x)\n", a, m_pushpc);
-	fifoout_push_f(sqrtf(a));
+	logerror("TGP fisqrt %f (%x)\n", a, m_pushpc);
+	fifoout_push_f(1/sqrtf(a));
 	next_fn();
 }
 
@@ -893,8 +893,8 @@ TGP_FUNCTION( model1_state::track_read_info )
 
 	logerror("TGP track_read_info %d (%x)\n", a, m_pushpc);
 
-	offd = m_tgp_data[0x20+m_tgp_vr_select] + 16*a;
-	fifoout_push(m_tgp_data[offd+15]);
+	offd = m_tgp_data->as_u32(0x20+m_tgp_vr_select) + 16*a;
+	fifoout_push(m_tgp_data->as_u32(offd+15));
 	next_fn();
 }
 
@@ -1046,10 +1046,10 @@ TGP_FUNCTION( model1_state::track_lookup )
 
 	logerror("TGP track_lookup %f, 0x%x, %f, %f (%x)\n", a, b, c, d, m_pushpc);
 
-	offi = m_tgp_data[0x10+m_tgp_vr_select] + b;
-	offd = m_tgp_data[0x20+m_tgp_vr_select];
+	offi = m_tgp_data->as_u32(0x10+m_tgp_vr_select) + b;
+	offd = m_tgp_data->as_u32(0x20+m_tgp_vr_select);
 
-	len = m_tgp_data[offi++];
+	len = m_tgp_data->as_u32(offi++);
 
 	dist = -1;
 
@@ -1059,9 +1059,9 @@ TGP_FUNCTION( model1_state::track_lookup )
 
 	for(i=0; i<len; i++) {
 		int j;
-		int bpos = m_tgp_data[offi++];
+		int bpos = m_tgp_data->as_u32(offi++);
 		int posd = offd + bpos*0x10;
-		const float *pts = (const float *)&m_tgp_data[posd];
+		const float *pts = (const float *)&m_tgp_data->as_u32(posd);
 		float ax = pts[12];
 		float ay = pts[14];
 		float az = pts[13];
@@ -1074,7 +1074,7 @@ TGP_FUNCTION( model1_state::track_lookup )
 				float d = (a-z)*(a-z);
 				if(dist == -1 || d<dist) {
 					dist = d;
-//                  behaviour = m_tgp_data[posd+15];
+//                  behaviour = m_tgp_data->as_u32(posd+15);
 					height = z;
 					entry = bpos+i;
 				}
@@ -1082,9 +1082,9 @@ TGP_FUNCTION( model1_state::track_lookup )
 		}
 	}
 
-	m_ram_data[0x0000] = 0; // non zero = still computing
-	m_ram_data[0x8001] = f2u(height);
-	m_ram_data[0x8002] = entry;
+	m_ram_data[0x0000] = 0; // non zero (ffffffff) = still searching
+	m_ram_data[0x0001] = f2u(height);
+	m_ram_data[0x0002] = entry;
 
 	next_fn();
 }
@@ -1114,9 +1114,9 @@ TGP_FUNCTION( model1_state::f56 )
 TGP_FUNCTION( model1_state::int_normal )
 {
 	logerror("TGP int_normal (%x)\n", m_pushpc);
-	fifoout_push_f(u2f(m_tgp_data[m_tgp_int_adr+12]));
-	fifoout_push_f(u2f(m_tgp_data[m_tgp_int_adr+13]));
-	fifoout_push_f(u2f(m_tgp_data[m_tgp_int_adr+14]));
+	fifoout_push_f(u2f(m_tgp_data->as_u32(m_tgp_int_adr+12)));
+	fifoout_push_f(u2f(m_tgp_data->as_u32(m_tgp_int_adr+13)));
+	fifoout_push_f(u2f(m_tgp_data->as_u32(m_tgp_int_adr+14)));
 	next_fn();
 }
 
@@ -1637,84 +1637,84 @@ TGP_FUNCTION( model1_state::f103 )
 	next_fn();
 }
 
-// Addresses in daytona's TGP program
+// Addresses in daytona's and VR's TGP programs
 const struct model1_state::function model1_state::ftab_vf[] = {
-	{ &model1_state::fadd,            2 }, /* 0x00 */ // 0b5
-	{ &model1_state::fsub,            2 },            // 0ba
-	{ &model1_state::fmul,            2 },            // 0bf
-	{ &model1_state::fdiv,            2 },            // 0c4
-	{ nullptr,                        0 },            // 0d2
-	{ &model1_state::matrix_push,     0 },            // 0e3
-	{ &model1_state::matrix_pop,      0 },            // 0f7
-	{ &model1_state::matrix_write,   12 },            // 106
-	{ &model1_state::clear_stack,     0 },            // 10a
-	{ &model1_state::matrix_mul,     12 },            // 10e
-	{ &model1_state::anglev,          2 },            // 154
-	{ nullptr,                        0 },            // 15d
-	{ nullptr,                        0 },            // 19f
-	{ &model1_state::track_select,    1 },            // 1b8
-	{ &model1_state::load_base,       4 },            // 1bb
-	{ &model1_state::anglep,          4 },            // 1c1
+	{ &model1_state::fadd,            2 }, /* 0x00 */ // 0b5 09b
+	{ &model1_state::fsub,            2 },            // 0ba 0a0
+	{ &model1_state::fmul,            2 },            // 0bf 0a5
+	{ &model1_state::fdiv,            2 },            // 0c4 0aa
+	{ nullptr,                        0 },            // 0d2 0b9
+	{ &model1_state::matrix_push,     0 },            // 0e3 0cc
+	{ &model1_state::matrix_pop,      0 },            // 0f7 0e0
+	{ &model1_state::matrix_write,   12 },            // 106 0ef
+	{ &model1_state::clear_stack,     0 },            // 10a 0f4
+	{ &model1_state::matrix_mul,     12 },            // 10e 0f8
+	{ &model1_state::anglev,          2 },            // 154 13f
+	{ nullptr,                        0 },            // 15d 149
+	{ nullptr,                        0 },            // 19f 18a
+	{ &model1_state::track_select,    1 },            // 1b8 1a5
+	{ &model1_state::load_base,       4 },            // 1bb 1a8
+	{ &model1_state::anglep,          4 },            // 1c1 1ae
 
-	{ &model1_state::matrix_ident,    0 }, /* 0x10 */ // 1d2
-	{ &model1_state::matrix_read,     0 },            // 1d9
-	{ &model1_state::matrix_trans,    3 },            // 1dd
-	{ &model1_state::matrix_scale,    3 },            // 1f3
-	{ &model1_state::matrix_rotx,     1 },            // 20a
-	{ &model1_state::matrix_roty,     1 },            // 223
-	{ &model1_state::matrix_rotz,     1 },            // 23b
-	{ nullptr,                        0 },            // 253
-	{ &model1_state::track_read_quad, 1 },            // 2aa
-	{ nullptr,                        0 },            // 2b0
-	{ &model1_state::transform_point, 3 },            // 2b2
-	{ &model1_state::fsin_m1,         1 },            // 2cb
-	{ &model1_state::fcos_m1,         1 },            // 2ce
-	{ &model1_state::fsinm_m1,        2 },            // 2d1
-	{ &model1_state::fcosm_m1,        2 },            // 2d7
-	{ &model1_state::distance3,       6 },            // 2dd
+	{ &model1_state::matrix_ident,    0 }, /* 0x10 */ // 1d2 1c1
+	{ &model1_state::matrix_read,     0 },            // 1d9 1c8
+	{ &model1_state::matrix_trans,    3 },            // 1dd 1d1
+	{ &model1_state::matrix_scale,    3 },            // 1f3 1e8
+	{ &model1_state::matrix_rotx,     1 },            // 20a 200
+	{ &model1_state::matrix_roty,     1 },            // 223 21a
+	{ &model1_state::matrix_rotz,     1 },            // 23b 233
+	{ nullptr,                        0 },            // 253 24c
+	{ &model1_state::track_read_quad, 1 },            // 2aa 2a8
+	{ nullptr,                        0 },            // 2b0 2b0
+	{ &model1_state::transform_point, 3 },            // 2b2 2b4
+	{ &model1_state::fsin_m1,         1 },            // 2cb 2d7
+	{ &model1_state::fcos_m1,         1 },            // 2ce 2df
+	{ &model1_state::fsinm_m1,        2 },            // 2d1 2e7
+	{ &model1_state::fcosm_m1,        2 },            // 2d7 2f1
+	{ &model1_state::distance3,       6 },            // 2dd 2fb
 
-	{ nullptr,                        0 }, /* 0x20 */ // 2ff
-	{ nullptr,                        0 },            // 2ff
-	{ nullptr,                        0 },            // 300
-	{ nullptr,                        0 },            // 304
-	{ &model1_state::acc_set,         1 },            // 308
-	{ &model1_state::acc_get,         0 },            // 30a
-	{ &model1_state::acc_add,         1 },            // 30c
-	{ &model1_state::acc_sub,         1 },            // 311
-	{ &model1_state::acc_mul,         1 },            // 316
-	{ &model1_state::acc_div,         1 },            // 31b
-	{ &model1_state::f42,             3 },            // 329
-	{ &model1_state::f43,             6 },            // 36c
-	{ &model1_state::track_read_tri,  1 },            // 3c2
-	{ &model1_state::fsqrt,           1 },            // 3c7
-	{ &model1_state::vlength,         3 },            // 3cf
-	{ nullptr,                        0 },            // 3ef
+	{ nullptr,                        0 }, /* 0x20 */ // 2ff 31e
+	{ nullptr,                        0 },            // 2ff 31e
+	{ nullptr,                        0 },            // 300 31f
+	{ nullptr,                        0 },            // 304 323
+	{ &model1_state::acc_set,         1 },            // 308 327
+	{ &model1_state::acc_get,         0 },            // 30a 32a
+	{ &model1_state::acc_add,         1 },            // 30c 32e
+	{ &model1_state::acc_sub,         1 },            // 311 333
+	{ &model1_state::acc_mul,         1 },            // 316 338
+	{ &model1_state::acc_div,         1 },            // 31b 33d
+	{ &model1_state::f42,             3 },            // 329 34b
+	{ &model1_state::f43,             6 },            // 36c 38f
+	{ &model1_state::track_read_tri,  1 },            // 3c2 3e2
+	{ &model1_state::fisqrt,          1 },            // 3c7 3e9
+	{ &model1_state::vlength,         3 },            // 3cf 3f2
+	{ nullptr,                        0 },            // 3ef 411
 
-	{ &model1_state::track_read_info, 1 }, /* 0x30 */ // 410
-	{ &model1_state::colbox_set,     12 },            // 413
-	{ &model1_state::colbox_test,     3 },            // 417
-	{ nullptr,                        0 },            // 43b
-	{ nullptr,                        0 },            // 44d
-	{ nullptr,                        0 },            // 452
-	{ &model1_state::track_lookup,    4 },            // 457
-	{ nullptr,                        0 },            // 51a
-	{ nullptr,                        0 },            // 521
-	{ nullptr,                        0 },            // 52f
-	{ nullptr,                        0 },            // 53d
-	{ nullptr,                        0 },            // 545
-	{ nullptr,                        0 },            // 558
-	{ nullptr,                        0 },            // 559
-	{ nullptr,                        0 },            // 5c6
-	{ nullptr,                        0 },            // 5e9
+	{ &model1_state::track_read_info, 1 }, /* 0x30 */ // 410 431
+	{ &model1_state::colbox_set,     12 },            // 413 436
+	{ &model1_state::colbox_test,     3 },            // 417 43b
+	{ nullptr,                        0 },            // 43b 463
+	{ nullptr,                        0 },            // 44d 478
+	{ nullptr,                        0 },            // 452 47d
+	{ &model1_state::track_lookup,    4 },            // 457 482
+	{ nullptr,                        0 },            // 51a 522
+	{ nullptr,                        0 },            // 521 527
+	{ nullptr,                        0 },            // 52f 535
+	{ nullptr,                        0 },            // 53d 543
+	{ nullptr,                        0 },            // 545 54c
+	{ nullptr,                        0 },            // 558 55e
+	{ nullptr,                        0 },            // 559 55f
+	{ nullptr,                        0 },            // 5c6 5cd
+	{ nullptr,                        0 },            // 5e9 5f4
 
-	{ &model1_state::col_setcirc,     3 }, /* 0x40 */ // 5f3
-	{ &model1_state::col_testpt,      2 },            // 5fa
-	{ nullptr,                        0 },            // 615
-	{ &model1_state::distance,        4 },            // 631
-	{ nullptr,                        0 },            // 63f
-	{ nullptr,                        0 },            // 643
-	{ nullptr,                        0 },            // 64b
-	{ &model1_state::car_move,        4 },            // 661
+	{ &model1_state::col_setcirc,     3 }, /* 0x40 */ // 5f3 5fe
+	{ &model1_state::col_testpt,      2 },            // 5fa 603
+	{ nullptr,                        0 },            // 615 61e
+	{ &model1_state::distance,        4 },            // 631 639
+	{ nullptr,                        0 },            // 63f 648
+	{ nullptr,                        0 },            // 643 64e
+	{ nullptr,                        0 },            // 64b 657
+	{ &model1_state::car_move,        4 },            // 661 66e
 	{ &model1_state::cpa,            12 },            // 7d9
 	{ nullptr,                        0 },
 	{ &model1_state::vmat_store,      1 },
@@ -1802,7 +1802,7 @@ const struct model1_state::function model1_state::ftab_swa[] = {
 	{ &model1_state::xyz2rqf,         3 },
 	{ &model1_state::f43_swa,         3 },
 	{ &model1_state::matrix_sdir,     3 },
-	{ &model1_state::fsqrt,           1 },
+	{ &model1_state::fisqrt,          1 },
 	{ &model1_state::vlength,         3 },
 	{ &model1_state::f47,             3 },
 
@@ -1954,6 +1954,8 @@ MACHINE_START_MEMBER(model1_state,model1)
 	save_item(NAME(m_acc));
 	save_item(NAME(m_list_length));
 	save_item(NAME(m_io_command));
+
+	configure_fifos();
 }
 
 void model1_state::tgp_reset(bool swa)
@@ -2065,7 +2067,7 @@ WRITE32_MEMBER(model1_state::copro_fifoout_push)
 {
 	if (m_copro_fifoout_num == FIFO_SIZE)
 	{
-		fatalerror("Copro FIFOOUT overflow (at %08X)\n", m_tgp->pc());
+		fatalerror("Copro FIFOOUT overflow (at %08X)\n", m_tgp_copro->pc());
 	}
 
 	m_copro_fifoout_data[m_copro_fifoout_wpos++] = data;
@@ -2116,12 +2118,6 @@ READ16_MEMBER(model1_state::model1_vr_tgp_ram_r)
 	{
 		r = m_ram_data[m_ram_adr&0x7fff] >> 16;
 
-		if ( m_ram_adr == 0 && r == 0xffff )
-		{
-			/* if the TGP is busy, spin some more */
-			m_maincpu->spin_until_time(attotime::from_usec(100));
-		}
-
 		if ( m_ram_adr & 0x8000 )
 			m_ram_adr++;
 	}
@@ -2142,32 +2138,184 @@ WRITE16_MEMBER(model1_state::model1_vr_tgp_ram_w)
 	}
 }
 
-READ16_MEMBER(model1_state::model1_vr_tgp_r)
+READ16_MEMBER(model1_state::copro_r)
 {
-	if (!offset)
-	{
-		m_vr_r = copro_fifoout_pop();
-		return m_vr_r;
-	}
-	else
-		return m_vr_r >> 16;
+	if (!offset) {
+		m_copro_r = m_copro_fifo_out->pop();
+		return m_copro_r;
+
+	} else
+		return m_copro_r >> 16;
 }
 
-WRITE16_MEMBER(model1_state::model1_vr_tgp_w)
+WRITE16_MEMBER(model1_state::copro_w)
 {
-	if (offset)
-	{
-		m_vr_w = (m_vr_w & 0x0000ffff) | (data << 16);
-		copro_fifoin_push(m_vr_w);
-	}
-	else
-		m_vr_w = (m_vr_w & 0xffff0000) | data;
+	if(offset) {
+		m_copro_w = (m_copro_w & 0x0000ffff) | (data << 16);
+		m_copro_fifo_in->push(u32(m_copro_w));
+
+	} else
+		m_copro_w = (m_copro_w & 0xffff0000) | data;
 }
 
-/* TGP memory map */
-void model1_state::model1_vr_tgp_map(address_map &map)
+void model1_state::configure_fifos()
 {
-	map(0x00000000, 0x000007ff).ram().region("tgp", 0);
-	map(0x00400000, 0x00407fff).rw(this, FUNC(model1_state::copro_ram_r), FUNC(model1_state::copro_ram_w));
-	map(0xff800000, 0xff87ffff).rom().region("tgp_data", 0);
+	if(m_tgp_copro) {
+		m_copro_fifo_in->setup(16,
+							   [this]() { m_tgp_copro->stall(); },
+							   [this]() { m_tgp_copro->set_input_line(INPUT_LINE_HALT, ASSERT_LINE); },
+							   [this]() { m_tgp_copro->set_input_line(INPUT_LINE_HALT, CLEAR_LINE); },
+							   [this]() { m_maincpu->set_input_line(INPUT_LINE_HALT, ASSERT_LINE); },
+							   [this]() { m_maincpu->set_input_line(INPUT_LINE_HALT, CLEAR_LINE); });
+		m_copro_fifo_out->setup(16,
+							   [this]() { m_maincpu->stall(); },
+							   [this]() { m_maincpu->set_input_line(INPUT_LINE_HALT, ASSERT_LINE); },
+							   [this]() { m_maincpu->set_input_line(INPUT_LINE_HALT, CLEAR_LINE); },
+							   [this]() { m_tgp_copro->set_input_line(INPUT_LINE_HALT, ASSERT_LINE); },
+							   [this]() { m_tgp_copro->set_input_line(INPUT_LINE_HALT, CLEAR_LINE); });
+
+	} else {
+	}
+}
+
+/* Coprocessor TGP memory map */
+void model1_state::tgp_copro_prog_map(address_map &map)
+{
+	map(0x000, 0x7ff).rom();
+}
+
+void model1_state::tgp_copro_data_map(address_map &map)
+{
+	map(0x0000, 0x00ff).ram();
+	map(0x0100, 0x0100).r(m_copro_fifo_in, FUNC(generic_fifo_u32_device::read));
+
+	map(0x0200, 0x03ff).ram();
+	map(0x0400, 0x0400).w(m_copro_fifo_out, FUNC(generic_fifo_u32_device::write));
+}
+
+void model1_state::tgp_copro_io_map(address_map &map)
+{
+	map(0x0008, 0x0008).rw(this, FUNC(model1_state::copro_ramadr_r), FUNC(model1_state::copro_ramadr_w));
+	map(0x0009, 0x0009).rw(this, FUNC(model1_state::copro_ramdata_r), FUNC(model1_state::copro_ramdata_w));
+	map(0x0020, 0x0021).rw(this, FUNC(model1_state::copro_sincos_r), FUNC(model1_state::copro_sincos_w)).mirror(0x0002);
+	map(0x0024, 0x0027).rw(this, FUNC(model1_state::copro_atan_r), FUNC(model1_state::copro_atan_w));
+	map(0x0028, 0x0029).rw(this, FUNC(model1_state::copro_inv_r), FUNC(model1_state::copro_inv_w));
+	map(0x002a, 0x002b).rw(this, FUNC(model1_state::copro_isqrt_r), FUNC(model1_state::copro_isqrt_w));
+	map(0x002e, 0x002e).w(this, FUNC(model1_state::copro_data_w));
+	map(0x8000, 0xffff).r(this, FUNC(model1_state::copro_data_r));
+}
+
+void model1_state::tgp_copro_rf_map(address_map &map)
+{
+}
+
+WRITE32_MEMBER(model1_state::copro_ramadr_w)
+{
+	COMBINE_DATA(&m_copro_ram_adr);
+}
+
+READ32_MEMBER(model1_state::copro_ramadr_r)
+{
+	return m_copro_ram_adr;
+}
+
+WRITE32_MEMBER(model1_state::copro_ramdata_w)
+{
+	COMBINE_DATA(&m_ram_data[m_copro_ram_adr & 0x7fff]);
+	m_copro_ram_adr ++;
+}
+
+READ32_MEMBER(model1_state::copro_ramdata_r)
+{
+	u32 val = m_ram_data[m_copro_ram_adr & 0x7fff];
+	m_copro_ram_adr ++;
+	return val;
+}
+
+
+
+WRITE32_MEMBER(model1_state::copro_sincos_w)
+{
+	COMBINE_DATA(&m_copro_sincos_base);
+}
+
+READ32_MEMBER(model1_state::copro_sincos_r)
+{
+	offs_t ang = m_copro_sincos_base + (offset ? 0x4000 : 0);
+	offs_t index = ang & 0x3fff;
+	if(ang & 0x4000)
+		index ^= 0x3fff;
+	u32 result = m_copro_data[index];
+	if(ang & 0x8000)
+		result ^= 0x80000000;
+	return result;
+}
+
+WRITE32_MEMBER(model1_state::copro_inv_w)
+{
+	COMBINE_DATA(&m_copro_inv_base);
+}
+
+READ32_MEMBER(model1_state::copro_inv_r)
+{
+	offs_t index = ((m_copro_inv_base >> 9) & 0x3ffe) | (offset & 1);
+	u32 result = m_copro_data[index | 0x8000];
+	s8 bexp = (m_copro_inv_base >> 23) - 0x7e;
+	u8 exp = (result >> 23) - bexp;
+	result = (result & 0x807fffff) | (exp << 23);
+	if(m_copro_inv_base & 0x80000000)
+		result ^= 0x80000000;
+	return result;
+}
+
+WRITE32_MEMBER(model1_state::copro_isqrt_w)
+{
+	COMBINE_DATA(&m_copro_isqrt_base);
+}
+
+READ32_MEMBER(model1_state::copro_isqrt_r)
+{
+	offs_t index = 0x2000 ^ (((m_copro_isqrt_base>> 10) & 0x3ffe) | (offset & 1));
+	u32 result = m_copro_data[index | 0xc000];
+	s8 bexp = (m_copro_isqrt_base >> 23) - 0x7c;
+	bexp >>= 1;
+	u8 exp = (result >> 23) - bexp;
+	result = (result & 0x807fffff) | (exp << 23);
+	return result;
+}
+
+WRITE32_MEMBER(model1_state::copro_atan_w)
+{
+	COMBINE_DATA(&m_copro_atan_base[offset]);
+}
+
+READ32_MEMBER(model1_state::copro_atan_r)
+{
+	offs_t index = (m_copro_atan_base[3] << 1) & 0x3fff;
+	u32 result = m_copro_data[index | 0x4000];
+
+	bool s0 = m_copro_atan_base[0] & 0x80000000;
+	bool s1 = m_copro_atan_base[1] & 0x80000000;
+	bool s2 = m_copro_atan_base[2] & 0x80000000;
+
+	if(s0 ^ s1 ^ s2)
+		result >>= 16;
+	if(s2)
+		result ^= 0xc000;
+	if(s0)
+		result ^= 0x8000;
+
+	return result & 0xffff;
+}
+
+WRITE32_MEMBER(model1_state::copro_data_w)
+{
+	COMBINE_DATA(&m_copro_data_base);
+}
+
+READ32_MEMBER(model1_state::copro_data_r)
+{
+	offs_t index = (m_copro_data_base & ~0x7fff) | offset;
+	index &= (m_tgp_data->bytes() >> 2) - 1;
+	return m_tgp_data->as_u32(index);
 }

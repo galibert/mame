@@ -618,6 +618,7 @@ MACHINES["WATCHDOG"] = true
 MACHINES["INPUT_MERGER"] = true
 MACHINES["K054321"] = true
 MACHINES["ADC0844"] = true
+MACHINES["GEN_FIFO"] = true
 
 --------------------------------------------------
 -- specify available bus cores

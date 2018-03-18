@@ -11,6 +11,7 @@
 #include "cpu/mb86233/mb86233.h"
 #include "cpu/v60/v60.h"
 #include "machine/i8251.h"
+#include "machine/gen_fifo.h"
 #include "machine/m1comm.h"
 #include "machine/timer.h"
 #include "video/segaic24.h"
@@ -37,11 +38,14 @@ public:
 		, m_m1uart(*this, "m1uart")
 		, m_m1comm(*this, "m1comm")
 		, m_dsbz80(*this, DSBZ80_TAG)
-		, m_tgp(*this, "tgp")
+		, m_tgp_copro(*this, "tgp_copro")
 		, m_screen(*this, "screen")
 		, m_io_timer(*this, "iotimer")
+		, m_copro_fifo_in(*this, "copro_fifo_in")
+		, m_copro_fifo_out(*this, "copro_fifo_out")
 		, m_poly_rom(*this, "polygons")
 		, m_tgp_data(*this, "tgp_data")
+		, m_copro_data(*this, "copro_data")
 		, m_mr2(*this, "mr2")
 		, m_mr(*this, "mr")
 		, m_display_list0(*this, "display_list0")
@@ -90,14 +94,36 @@ public:
 	DECLARE_WRITE16_MEMBER(model1_tgp_vr_adr_w);
 	DECLARE_READ16_MEMBER(model1_vr_tgp_ram_r);
 	DECLARE_WRITE16_MEMBER(model1_vr_tgp_ram_w);
-	DECLARE_READ16_MEMBER(model1_vr_tgp_r);
-	DECLARE_WRITE16_MEMBER(model1_vr_tgp_w);
+	DECLARE_READ16_MEMBER(copro_r);
+	DECLARE_WRITE16_MEMBER(copro_w);
 
 	DECLARE_READ32_MEMBER(copro_ram_r);
 	DECLARE_WRITE32_MEMBER(copro_ram_w);
 	DECLARE_READ_LINE_MEMBER(copro_fifoin_pop_ok);
 	DECLARE_READ32_MEMBER(copro_fifoin_pop);
 	DECLARE_WRITE32_MEMBER(copro_fifoout_push);
+
+	DECLARE_WRITE32_MEMBER(copro_sincos_w);
+	DECLARE_READ32_MEMBER(copro_sincos_r);
+	DECLARE_WRITE32_MEMBER(copro_inv_w);
+	DECLARE_READ32_MEMBER(copro_inv_r);
+	DECLARE_WRITE32_MEMBER(copro_isqrt_w);
+	DECLARE_READ32_MEMBER(copro_isqrt_r);
+	DECLARE_WRITE32_MEMBER(copro_atan_w);
+	DECLARE_READ32_MEMBER(copro_atan_r);
+	DECLARE_WRITE32_MEMBER(copro_data_w);
+	DECLARE_READ32_MEMBER(copro_data_r);
+	DECLARE_WRITE32_MEMBER(copro_ramadr_w);
+	DECLARE_READ32_MEMBER(copro_ramadr_r);
+	DECLARE_WRITE32_MEMBER(copro_ramdata_w);
+	DECLARE_READ32_MEMBER(copro_ramdata_r);
+
+	u32 m_copro_sincos_base;
+	u32 m_copro_inv_base;
+	u32 m_copro_isqrt_base;
+	u32 m_copro_atan_base[4];
+	u32 m_copro_data_base;
+	u32 m_copro_ram_adr;
 
 	uint16_t m_r360_state;
 	DECLARE_DRIVER_INIT(wingwar360);
@@ -188,12 +214,19 @@ public:
 	void model1(machine_config &config);
 	void swa(machine_config &config);
 	void netmerc(machine_config &config);
+
 	void model1_vr(machine_config &config);
 	void model1_io(address_map &map);
 	void model1_mem(address_map &map);
 	void model1_vr_io(address_map &map);
 	void model1_vr_mem(address_map &map);
-	void model1_vr_tgp_map(address_map &map);
+
+	void tgp_copro_prog_map(address_map &map);
+	void tgp_copro_data_map(address_map &map);
+	void tgp_copro_external_map(address_map &map);
+	void tgp_copro_io_map(address_map &map);
+	void tgp_copro_rf_map(address_map &map);
+
 	void polhemus_map(address_map &map);
 private:
 	// Machine
@@ -212,12 +245,14 @@ private:
 	required_device<i8251_device> m_m1uart;
 	optional_device<m1comm_device> m_m1comm;        // Model 1 communication board
 	optional_device<dsbz80_device> m_dsbz80;        // Digital Sound Board
-	optional_device<mb86233_cpu_device> m_tgp;
+	optional_device<mb86233_device> m_tgp_copro;
 	required_device<screen_device> m_screen;
 	required_device<timer_device> m_io_timer;
+	required_device<generic_fifo_u32_device> m_copro_fifo_in, m_copro_fifo_out;
 
 	required_region_ptr<uint32_t> m_poly_rom;
-	optional_region_ptr<uint32_t> m_tgp_data;
+	optional_memory_region        m_tgp_data;
+	required_region_ptr<uint32_t> m_copro_data;
 
 	required_shared_ptr<uint16_t> m_mr2;
 	required_shared_ptr<uint16_t> m_mr;
@@ -240,6 +275,9 @@ private:
 	void    copro_fifoin_push(uint32_t data);
 	uint32_t  copro_fifoout_pop();
 	void    next_fn();
+
+	DECLARE_READ32_MEMBER(copro_cfifo_pop);
+	DECLARE_WRITE32_MEMBER(copro_cfifo_push);
 
 	uint32_t  m_copro_r;
 	uint32_t  m_copro_w;
@@ -302,7 +340,7 @@ private:
 	DECLARE_TGP_FUNCTION( f43_swa );
 	DECLARE_TGP_FUNCTION( track_read_tri );
 	DECLARE_TGP_FUNCTION( matrix_sdir );
-	DECLARE_TGP_FUNCTION( fsqrt );
+	DECLARE_TGP_FUNCTION( fisqrt );
 	DECLARE_TGP_FUNCTION( vlength );
 	DECLARE_TGP_FUNCTION( f47 );
 	DECLARE_TGP_FUNCTION( track_read_info );
@@ -428,14 +466,14 @@ private:
 	float   m_tgp_vr_base[4];
 	int     m_puuu;
 	int     m_ccount;
-	uint32_t  m_vr_r;
-	uint32_t  m_vr_w;
 	uint16_t  m_listctl[2];
 	uint16_t  *m_glist;
 	bool    m_render_done;
 
 	std::unique_ptr<uint16_t[]> m_tgp_ram;
 	std::unique_ptr<uint32_t[]> m_poly_ram;
+
+	void configure_fifos();
 
 	// Rendering helper functions
 	uint32_t  readi(int adr) const;

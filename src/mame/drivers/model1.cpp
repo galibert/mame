@@ -181,8 +181,8 @@ Notes:
       *1            - Unpopulated position for Fujitsu MB8421
       D70615GD-16   - NEC uPD70615GD-16-S V60 CPU, running at 16.000MHz (QFP120, clock 32 / 2)
       315-5546A     - Lattice GAL16V8A (DIP20)
-      315-5571      - Fujitsu MB86233 Geometrizer (IC57/IC58, QFP160)                   \
-      315-5572      - Fujitsu MB86233 Geometrizer (different code) (IC60/IC66, QFP160)  / According to test mode, these chips are the TGPs
+      315-5571      - Fujitsu MB86233 Geometrizer (IC57/IC58, QFP160)
+      315-5572      - Fujitsu MB86233 Geometrizer (different code) (IC60/IC66, QFP160)
       COPRO         - Fujitsu MB86233 Coprocessor (QFP160), differs depending on game:
           315-5573      - Virtua Racing, Virtua Formula (original for above board part number)
           315-5711      - Wing War, Star Wars Arcade, Netmerc
@@ -673,11 +673,11 @@ WRITE16_MEMBER(model1_state::io_w)
 		output().set_led_value(4, data & 0x40);  // VIEW4
 		output().set_led_value(5, data & 0x80);  // RACE LEADER
 		m_lamp_state = data;
-		output().set_digit_value(1, data);
+		//		output().set_digit_value(1, data);
 		return;
 	} else if (offset == 0x11) {
 		// drive board commands
-		output().set_digit_value(0, data);
+		//		output().set_digit_value(0, data);
 		return;
 	}
 	logerror("IOW: %02x %02x\n", offset, data);
@@ -954,7 +954,7 @@ void model1_state::model1_vr_mem(address_map &map)
 
 	map(0xd00000, 0xd00001).rw(this, FUNC(model1_state::model1_tgp_vr_adr_r), FUNC(model1_state::model1_tgp_vr_adr_w));
 	map(0xd20000, 0xd20003).w(this, FUNC(model1_state::model1_vr_tgp_ram_w));
-	map(0xd80000, 0xd80003).w(this, FUNC(model1_state::model1_vr_tgp_w)).mirror(0x10);
+	map(0xd80000, 0xd80003).w(this, FUNC(model1_state::copro_w)).mirror(0x10);
 	map(0xdc0000, 0xdc0003).r(this, FUNC(model1_state::fifoin_status_r));
 
 	map(0xe00000, 0xe00001).nopw();        // Watchdog?  IRQ ack? Always 0x20, usually on irq
@@ -967,7 +967,7 @@ void model1_state::model1_vr_mem(address_map &map)
 void model1_state::model1_vr_io(address_map &map)
 {
 	map(0xd20000, 0xd20003).r(this, FUNC(model1_state::model1_vr_tgp_ram_r));
-	map(0xd80000, 0xd80003).r(this, FUNC(model1_state::model1_vr_tgp_r));
+	map(0xd80000, 0xd80003).r(this, FUNC(model1_state::copro_r));
 }
 
 static INPUT_PORTS_START( vf )
@@ -1120,9 +1120,10 @@ static INPUT_PORTS_START( swa )
 INPUT_PORTS_END
 
 #define MODEL1_CPU_BOARD \
-	ROM_REGION( 0xe0000, "copro_data", 0 ) \
+	ROM_REGION32_LE( 0x40000, "copro_data", 0 ) \
 	ROM_LOAD32_WORD("opr14742.bin",  0x000000,  0x20000, CRC(446a1085) SHA1(51b3f4d3a35a36087ea0ba4e26d6e7d17b6418e2) ) \
 	ROM_LOAD32_WORD("opr14743.bin",  0x000002,  0x20000, CRC(e8953554) SHA1(1499f8e30ac15affc66e6f04ae031bb8680d9260) ) \
+	ROM_REGION( 0xe0000, "other_data", 0 ) \
 	ROM_LOAD("opr14744.bin",   0x040000,  0x20000, CRC(730ea9e0) SHA1(651f1db4089a400d073b19ada299b4b08b08f372) ) \
 	ROM_LOAD("opr14745.bin",   0x060000,  0x20000, CRC(4c934d96) SHA1(e3349ece0e47f684d61ad11bfea4a90602287350) ) \
 	ROM_LOAD("opr14746.bin",   0x080000,  0x20000, CRC(2a266cbd) SHA1(34e047a93459406c22acf4c25089d1a4955f94ca) ) \
@@ -1133,7 +1134,7 @@ INPUT_PORTS_END
 	ROM_LOAD("315-5571.bin", 0, 0x2000, CRC(1233db2a) SHA1(06760409d40f3d9117fd3e7c7ab62dfd70aa2a4d) ) \
 \
 	ROM_REGION32_LE( 0x2000, "315_5572", 0) \
-	ROM_LOAD("315-5572.bin", 0, 0x2000, CRC(0a534a3b) SHA1(b8c988bc414b3ad3cd036ba5a64b5ee04a4758b4) )
+	ROM_LOAD("315-5572.bin", 0, 0x2000, CRC(66785906) SHA1(d94a51eced65b0073fb39625927782bf264d271a) )
 
 ROM_START( vf )
 	MODEL1_CPU_BOARD
@@ -1225,20 +1226,15 @@ ROM_START( vr )
 	ROM_LOAD32_BYTE( "mpr-14900.41", 0x000002, 0x80000, CRC(aa7c017d) SHA1(0fa2b59a8bb5f5907b2b2567e69d11c73b398dc1) )
 	ROM_LOAD32_BYTE( "mpr-14901.42", 0x000003, 0x80000, CRC(175b7a9a) SHA1(c86602e771cd49bab425b4ba7926d2f44858bd39) )
 
-	ROM_REGION( 0x2000, "tgp", 0 ) /* TGP program rom */
-	// The real internal TGP rom
-	ROM_LOAD("315-5573.bin", 0, 0x2000, CRC(ec913af2) SHA1(a18bf6c9d7b35f8b9e513a7d279f13a30b32a961) )
-
-	// this is the Daytona TGP program with some modifications needed for Virtua Racing
-	// Kept here for now to avoid instantly breaking the game until the tgp is up to it
-	ROM_LOAD("vr-tgp.bin", 0x000000, 0x2000, CRC(3de33c7f) SHA1(acecc779c9d8fe39ded6c22492be5b7c25fd52db) )
+	ROM_REGION( 0x2000, "tgp_copro", 0 ) /* TGP program rom */
+	ROM_LOAD("315-5573.bin", 0, 0x2000, CRC(3335a19b) SHA1(72eedfcc799ec4c7534fd7415de6631087ff6731) )
 
 	ROM_REGION( 0x100, "nvram", 0 ) // default nvram
 	ROM_LOAD( "vr_defaults.nv", 0x000, 0x100, CRC(5ccdc835) SHA1(7e809de470f78fb897b938ca2aee2e12f1c8f3a4) )
 
 	ROM_REGION ( 0x10000, "io_board", 0)
 	ROM_LOAD("epr-14869.25",  0x00000, 0x10000, CRC(6187cd7a) SHA1(b65fdd0ad31794a565a0ca4dc67a3f16b329fd71) )
-	ROM_LOAD("epr-14869b.25", 0x00000, 0x10000, BAD_DUMP CRC(b410f22b) SHA1(75c5009ca4d21ebb53d54d4e3fb8aa55a4c74a07) ) // stray FFs at xx49, xx5F, xxC9, xxDF
+//	ROM_LOAD("epr-14869b.25", 0x00000, 0x10000, BAD_DUMP CRC(b410f22b) SHA1(75c5009ca4d21ebb53d54d4e3fb8aa55a4c74a07) ) // stray FFs at xx49, xx5F, xxC9, xxDF
 	// there is also epr-14869c in model2 daytona
 ROM_END
 
@@ -1289,13 +1285,8 @@ ROM_START( vformula )
 	ROM_REGION( 0x20000, "commboard", 0 ) /* Comms Board */
 	ROM_LOAD( "epr-15624.17", 0x00000, 0x20000, CRC(9b3ba315) SHA1(0cd0983cc8b2f2d6b41617d0d0a24cc6c188e62a) )
 
-	ROM_REGION( 0x2000, "tgp", 0 ) /* TGP program rom */
-	// The real internal TGP rom
-	ROM_LOAD("315-5573.bin", 0, 0x2000, CRC(ec913af2) SHA1(a18bf6c9d7b35f8b9e513a7d279f13a30b32a961) )
-
-	// this is the Daytona TGP program with some modifications needed for Virtua Racing
-	// Kept here for now to avoid instantly breaking the game until the tgp is up to it
-	ROM_LOAD("vr-tgp.bin", 0x000000, 0x2000, CRC(3de33c7f) SHA1(acecc779c9d8fe39ded6c22492be5b7c25fd52db) )
+	ROM_REGION( 0x2000, "tgp_copro", 0 ) /* TGP program rom */
+	ROM_LOAD("315-5573.bin", 0, 0x2000, CRC(3335a19b) SHA1(72eedfcc799ec4c7534fd7415de6631087ff6731) )
 ROM_END
 
 
@@ -1404,6 +1395,8 @@ ROM_START( wingwar )
 ROM_END
 
 ROM_START( wingwaru )
+	MODEL1_CPU_BOARD
+
 	ROM_REGION( 0x2000000, "maincpu", ROMREGION_ERASEFF ) /* v60 code */
 	ROM_LOAD16_BYTE( "epr-16729.14", 0x200000, 0x80000, CRC(7edec2cc) SHA1(3e423a868ca7c8475fbb5bc1a10526e69d94d865) )
 	ROM_LOAD16_BYTE( "epr-16730.15", 0x200001, 0x80000, CRC(bab24dee) SHA1(26c95139c1aa7f34b6a5cce39e5bd1dd2ef0dd49) )
@@ -1622,6 +1615,9 @@ MACHINE_CONFIG_START(model1_state::model1)
 	MCFG_CPU_IO_MAP(model1_io)
 	MCFG_CPU_IRQ_ACKNOWLEDGE_DRIVER(model1_state,irq_callback)
 
+	MCFG_DEVICE_ADD("copro_fifo_in", GENERIC_FIFO_U32, 0)
+	MCFG_DEVICE_ADD("copro_fifo_out", GENERIC_FIFO_U32, 0)
+
 	MCFG_TIMER_DRIVER_ADD_SCANLINE("scantimer", model1_state, model1_interrupt, "screen", 0, 1)
 	MCFG_TIMER_DRIVER_ADD("iotimer", model1_state, io_command_acknowledge)
 
@@ -1688,15 +1684,17 @@ MACHINE_CONFIG_START(model1_state::model1_vr)
 	MCFG_CPU_IO_MAP(model1_vr_io)
 	MCFG_CPU_IRQ_ACKNOWLEDGE_DRIVER(model1_state,irq_callback)
 
+	MCFG_DEVICE_ADD("copro_fifo_in", GENERIC_FIFO_U32, 0)
+	MCFG_DEVICE_ADD("copro_fifo_out", GENERIC_FIFO_U32, 0)
+
 	MCFG_TIMER_DRIVER_ADD_SCANLINE("scantimer", model1_state, model1_interrupt, "screen", 0, 1)
 	MCFG_TIMER_DRIVER_ADD("iotimer", model1_state, io_command_acknowledge)
 
-	MCFG_CPU_ADD("tgp", MB86233, 16000000)
-	MCFG_CPU_PROGRAM_MAP(model1_vr_tgp_map)
-	MCFG_MB86233_FIFO_READ_CB(READ32(model1_state,copro_fifoin_pop))
-	MCFG_MB86233_FIFO_READ_OK_CB(READLINE(model1_state,copro_fifoin_pop_ok))
-	MCFG_MB86233_FIFO_WRITE_CB(WRITE32(model1_state,copro_fifoout_push))
-	MCFG_MB86233_TABLE_REGION("copro_data")
+	MCFG_CPU_ADD("tgp_copro", MB86233, 16000000)
+	MCFG_CPU_PROGRAM_MAP(tgp_copro_prog_map)
+	MCFG_CPU_DATA_MAP(tgp_copro_data_map)
+	MCFG_CPU_IO_MAP(tgp_copro_io_map)
+	MCFG_DEVICE_ADDRESS_MAP(mb86233_device::AS_RF, tgp_copro_rf_map)
 
 	MCFG_MACHINE_START_OVERRIDE(model1_state,model1)
 	MCFG_MACHINE_RESET_OVERRIDE(model1_state,model1_vr)
@@ -1794,7 +1792,7 @@ WRITE16_MEMBER(model1_state::r360_w)
 }
 
 GAME( 1993, vf,         0,       model1,    vf,      model1_state,  0,          ROT0, "Sega", "Virtua Fighter", MACHINE_IMPERFECT_GRAPHICS )
-GAMEL(1992, vr,         0,       model1_vr, vr,      model1_state,  0,          ROT0, "Sega", "Virtua Racing", MACHINE_IMPERFECT_GRAPHICS, layout_vr )
+GAMEL(1992, vr,         0,       model1_vr, vr,      model1_state,  0,          ROT0, "Sega", "Virtua Racing", 0, layout_vr )
 GAME( 1993, vformula,   vr,      model1_vr, vr,      model1_state,  0,          ROT0, "Sega", "Virtua Formula", MACHINE_IMPERFECT_GRAPHICS )
 GAME( 1993, swa,        0,       swa,       swa,     model1_state,  0,          ROT0, "Sega", "Star Wars Arcade", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_SOUND )
 GAME( 1994, wingwar,    0,       model1,    wingwar, model1_state,  0,          ROT0, "Sega", "Wing War (World)", MACHINE_NOT_WORKING )
