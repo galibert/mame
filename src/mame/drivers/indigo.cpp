@@ -23,10 +23,13 @@
 #include "bus/scsi/scsicd.h"
 #include "cpu/mips/mips3.h"
 #include "cpu/mips/r3000.h"
-#include "machine/8530scc.h"
+#include "machine/z80scc.h"
 #include "machine/eepromser.h"
 #include "machine/sgi.h"
 #include "machine/wd33c93.h"
+#include "machine/dp8573a.h"
+#include "machine/clock.h"
+
 #include "emupal.h"
 #include "screen.h"
 #include "speaker.h"
@@ -38,8 +41,13 @@ public:
 		: driver_device(mconfig, type, tag)
 		, m_maincpu(*this, "maincpu")
 		, m_wd33c93(*this, "wd33c93")
-		, m_scc(*this, "scc")
+		, m_scc0(*this, "scc0")
+		, m_scc1(*this, "scc1")
+		, m_scc2(*this, "scc2")
+		, m_rtc(*this, "dp8573a")
 		, m_eeprom(*this, "eeprom")
+		, m_screen(*this, "screen")
+		, m_palette(*this, "palette")
 	{
 	}
 
@@ -47,16 +55,11 @@ public:
 	void indigo3k(machine_config &config);
 
 private:
-	enum
-	{
-		TIMER_RTC
-	};
-
-	DECLARE_READ32_MEMBER(hpc_r);
-	DECLARE_WRITE32_MEMBER(hpc_w);
-	DECLARE_READ32_MEMBER(int_r);
-	DECLARE_WRITE32_MEMBER(int_w);
 	DECLARE_WRITE_LINE_MEMBER(scsi_irq);
+	DECLARE_READ8_MEMBER  (eeprom_r);
+	DECLARE_WRITE8_MEMBER (eeprom_w);
+	DECLARE_READ32_MEMBER (misc_status_r);
+	DECLARE_WRITE32_MEMBER(misc_status_w);
 
 	virtual void machine_start() override;
 	virtual void video_start() override;
@@ -80,24 +83,20 @@ private:
 		uint32_t m_scsi0_dma_ctrl;
 	};
 
-	struct rtc_t
-	{
-		uint8_t nRAM[32];
-	};
-
 	required_device<cpu_device> m_maincpu;
 	required_device<wd33c93_device> m_wd33c93;
-	required_device<scc8530_t> m_scc;
+	required_device<scc8530_device> m_scc0, m_scc1, m_scc2;
+	required_device<dp8573a_device> m_rtc;
 	required_device<eeprom_serial_93cxx_device> m_eeprom;
+	required_device<screen_device> m_screen;
+	required_device<palette_device> m_palette;
+
+	u32 m_misc_status;
+	u8 m_eeprom_reg;
 
 	hpc_t m_hpc;
-	rtc_t m_rtc;
-
-	void indigo_timer_rtc();
 
 	inline void ATTR_PRINTF(3,4) verboselog(int n_level, const char *s_fmt, ... );
-
-	virtual void device_timer(emu_timer &timer, device_timer_id id, int param, void *ptr) override;
 };
 
 
@@ -127,23 +126,10 @@ uint32_t indigo_state::screen_update(screen_device &screen, bitmap_ind16 &bitmap
 
 
 
-#define RTC_DAYOFWEEK   m_rtc.nRAM[0x0e]
-#define RTC_YEAR        m_rtc.nRAM[0x0b]
-#define RTC_MONTH       m_rtc.nRAM[0x0a]
-#define RTC_DAY         m_rtc.nRAM[0x09]
-#define RTC_HOUR        m_rtc.nRAM[0x08]
-#define RTC_MINUTE      m_rtc.nRAM[0x07]
-#define RTC_SECOND      m_rtc.nRAM[0x06]
-#define RTC_HUNDREDTH   m_rtc.nRAM[0x05]
-
+#if 0
 READ32_MEMBER(indigo_state::hpc_r)
 {
 	offset <<= 2;
-	if( offset >= 0x0e00 && offset <= 0x0e7c )
-	{
-		verboselog(2, "RTC RAM[0x%02x] Read: %02x\n", ( offset - 0xe00 ) >> 2, m_rtc.nRAM[ ( offset - 0xe00 ) >> 2 ] );
-		return m_rtc.nRAM[ ( offset - 0xe00 ) >> 2 ];
-	}
 	switch( offset )
 	{
 	case 0x05c:
@@ -152,33 +138,6 @@ READ32_MEMBER(indigo_state::hpc_r)
 	case 0x00ac:
 		verboselog(2, "HPC Parallel Buffer Pointer Read: %08x (%08x)\n", m_hpc.m_parbuf_ptr, mem_mask );
 		return m_hpc.m_parbuf_ptr;
-	case 0x00c0:
-		verboselog(2, "HPC Endianness Read: %08x (%08x)\n", 0x0000001f, mem_mask );
-		return 0x0000001f;
-	case 0x0120:
-		if (ACCESSING_BITS_8_15)
-		{
-			return ( m_wd33c93->read( space, 0 ) << 8 );
-		}
-		else
-		{
-			return 0;
-		}
-	case 0x0124:
-		if (ACCESSING_BITS_8_15)
-		{
-			return ( m_wd33c93->read( space, 1 ) << 8 );
-		}
-		else
-		{
-			return 0;
-		}
-	case 0x01b0:
-		verboselog(2, "HPC Misc. Status Read: %08x (%08x)\n", m_hpc.m_misc_status, mem_mask );
-		return m_hpc.m_misc_status;
-	case 0x01bc:
-//      verboselog(machine, 2, "HPC CPU Serial EEPROM Read\n" );
-		return m_eeprom->do_read() << 4;
 	case 0x01c4:
 		verboselog(2, "HPC Local IO Register 0 Mask Read: %08x (%08x)\n", m_hpc.m_local_ioreg0_mask, mem_mask );
 		return m_hpc.m_local_ioreg0_mask;
@@ -191,34 +150,6 @@ READ32_MEMBER(indigo_state::hpc_r)
 	case 0x01d8:
 		verboselog(2, "HPC VME Interrupt Mask 1 Read: %08x (%08x)\n", m_hpc.m_vme_intmask1, mem_mask );
 		return m_hpc.m_vme_intmask1;
-	case 0x0d00:
-		verboselog(2, "HPC DUART0 Channel B Control Read\n" );
-//      return 0x00000004;
-		return 0x7c; //m_scc->reg_r(space, 0);
-	case 0x0d04:
-		verboselog(2, "HPC DUART0 Channel B Data Read\n" );
-//      return 0;
-		return m_scc->reg_r(space, 2);
-	case 0x0d08:
-		verboselog(2, "HPC DUART0 Channel A Control Read (%08x)\n", mem_mask  );
-//      return 0x40;
-		return 0x7c; //m_scc->reg_r(space, 1);
-	case 0x0d0c:
-		verboselog(2, "HPC DUART0 Channel A Data Read\n" );
-//      return 0;
-		return m_scc->reg_r(space, 3);
-	case 0x0d10:
-//      verboselog(machine, 2, "HPC DUART1 Channel B Control Read\n" );
-		return 0x00000004;
-	case 0x0d14:
-		verboselog(2, "HPC DUART1 Channel B Data Read\n" );
-		return 0;
-	case 0x0d18:
-		verboselog(2, "HPC DUART1 Channel A Control Read\n" );
-		return 0;
-	case 0x0d1c:
-		verboselog(2, "HPC DUART1 Channel A Data Read\n" );
-		return 0;
 	case 0x0d20:
 		verboselog(2, "HPC DUART2 Channel B Control Read\n" );
 		return 0x00000004;
@@ -251,30 +182,6 @@ READ32_MEMBER(indigo_state::hpc_r)
 WRITE32_MEMBER(indigo_state::hpc_w)
 {
 	offset <<= 2;
-	if( offset >= 0x0e00 && offset <= 0x0e7c )
-	{
-		verboselog(2, "RTC RAM[0x%02x] Write: %02x\n", ( offset - 0xe00 ) >> 2, data & 0x000000ff );
-		m_rtc.nRAM[ ( offset - 0xe00 ) >> 2 ] = data & 0x000000ff;
-		switch( ( offset - 0xe00 ) >> 2 )
-		{
-		case 0:
-			break;
-		case 4:
-			if( !( m_rtc.nRAM[0x00] & 0x80 ) )
-			{
-				if( data & 0x80 )
-				{
-					m_rtc.nRAM[0x19] = m_rtc.nRAM[0x06]; //RTC_SECOND;
-					m_rtc.nRAM[0x1a] = m_rtc.nRAM[0x07]; //RTC_MINUTE;
-					m_rtc.nRAM[0x1b] = m_rtc.nRAM[0x08]; //RTC_HOUR;
-					m_rtc.nRAM[0x1c] = m_rtc.nRAM[0x09]; //RTC_DAY;
-					m_rtc.nRAM[0x1d] = m_rtc.nRAM[0x0a]; //RTC_MONTH;
-				}
-			}
-			break;
-		}
-		return;
-	}
 	switch( offset )
 	{
 	case 0x0090:    // SCSI0 next descriptor pointer
@@ -328,44 +235,6 @@ WRITE32_MEMBER(indigo_state::hpc_w)
 			return;
 		}
 		break;
-	case 0x01b0:
-		verboselog(2, "HPC Misc. Status Write: %08x (%08x)\n", data, mem_mask );
-		if( data & 0x00000001 )
-		{
-			verboselog(2, "  Force DSP hard reset\n" );
-		}
-		if( data & 0x00000002 )
-		{
-			verboselog(2, "  Force IRQA\n" );
-		}
-		if( data & 0x00000004 )
-		{
-			verboselog(2, "  Set IRQA polarity high\n" );
-		}
-		else
-		{
-			verboselog(2, "  Set IRQA polarity low\n" );
-		}
-		if( data & 0x00000008 )
-		{
-			verboselog(2, "  SRAM size: 32K\n" );
-		}
-		else
-		{
-			verboselog(2, "  SRAM size:  8K\n" );
-		}
-		m_hpc.m_misc_status = data;
-		break;
-	case 0x01bc:
-//      verboselog(machine, 2, "HPC CPU Serial EEPROM Write: %08x (%08x)\n", data, mem_mask );
-		if( data & 0x00000001 )
-		{
-			verboselog(2, "    CPU board LED on\n" );
-		}
-		m_eeprom->di_write((data & 0x00000008) ? 1 : 0 );
-		m_eeprom->cs_write((data & 0x00000002) ? CLEAR_LINE : ASSERT_LINE );
-		m_eeprom->clk_write((data & 0x00000004) ? CLEAR_LINE : ASSERT_LINE );
-		break;
 	case 0x01c4:
 		verboselog(2, "HPC Local IO Register 0 Mask Write: %08x (%08x)\n", data, mem_mask );
 		m_hpc.m_local_ioreg0_mask = data;
@@ -381,62 +250,6 @@ WRITE32_MEMBER(indigo_state::hpc_w)
 	case 0x01d8:
 		verboselog(2, "HPC VME Interrupt Mask 1 Write: %08x (%08x)\n", data, mem_mask );
 		m_hpc.m_vme_intmask1 = data;
-		break;
-	case 0x0d00:
-		verboselog(2, "HPC DUART0 Channel B Control Write: %08x (%08x)\n", data, mem_mask );
-		m_scc->reg_w(space, 0, data);
-		break;
-	case 0x0d04:
-		verboselog(2, "HPC DUART0 Channel B Data Write: %08x (%08x)\n", data, mem_mask );
-		m_scc->reg_w(space, 2, data);
-		break;
-	case 0x0d08:
-		verboselog(2, "HPC DUART0 Channel A Control Write: %08x (%08x)\n", data, mem_mask );
-		m_scc->reg_w(space, 1, data);
-		break;
-	case 0x0d0c:
-		verboselog(2, "HPC DUART0 Channel A Data Write: %08x (%08x)\n", data, mem_mask );
-		m_scc->reg_w(space, 3, data);
-		break;
-	case 0x0d10:
-		if( ( data & 0x000000ff ) >= 0x00000020 )
-		{
-//          verboselog(2, "HPC DUART1 Channel B Control Write: %08x (%08x) %c\n", data, mem_mask, data & 0x000000ff );
-			//osd_printf_info( "%c", data & 0x000000ff );
-		}
-		else
-		{
-//          verboselog(2, "HPC DUART1 Channel B Control Write: %08x (%08x)\n", data, mem_mask );
-		}
-		break;
-	case 0x0d14:
-		if( ( data & 0x000000ff ) >= 0x00000020 || ( data & 0x000000ff ) == 0x0d || ( data & 0x000000ff ) == 0x0a )
-		{
-			verboselog(2, "HPC DUART1 Channel B Data Write: %08x (%08x) %c\n", data, mem_mask, data & 0x000000ff );
-			osd_printf_info( "%c", data & 0x000000ff );
-		}
-		else
-		{
-			verboselog(2, "HPC DUART1 Channel B Data Write: %08x (%08x)\n", data, mem_mask );
-		}
-		break;
-	case 0x0d18:
-		osd_printf_info("HPC DUART1 Channel A Control Write: %08x (%08x)\n", data, mem_mask );
-		break;
-	case 0x0d1c:
-		verboselog(2, "HPC DUART1 Channel A Data Write: %08x (%08x)\n", data, mem_mask );
-		break;
-	case 0x0d20:
-		osd_printf_info("HPC DUART2 Channel B Control Write: %08x (%08x)\n", data, mem_mask );
-		break;
-	case 0x0d24:
-		verboselog(2, "HPC DUART2 Channel B Data Write: %08x (%08x)\n", data, mem_mask );
-		break;
-	case 0x0d28:
-		osd_printf_info("HPC DUART2 Channel A Control Write: %08x (%08x)\n", data, mem_mask );
-		break;
-	case 0x0d2c:
-		verboselog(2, "HPC DUART2 Channel A Data Write: %08x (%08x)\n", data, mem_mask );
 		break;
 	case 0x0d30:
 		osd_printf_info("HPC DUART3 Channel B Control Write: %08x (%08x)\n", data, mem_mask );
@@ -467,18 +280,94 @@ WRITE32_MEMBER(indigo_state::int_w)
 {
 	osd_printf_info("INT: write %x to ofs %x (mask %x) (PC=%x)\n", data, offset, mem_mask, m_maincpu->pc());
 }
+#endif
+
+READ8_MEMBER(indigo_state::eeprom_r)
+{
+	return (m_eeprom_reg & 0xef) | (m_eeprom->do_read() << 4);
+}
+
+WRITE8_MEMBER(indigo_state::eeprom_w)
+{
+	if((data ^ m_eeprom_reg) & 1)
+		logerror("CPU led %s\n", data & 1 ? "on" : "off");
+	m_eeprom_reg = data;
+	m_eeprom->di_write(m_eeprom_reg & 8 ? 1 : 0 );
+	m_eeprom->cs_write(m_eeprom_reg & 2 ? CLEAR_LINE : ASSERT_LINE );
+	m_eeprom->clk_write(m_eeprom_reg & 4 ? CLEAR_LINE : ASSERT_LINE );	
+}
+
+READ32_MEMBER(indigo_state::misc_status_r)
+{
+	return m_misc_status;
+}
+
+WRITE32_MEMBER(indigo_state::misc_status_w)
+{
+	COMBINE_DATA(&m_misc_status);
+	logerror("Misc status: sram %dK irqa %s%s dsp %s\n",
+			 m_misc_status & 8 ? 32 : 8,
+			 m_misc_status & 4 ? "high" : "low",
+			 m_misc_status & 2 ? " forced" : "",
+			 m_misc_status & 1 ? "reset" : "normal");
+}
+
+/*
+  bfc02c60:
+  read   5f, drop it
+  write  5b, 0x5a
+  read  e57 to r16
+  write e57, 0xa5
+  read  e5b to r4
+  write e5b, 0x5a
+  read  e57, check it's a5 (RTC ram) (r15 |= 4)
+  read  e5b, check it's 5a (RTC ram)
+  write e57, r16
+  write e5b, r4
+
+  write 1c7, 0xa5
+  write 1db, 0x5a
+  read  1c7, check it's a5 (r15 |= 8)
+  read  1db, check it's 5a (r15 |= 8)
+  write 1c7, 0x00
+  write 1db, 0x00
+
+  if r15 != 0 "Data path test failed"
+
+  bfc00730: Ram test, including size
+
+*/
+
 
 void indigo_state::indigo_map(address_map &map)
 {
-	map(0x00000000, 0x001fffff).ram().share("share10");
-	map(0x08000000, 0x08ffffff).ram().share("share5");
-	map(0x09000000, 0x097fffff).ram().share("share6");
-	map(0x0a000000, 0x0a7fffff).ram().share("share7");
-	map(0x0c000000, 0x0c7fffff).ram().share("share8");
-	map(0x10000000, 0x107fffff).ram().share("share9");
-	map(0x18000000, 0x187fffff).ram().share("share1");
-	map(0x1fb80000, 0x1fb8ffff).rw(FUNC(indigo_state::hpc_r), FUNC(indigo_state::hpc_w));
-	map(0x1fbd9000, 0x1fbd903f).rw(FUNC(indigo_state::int_r), FUNC(indigo_state::int_w));
+	map(0x00000000, 0x00ffffff).ram();
+	map(0x1fb800c0, 0x1fb800c3).lr32("endianness", [](address_space &, offs_t, u32) -> u32 { return 0x40; }); // Rev 1, all big-endian (dsp, par, scsi, enet, cpu)
+	map(0x1fb80120, 0x1fb80127).rw(m_wd33c93, FUNC(wd33c93_device::read), FUNC(wd33c93_device::write)).umask32(0x0000ff00);
+	map(0x1fb801b0, 0x1fb801b3).rw(FUNC(indigo_state::misc_status_r), FUNC(indigo_state::misc_status_w));
+	map(0x1fb801bf, 0x1fb801bf).rw(FUNC(indigo_state::eeprom_r), FUNC(indigo_state::eeprom_w));
+
+	map(0x1fb80d03, 0x1fb80d03).rw(m_scc0, FUNC(scc8530_device::cb_r), FUNC(scc8530_device::cb_w));
+	map(0x1fb80d07, 0x1fb80d07).rw(m_scc0, FUNC(scc8530_device::db_r), FUNC(scc8530_device::db_w));
+	map(0x1fb80d0b, 0x1fb80d0b).rw(m_scc0, FUNC(scc8530_device::ca_r), FUNC(scc8530_device::ca_w));
+	map(0x1fb80d0f, 0x1fb80d0f).rw(m_scc0, FUNC(scc8530_device::da_r), FUNC(scc8530_device::da_w));
+	map(0x1fb80d13, 0x1fb80d13).rw(m_scc1, FUNC(scc8530_device::cb_r), FUNC(scc8530_device::cb_w));
+	map(0x1fb80d17, 0x1fb80d17).rw(m_scc1, FUNC(scc8530_device::db_r), FUNC(scc8530_device::db_w));
+	map(0x1fb80d1b, 0x1fb80d1b).rw(m_scc1, FUNC(scc8530_device::ca_r), FUNC(scc8530_device::ca_w));
+	map(0x1fb80d1f, 0x1fb80d1f).rw(m_scc1, FUNC(scc8530_device::da_r), FUNC(scc8530_device::da_w));
+	map(0x1fb80d23, 0x1fb80d23).rw(m_scc2, FUNC(scc8530_device::cb_r), FUNC(scc8530_device::cb_w));
+	map(0x1fb80d27, 0x1fb80d27).rw(m_scc2, FUNC(scc8530_device::db_r), FUNC(scc8530_device::db_w));
+	map(0x1fb80d2b, 0x1fb80d2b).rw(m_scc2, FUNC(scc8530_device::ca_r), FUNC(scc8530_device::ca_w));
+	map(0x1fb80d2f, 0x1fb80d2f).rw(m_scc2, FUNC(scc8530_device::da_r), FUNC(scc8530_device::da_w));
+
+	map(0x1fb80e00, 0x1fb80e7f).m(m_rtc, FUNC(dp8573a_device::map)).umask32(0x000000ff);
+
+	//	map(0x1fb80000, 0x1fb8ffff).rw(FUNC(indigo_state::hpc_r), FUNC(indigo_state::hpc_w));
+	//	map(0x1fbd9000, 0x1fbd903f).rw(FUNC(indigo_state::int_r), FUNC(indigo_state::int_w));
+
+
+	map(0x1fb801c7, 0x1fb801c7).lr8("hack3", [](address_space &, offs_t, u8) -> u8 { return 0xa5; });
+	map(0x1fb801db, 0x1fb801db).lr8("hack4", [](address_space &, offs_t, u8) -> u8 { return 0x5a; });
 }
 
 void indigo_state::indigo3k_map(address_map &map)
@@ -498,70 +387,6 @@ WRITE_LINE_MEMBER(indigo_state::scsi_irq)
 {
 }
 
-void indigo_state::device_timer(emu_timer &timer, device_timer_id id, int param, void *ptr)
-{
-	switch (id)
-	{
-	case TIMER_RTC:
-		indigo_timer_rtc();
-		break;
-	default:
-		assert_always(false, "Unknown id in indigo_state::device_timer");
-	}
-}
-
-void indigo_state::indigo_timer_rtc()
-{
-	// update RTC every 10 milliseconds
-	RTC_HUNDREDTH++;
-
-	if( ( RTC_HUNDREDTH & 0x0f ) == 0x0a )
-	{
-		RTC_HUNDREDTH -= 0x0a;
-		RTC_HUNDREDTH += 0x10;
-		if( ( RTC_HUNDREDTH & 0xa0 ) == 0xa0 )
-		{
-			RTC_HUNDREDTH = 0;
-			RTC_SECOND++;
-
-			if( ( RTC_SECOND & 0x0f ) == 0x0a )
-			{
-				RTC_SECOND -= 0x0a;
-				RTC_SECOND += 0x10;
-				if( RTC_SECOND == 0x60 )
-				{
-					RTC_SECOND = 0;
-					RTC_MINUTE++;
-
-					if( ( RTC_MINUTE & 0x0f ) == 0x0a )
-					{
-						RTC_MINUTE -= 0x0a;
-						RTC_MINUTE += 0x10;
-						if( RTC_MINUTE == 0x60 )
-						{
-							RTC_MINUTE = 0;
-							RTC_HOUR++;
-
-							if( ( RTC_HOUR & 0x0f ) == 0x0a )
-							{
-								RTC_HOUR -= 0x0a;
-								RTC_HOUR += 0x10;
-								if( RTC_HOUR == 0x24 )
-								{
-									RTC_HOUR = 0;
-									RTC_DAY++;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	timer_set(attotime::from_msec(10), TIMER_RTC);
-}
-
 void indigo_state::machine_start()
 {
 	m_hpc.m_misc_status = 0;
@@ -571,7 +396,10 @@ void indigo_state::machine_start()
 	m_hpc.m_vme_intmask0 = 0;
 	m_hpc.m_vme_intmask1 = 0;
 
-	timer_set(attotime::from_msec(10), TIMER_RTC);
+	m_misc_status = 0x00000000;
+	m_eeprom_reg = 0x00;
+	save_item(NAME(m_misc_status));
+	save_item(NAME(m_eeprom_reg));
 }
 
 static INPUT_PORTS_START( indigo )
@@ -581,50 +409,67 @@ INPUT_PORTS_END
 
 void indigo_state::cdrom_config(device_t *device)
 {
-	device = device->subdevice("cdda");
-	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "^^mono", 1.0)
+	device->subdevice<cdda_device>("cdda")->add_route(ALL_OUTPUTS, "^^mono", 1.0);
 }
 
-MACHINE_CONFIG_START(indigo_state::indigo3k)
-	MCFG_DEVICE_ADD("maincpu", R3041, 33000000)
-	MCFG_R3000_ENDIANNESS(ENDIANNESS_BIG)
-	MCFG_DEVICE_PROGRAM_MAP(indigo3k_map)
+void indigo_state::indigo3k(machine_config &config)
+{
+	auto &cpu(R3041(config, m_maincpu, 33000000));
+	cpu.set_endianness(ENDIANNESS_BIG);
+	cpu.set_addrmap(AS_PROGRAM, &indigo_state::indigo3k_map);
 
-	/* video hardware */
-	MCFG_SCREEN_ADD("screen", RASTER)
-	MCFG_SCREEN_REFRESH_RATE( 60 )
-	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(2500)) /* not accurate */
-	MCFG_SCREEN_SIZE(800, 600)
-	MCFG_SCREEN_VISIBLE_AREA(0, 799, 0, 599)
-	MCFG_SCREEN_UPDATE_DRIVER(indigo_state, screen_update)
-	MCFG_SCREEN_PALETTE("palette")
+	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	m_screen->set_refresh(HZ_TO_ATTOSECONDS(60));
+	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(2500));
+	m_screen->set_size(800, 600);
+	m_screen->set_visarea(0, 799, 0, 599);
+	m_screen->set_screen_update(FUNC(indigo_state::screen_update));
+	m_screen->set_palette(m_palette);
 
-	MCFG_PALETTE_ADD("palette", 65536)
+	PALETTE(config, m_palette, 65536);
 
 	SPEAKER(config, "mono").front_center();
 
-	MCFG_DEVICE_ADD("scc", SCC8530, 7000000)
+	DP8573A(config, m_rtc);
 
-	MCFG_DEVICE_ADD("scsi", SCSI_PORT, 0)
-	MCFG_SCSIDEV_ADD("scsi:" SCSI_PORT_DEVICE1, "cdrom", SCSICD, SCSI_ID_6)
-	MCFG_SLOT_OPTION_MACHINE_CONFIG("cdrom", cdrom_config)
+	SCC8530N(config, m_scc0, 3672000); // Actual clock unknown
+	SCC8530N(config, m_scc1, 3672000);
 
-	MCFG_DEVICE_ADD("wd33c93", WD33C93, 0)
-	MCFG_LEGACY_SCSI_PORT("scsi")
-	MCFG_WD33C93_IRQ_CB(WRITELINE(*this, indigo_state, scsi_irq))      /* command completion IRQ */
+	auto &brg(CLOCK(config, "brg", 3672000));
+	brg.signal_handler().set   (m_scc0, FUNC(scc8530_device::rxca_w));
+	brg.signal_handler().append(m_scc0, FUNC(scc8530_device::txca_w));
+	brg.signal_handler().append(m_scc0, FUNC(scc8530_device::rxcb_w));
+	brg.signal_handler().append(m_scc0, FUNC(scc8530_device::txcb_w));
+	brg.signal_handler().append(m_scc1, FUNC(scc8530_device::rxca_w));
+	brg.signal_handler().append(m_scc1, FUNC(scc8530_device::txca_w));
+	brg.signal_handler().append(m_scc1, FUNC(scc8530_device::rxcb_w));
+	brg.signal_handler().append(m_scc1, FUNC(scc8530_device::txcb_w));
 
-	MCFG_DEVICE_ADD("eeprom", EEPROM_SERIAL_93C56_16BIT)
-MACHINE_CONFIG_END
+	auto &scsi_port(SCSI_PORT(config, "scsi"));
+	auto &cdrom(*scsi_port.subdevice<scsi_port_slot_device>("1"));
+	cdrom.option_add("cdrom", SCSICD);
+	cdrom.set_default_option("cdrom");
+	cdrom.set_option_device_input_defaults("cdrom", DEVICE_INPUT_DEFAULTS_NAME(SCSI_ID_4));
+	cdrom.set_option_machine_config("cdrom", cdrom_config);
 
-MACHINE_CONFIG_START(indigo_state::indigo4k)
+	WD33C93(config, m_wd33c93, 10000000);
+	m_wd33c93->set_scsi_port(scsi_port);
+	m_wd33c93->set_irq_callback(DEVCB_WRITELINE(*this, indigo_state, scsi_irq));      /* command completion IRQ */
+
+	EEPROM_SERIAL_93C56_16BIT(config, m_eeprom);
+}
+
+void indigo_state::indigo4k(machine_config &config)
+{
 	indigo3k(config);
-	MCFG_DEVICE_REPLACE("maincpu", R4600BE, 150000000) // Should be R4400
-	MCFG_MIPS3_ICACHE_SIZE(32768)
-	MCFG_MIPS3_DCACHE_SIZE(32768)
-	MCFG_DEVICE_PROGRAM_MAP(indigo4k_map)
+	auto &cpu(R4600BE(config.replace(), m_maincpu, 150000000)); // Should be R4400
+	cpu.set_icache_size(32768);
+	cpu.set_dcache_size(32768);
+	cpu.set_addrmap(AS_PROGRAM, &indigo_state::indigo4k_map);
 
-	MCFG_DEVICE_ADD("sgi_mc", SGI_MC, 0)
-MACHINE_CONFIG_END
+	SGI_MC(config, "sgi_mc", 0);
+}
+
 
 ROM_START( indigo3k )
 	ROM_REGION32_BE( 0x40000, "user1", 0 )
