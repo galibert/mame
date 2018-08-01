@@ -853,6 +853,20 @@ if (MACHINES["CXD1095"]~=null) then
 	}
 end
 
+---------------------------------------------------
+--
+--@src/devices/machine/dp8573a.h,MACHINES["DP8573A"] = true
+---------------------------------------------------
+
+if (MACHINES["DP8573A"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/machine/dp8573a.cpp",
+		MAME_DIR .. "src/devices/machine/dp8573a.h",
+	}
+end
+
+---------------------------------------------------
+--
 --@src/devices/machine/ds1204.h,MACHINES["DS1204"] = true
 ---------------------------------------------------
 
