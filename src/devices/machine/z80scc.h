@@ -369,6 +369,8 @@ private:
 	void out_rts_cb(int state);
 	void out_dtr_cb(int state);
 
+	// to make RE easier
+	std::string m_log_buffer;
 };
 
 

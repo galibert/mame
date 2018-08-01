@@ -89,21 +89,23 @@ DONE (x) (p=partly)         NMOS         CMOS       ESCC      EMSCC
 #define LOG_CTS     (1U <<  7)
 #define LOG_DCD     (1U <<  8)
 #define LOG_SYNC    (1U <<  9)
+#define LOG_TXTEXT  (1U << 10)
 
-//#define VERBOSE (LOG_GENERAL|LOG_SETUP|LOG_READ|LOG_INT|LOG_CMD|LOG_TX|LOG_RCV|LOG_CTS|LOG_DCD|LOG_SYNC)
+#define VERBOSE (LOG_TXTEXT)
 //#define LOG_OUTPUT_STREAM std::cout
 
 #include "logmacro.h"
 
-#define LOGSETUP(...) LOGMASKED(LOG_SETUP,   __VA_ARGS__)
-#define LOGR(...)     LOGMASKED(LOG_READ,    __VA_ARGS__)
-#define LOGINT(...)   LOGMASKED(LOG_INT,     __VA_ARGS__)
-#define LOGCMD(...)   LOGMASKED(LOG_CMD,     __VA_ARGS__)
-#define LOGTX(...)    LOGMASKED(LOG_TX,      __VA_ARGS__)
-#define LOGRCV(...)   LOGMASKED(LOG_RCV,     __VA_ARGS__)
-#define LOGCTS(...)   LOGMASKED(LOG_CTS,     __VA_ARGS__)
-#define LOGDCD(...)   LOGMASKED(LOG_DCD,     __VA_ARGS__)
-#define LOGSYNC(...)  LOGMASKED(LOG_SYNC,    __VA_ARGS__)
+#define LOGSETUP(...)  LOGMASKED(LOG_SETUP,   __VA_ARGS__)
+#define LOGR(...)      LOGMASKED(LOG_READ,    __VA_ARGS__)
+#define LOGINT(...)    LOGMASKED(LOG_INT,     __VA_ARGS__)
+#define LOGCMD(...)    LOGMASKED(LOG_CMD,     __VA_ARGS__)
+#define LOGTX(...)     LOGMASKED(LOG_TX,      __VA_ARGS__)
+#define LOGRCV(...)    LOGMASKED(LOG_RCV,     __VA_ARGS__)
+#define LOGCTS(...)    LOGMASKED(LOG_CTS,     __VA_ARGS__)
+#define LOGDCD(...)    LOGMASKED(LOG_DCD,     __VA_ARGS__)
+#define LOGSYNC(...)   LOGMASKED(LOG_SYNC,    __VA_ARGS__)
+#define LOGTXTEXT(...) LOGMASKED(LOG_TXTEXT,  __VA_ARGS__)
 
 
 //**************************************************************************
@@ -2117,6 +2119,13 @@ void z80scc_channel::do_sccreg_wr7(uint8_t data)
 /* WR8 is the transmit buffer register */
 void z80scc_channel::do_sccreg_wr8(uint8_t data)
 {
+	m_log_buffer += char(data);
+	if (data == 0x0a)
+	{
+		LOGTXTEXT("Transmit: %s", m_log_buffer);
+		m_log_buffer.clear();
+	}
+
 	LOGTX("%s(%02x) \"%s\": %c : Transmit Buffer write %02x\n", FUNCNAME, data, owner()->tag(), 'A' + m_index, data);
 	data_write(data);
 }
