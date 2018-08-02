@@ -41,9 +41,10 @@
 \*********************************************************************/
 
 #include "emu.h"
-#include "bus/scsi/scsi.h"
-#include "bus/scsi/scsicd.h"
-#include "bus/scsi/scsihd.h"
+
+#include "machine/nscsi_bus.h"
+#include "machine/nscsi_hd.h"
+#include "machine/nscsi_cd.h"
 
 #include "cpu/mips/mips3.h"
 
@@ -71,7 +72,7 @@ public:
 		, m_maincpu(*this, "maincpu")
 		, m_mainram(*this, "mainram")
 		, m_mem_ctrl(*this, "memctrl")
-		, m_scsi_ctrl(*this, "wd33c93")
+		, m_scsi_ctrl(*this, "scsibus:0:wd33c93")
 		, m_newport(*this, "newport")
 		, m_hal2(*this, HAL2_TAG)
 		, m_hpc3(*this, HPC3_TAG)
@@ -94,7 +95,9 @@ private:
 
 	void ip225015_map(address_map &map);
 
+	void wd33c93(device_t *device);
 	static void cdrom_config(device_t *device);
+	device_slot_interface &scsi_devices(device_slot_interface &device);
 
 	static const char* HAL2_TAG;
 	static const char* HPC3_TAG;
@@ -201,11 +204,28 @@ static INPUT_PORTS_START( ip225015 )
 	PORT_INCLUDE( at_keyboard )     /* IN4 - IN11 */
 INPUT_PORTS_END
 
+device_slot_interface &ip22_state::scsi_devices(device_slot_interface &device)
+{
+	device.option_add("cdrom", NSCSI_CDROM);
+	device.option_add("harddisk", NSCSI_HARDDISK);
+	device.set_option_machine_config("cdrom", cdrom_config);
+	return device;
+}
+
+void ip22_state::wd33c93(device_t *device)
+{
+	auto wd = downcast<wd33c93_device *>(device);
+	wd->irq_cb().set(m_hpc3, FUNC(hpc3_device::scsi_irq));
+	wd->drq_cb().set(m_hpc3, FUNC(hpc3_device::scsi_drq));
+}
+
 void ip22_state::cdrom_config(device_t *device)
 {
-	device = device->subdevice("cdda");
-	MCFG_SOUND_ROUTE(0, ":lspeaker", 1.0)
-	MCFG_SOUND_ROUTE(1, ":rspeaker", 1.0)
+#if 0 // cdda not in nscsi_cd yet
+	auto cdda = device->subdevice<cdda_device>("cdda");
+	cdda->add_route(0, ":lspeaker", 1.0);
+	cdda->add_route(1, ":rspeaker", 1.0);
+#endif
 }
 
 void ip22_state::ip225015(machine_config &config)
@@ -239,14 +259,20 @@ void ip22_state::ip225015(machine_config &config)
 	vreg.add_route(0, "dac",  1.0, DAC_VREF_POS_INPUT);
 	vreg.add_route(0, "dac", -1.0, DAC_VREF_NEG_INPUT);
 
-	scsi_port_device &scsi(SCSI_PORT(config, "scsi"));
-	scsi.set_slot_device(1, "harddisk", SCSIHD, DEVICE_INPUT_DEFAULTS_NAME(SCSI_ID_1));
-	scsi.set_slot_device(2, "cdrom", SCSICD, DEVICE_INPUT_DEFAULTS_NAME(SCSI_ID_4));
-	scsi.slot(2).set_option_machine_config("cdrom", cdrom_config);
+	NSCSI_BUS(config, "scsibus");
 
-	WD33C93(config, m_scsi_ctrl);
-	m_scsi_ctrl->set_scsi_port("scsi");
-	m_scsi_ctrl->irq_cb().set(m_hpc3, FUNC(hpc3_device::scsi_irq));
+	auto &id0(NSCSI_CONNECTOR(config, "scsibus:0"));
+	id0.option_add_internal("wd33c93", WD33C93);
+	id0.set_default_option("wd33c93");
+	id0.set_fixed(true);
+
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:1")).set_default_option("harddisk");
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:2"));
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:3"));
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:4")).set_default_option("cdrom");
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:5"));
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:6"));
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:7"));
 
 	SGI_HAL2(config, m_hal2);
 	SGI_IOC2_GUINNESS(config, m_ioc2, m_maincpu);

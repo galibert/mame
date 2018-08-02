@@ -62,50 +62,55 @@ void dp8573a_device::device_timer(emu_timer &timer, device_timer_id id, int para
 	if(!(m_rtm & 0x08))
 		return;
 
-	u8 orig_pf = m_pf;
 	u8 dmcc_limit;
 
 	// Milliseconds
+	m_pf |= 0x20;
 	if(m_ic0 & 0x20)
-		m_pf |= 0x20;
+		m_status |= 0x04;
 	m_tscc ++;
 	if(m_tscc != 10)
 		goto check;
 	m_tscc = 0;
 
 	// Hundredths of second
-	if(m_ic0 & 0x10)
 		m_pf |= 0x10;
+	if(m_ic0 & 0x10)
+		m_status |= 0x04;
 	m_hscc ++;
 	if((m_hscc & 0x0f) != 10)
 		goto check;
 
 	// Tenths of second
-	if(m_ic0 & 0x08)
 		m_pf |= 0x08;
+	if(m_ic0 & 0x08)
+		m_status |= 0x04;
 	m_hscc += 6;
 	if(m_hscc != 0xa0)
 		goto check;
 	m_hscc = 0;
 
 	// Seconds
+	m_pf |= 0x04;
 	if(m_ic0 & 0x04)
-		m_pf |= 0x04;
+		m_status |= 0x04;
 	m_scc ++;
 	if((m_scc & 0x0f) != 10)
 		goto check;
 
 	// Ten seconds
+	m_pf |= 0x02;
 	if(m_ic0 & 0x02)
-		m_pf |= 0x02;
+		m_status |= 0x04;
 	m_scc += 6;
 	if(m_scc != 0x60)
 		goto check;
 	m_scc = 0;
 
 	// Minutes
+	m_pf |= 0x01;
 	if(m_ic0 & 0x01)
-		m_pf |= 0x01;
+		m_status |= 0x04;
 	m_mcc ++;
 	if((m_mcc & 0x0f) != 10)
 		goto check;
@@ -158,8 +163,6 @@ void dp8573a_device::device_timer(emu_timer &timer, device_timer_id id, int para
 		m_ycc = 0;
 
  check:
-	if(m_pf != orig_pf)
-		m_status |= 0x04;
 	if(m_ic1 & 0x40) {
 		if((!(m_ic1 & 0x01) || m_scc  == m_scr)  &&
 		   (!(m_ic1 & 0x02) || m_mcc  == m_mcr)  &&
@@ -334,8 +337,14 @@ READ8_MEMBER (dp8573a_device::rtm_r)
 
 WRITE8_MEMBER(dp8573a_device::rtm_w)
 {
-	if(m_status & 0x40)
+	if(m_status & 0x40) {
 		m_rtm = data;
+		if(m_rtm & 0x08) {
+			m_pf &= 0xbf;
+			logerror("[Transmit] Clock started\n");
+			machine().debug_break();
+		}
+	}
 }
 
 READ8_MEMBER (dp8573a_device::om_r)
@@ -358,7 +367,7 @@ READ8_MEMBER (dp8573a_device::pf_ic0_r)
 	else {
 		u8 res = m_pf;
 		if(!machine().side_effects_disabled())
-			m_pf &= 0xc0;
+			m_pf &= 0x80;
 		return res;
 	}
 }
@@ -368,7 +377,7 @@ WRITE8_MEMBER(dp8573a_device::pf_ic0_w)
 	if(m_status & 0x40)
 		m_ic0 = data;
 	else
-		m_pf = (m_pf & 0x3f) | (data & 0xc0);
+		m_pf = (m_pf & 0x3f) | (data & 0x80);
 }
 
 READ8_MEMBER (dp8573a_device::tsc_ic1_r)

@@ -19,8 +19,6 @@
 \*********************************************************************/
 
 #include "emu.h"
-#include "bus/scsi/scsi.h"
-#include "bus/scsi/scsicd.h"
 #include "cpu/mips/mips3.h"
 #include "cpu/mips/r3000.h"
 #include "machine/z80scc.h"
@@ -29,6 +27,10 @@
 #include "machine/wd33c93.h"
 #include "machine/dp8573a.h"
 #include "machine/clock.h"
+#include "machine/pit8253.h"
+#include "machine/nscsi_bus.h"
+#include "machine/nscsi_hd.h"
+#include "machine/nscsi_cd.h"
 
 #include "emupal.h"
 #include "screen.h"
@@ -40,11 +42,11 @@ public:
 	indigo_state(const machine_config &mconfig, device_type type, const char *tag)
 		: driver_device(mconfig, type, tag)
 		, m_maincpu(*this, "maincpu")
-		, m_wd33c93(*this, "wd33c93")
+		, m_wd33c93(*this, "scsibus:0:wd33c93")
 		, m_scc0(*this, "scc0")
 		, m_scc1(*this, "scc1")
-		, m_scc2(*this, "scc2")
 		, m_rtc(*this, "dp8573a")
+		, m_pit(*this, "pit")
 		, m_eeprom(*this, "eeprom")
 		, m_screen(*this, "screen")
 		, m_palette(*this, "palette")
@@ -60,60 +62,74 @@ private:
 	DECLARE_WRITE8_MEMBER (eeprom_w);
 	DECLARE_READ32_MEMBER (misc_status_r);
 	DECLARE_WRITE32_MEMBER(misc_status_w);
+	DECLARE_READ8_MEMBER  (isr0_r);
+	DECLARE_WRITE8_MEMBER (isr0_w);
+	DECLARE_READ8_MEMBER  (isr1_r);
+	DECLARE_WRITE8_MEMBER (isr1_w);
+	DECLARE_READ8_MEMBER  (imr0_r);
+	DECLARE_WRITE8_MEMBER (imr0_w);
+	DECLARE_READ8_MEMBER  (imr1_r);
+	DECLARE_WRITE8_MEMBER (imr1_w);
+	DECLARE_READ8_MEMBER  (vmeisr_r);
+	DECLARE_WRITE8_MEMBER (vmeisr_w);
+	DECLARE_READ8_MEMBER  (vmeimr0_r);
+	DECLARE_WRITE8_MEMBER (vmeimr0_w);
+	DECLARE_READ8_MEMBER  (vmeimr1_r);
+	DECLARE_WRITE8_MEMBER (vmeimr1_w);
+
+	DECLARE_READ32_MEMBER (scsi0_bc_r);
+	DECLARE_WRITE32_MEMBER(scsi0_bc_w);
+	DECLARE_READ32_MEMBER (scsi0_cbp_r);
+	DECLARE_WRITE32_MEMBER(scsi0_cbp_w);
+	DECLARE_READ32_MEMBER (scsi0_nbdp_r);
+	DECLARE_WRITE32_MEMBER(scsi0_ndbp_w);
+	DECLARE_READ32_MEMBER (scsi0_ctrl_r);
+	DECLARE_WRITE32_MEMBER(scsi0_ctrl_w);
+	DECLARE_READ32_MEMBER (scsi0_pntr_r);
+	DECLARE_WRITE32_MEMBER(scsi0_pntr_w);
+	DECLARE_READ32_MEMBER (scsi0_fifo_r);
+	DECLARE_WRITE32_MEMBER(scsi0_fifo_w);
 
 	virtual void machine_start() override;
 	virtual void video_start() override;
 
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 
+	void wd33c93(device_t *device);
 	static void cdrom_config(device_t *device);
+	device_slot_interface &scsi_devices(device_slot_interface &device);
+
 	void indigo3k_map(address_map &map);
 	void indigo4k_map(address_map &map);
 	void indigo_map(address_map &map);
 
-	struct hpc_t
-	{
-		uint8_t m_misc_status;
-		uint32_t m_parbuf_ptr;
-		uint32_t m_local_ioreg0_mask;
-		uint32_t m_local_ioreg1_mask;
-		uint32_t m_vme_intmask0;
-		uint32_t m_vme_intmask1;
-		uint32_t m_scsi0_descriptor;
-		uint32_t m_scsi0_dma_ctrl;
-	};
 
 	required_device<cpu_device> m_maincpu;
 	required_device<wd33c93_device> m_wd33c93;
-	required_device<scc8530_device> m_scc0, m_scc1, m_scc2;
+	required_device<scc8530_device> m_scc0, m_scc1;
 	required_device<dp8573a_device> m_rtc;
+	required_device<pit8254_device> m_pit;
 	required_device<eeprom_serial_93cxx_device> m_eeprom;
 	required_device<screen_device> m_screen;
 	required_device<palette_device> m_palette;
 
+	memory_access_cache<2, 0, ENDIANNESS_BIG> *m_scsi0_cache;
+
 	u32 m_misc_status;
+	u32 m_scsi0_bc, m_scsi0_cbp, m_scsi0_nbdp, m_scsi0_ctrl;
+	u32 m_scsi0_pntr;
+
+	u16 m_isr, m_imr, m_vmeimr;
+	u8 m_vmeisr;
 	u8 m_eeprom_reg;
+	u8 m_scsi0_fifo[64];
 
-	hpc_t m_hpc;
-
-	inline void ATTR_PRINTF(3,4) verboselog(int n_level, const char *s_fmt, ... );
+	void scsi0_dma_run();
+	u8 scsi0_dma_fifo_r();
+	void scsi0_dma_fifo_w(u8 data);
+	void scsi0_irq(int state);
+	void scsi0_drq(int state);
 };
-
-
-#define VERBOSE_LEVEL (0)
-
-inline void ATTR_PRINTF(3,4) indigo_state::verboselog(int n_level, const char *s_fmt, ... )
-{
-	if( VERBOSE_LEVEL >= n_level )
-	{
-		va_list v;
-		char buf[ 32768 ];
-		va_start( v, s_fmt );
-		vsprintf( buf, s_fmt, v );
-		va_end( v );
-		logerror( "%08x: %s", m_maincpu->pc(), buf );
-	}
-}
 
 void indigo_state::video_start()
 {
@@ -124,176 +140,29 @@ uint32_t indigo_state::screen_update(screen_device &screen, bitmap_ind16 &bitmap
 	return 0;
 }
 
-
-
-#if 0
-READ32_MEMBER(indigo_state::hpc_r)
-{
-	offset <<= 2;
-	switch( offset )
-	{
-	case 0x05c:
-		verboselog(2, "HPC Unknown Read: %08x (%08x) (returning 0x000000a5 as kludge)\n", 0x1fb80000 + offset, mem_mask );
-		return 0x0000a500;
-	case 0x00ac:
-		verboselog(2, "HPC Parallel Buffer Pointer Read: %08x (%08x)\n", m_hpc.m_parbuf_ptr, mem_mask );
-		return m_hpc.m_parbuf_ptr;
-	case 0x01c4:
-		verboselog(2, "HPC Local IO Register 0 Mask Read: %08x (%08x)\n", m_hpc.m_local_ioreg0_mask, mem_mask );
-		return m_hpc.m_local_ioreg0_mask;
-	case 0x01cc:
-		verboselog(2, "HPC Local IO Register 1 Mask Read: %08x (%08x)\n", m_hpc.m_local_ioreg1_mask, mem_mask );
-		return m_hpc.m_local_ioreg1_mask;
-	case 0x01d4:
-		verboselog(2, "HPC VME Interrupt Mask 0 Read: %08x (%08x)\n", m_hpc.m_vme_intmask0, mem_mask );
-		return m_hpc.m_vme_intmask0;
-	case 0x01d8:
-		verboselog(2, "HPC VME Interrupt Mask 1 Read: %08x (%08x)\n", m_hpc.m_vme_intmask1, mem_mask );
-		return m_hpc.m_vme_intmask1;
-	case 0x0d20:
-		verboselog(2, "HPC DUART2 Channel B Control Read\n" );
-		return 0x00000004;
-	case 0x0d24:
-		verboselog(2, "HPC DUART2 Channel B Data Read\n" );
-		return 0;
-	case 0x0d28:
-		verboselog(2, "HPC DUART2 Channel A Control Read\n" );
-		return 0;
-	case 0x0d2c:
-		verboselog(2, "HPC DUART2 Channel A Data Read\n" );
-		return 0;
-	case 0x0d30:
-		verboselog(2, "HPC DUART3 Channel B Control Read\n" );
-		return 0x00000004;
-	case 0x0d34:
-		verboselog(2, "HPC DUART3 Channel B Data Read\n" );
-		return 0;
-	case 0x0d38:
-		verboselog(2, "HPC DUART3 Channel A Control Read\n" );
-		return 0;
-	case 0x0d3c:
-		verboselog(2, "HPC DUART3 Channel A Data Read\n" );
-		return 0;
-	}
-	verboselog(0, "Unmapped HPC read: 0x%08x (%08x)\n", 0x1fb80000 + offset, mem_mask );
-	return 0;
-}
-
-WRITE32_MEMBER(indigo_state::hpc_w)
-{
-	offset <<= 2;
-	switch( offset )
-	{
-	case 0x0090:    // SCSI0 next descriptor pointer
-		m_hpc.m_scsi0_descriptor = data;
-		break;
-
-	case 0x0094:    // SCSI0 control flags
-		m_hpc.m_scsi0_dma_ctrl = data;
-		#if 0
-		if (data & 0x80)
-		{
-			uint32_t next;
-
-			osd_printf_info("DMA activated for SCSI0\n");
-			osd_printf_info("Descriptor block:\n");
-			osd_printf_info("CTL: %08x BUFPTR: %08x DESCPTR %08x\n",
-				program_read_dword(m_hpc.m_scsi0_descriptor), program_read_dword(m_hpc.m_scsi0_descriptor+4),
-				program_read_dword(m_hpc.m_scsi0_descriptor+8));
-
-			next = program_read_dword(m_hpc.m_scsi0_descriptor+8);
-			osd_printf_info("CTL: %08x BUFPTR: %08x DESCPTR %08x\n",
-				program_read_dword(next), program_read_dword(next+4),
-				program_read_dword(next+8));
-		}
-		#endif
-		break;
-
-	case 0x00ac:
-		verboselog(2, "HPC Parallel Buffer Pointer Write: %08x (%08x)\n", data, mem_mask );
-		m_hpc.m_parbuf_ptr = data;
-		break;
-	case 0x0120:
-		if (ACCESSING_BITS_8_15)
-		{
-			verboselog(2, "HPC SCSI Controller Register Write: %08x\n", ( data >> 8 ) & 0x000000ff );
-			m_wd33c93->write( space, 0, ( data >> 8 ) & 0x000000ff );
-		}
-		else
-		{
-			return;
-		}
-		break;
-	case 0x0124:
-		if (ACCESSING_BITS_8_15)
-		{
-			verboselog(2, "HPC SCSI Controller Data Write: %08x\n", ( data >> 8 ) & 0x000000ff );
-			m_wd33c93->write( space, 1, ( data >> 8 ) & 0x000000ff );
-		}
-		else
-		{
-			return;
-		}
-		break;
-	case 0x01c4:
-		verboselog(2, "HPC Local IO Register 0 Mask Write: %08x (%08x)\n", data, mem_mask );
-		m_hpc.m_local_ioreg0_mask = data;
-		break;
-	case 0x01cc:
-		verboselog(2, "HPC Local IO Register 1 Mask Write: %08x (%08x)\n", data, mem_mask );
-		m_hpc.m_local_ioreg1_mask = data;
-		break;
-	case 0x01d4:
-		verboselog(2, "HPC VME Interrupt Mask 0 Write: %08x (%08x)\n", data, mem_mask );
-		m_hpc.m_vme_intmask0 = data;
-		break;
-	case 0x01d8:
-		verboselog(2, "HPC VME Interrupt Mask 1 Write: %08x (%08x)\n", data, mem_mask );
-		m_hpc.m_vme_intmask1 = data;
-		break;
-	case 0x0d30:
-		osd_printf_info("HPC DUART3 Channel B Control Write: %08x (%08x)\n", data, mem_mask );
-		break;
-	case 0x0d34:
-		verboselog(2, "HPC DUART3 Channel B Data Write: %08x (%08x)\n", data, mem_mask );
-		break;
-	case 0x0d38:
-		osd_printf_info("HPC DUART3 Channel A Control Write: %08x (%08x)\n", data, mem_mask );
-		break;
-	case 0x0d3c:
-		verboselog(2, "HPC DUART3 Channel A Data Write: %08x (%08x)\n", data, mem_mask );
-		break;
-	default:
-		osd_printf_info("Unmapped HPC write: 0x%08x (%08x): %08x\n", 0x1fb80000 + offset, mem_mask, data);
-		break;
-	}
-}
-
-// INT/INT2/INT3 interrupt controllers
-READ32_MEMBER(indigo_state::int_r)
-{
-	osd_printf_info("INT: read @ ofs %x (mask %x) (PC=%x)\n", offset, mem_mask, m_maincpu->pc());
-	return 0;
-}
-
-WRITE32_MEMBER(indigo_state::int_w)
-{
-	osd_printf_info("INT: write %x to ofs %x (mask %x) (PC=%x)\n", data, offset, mem_mask, m_maincpu->pc());
-}
-#endif
-
 READ8_MEMBER(indigo_state::eeprom_r)
 {
+#if 0
+	attotime t = machine().time();
+	int secs = t.m_seconds;
+	t.m_seconds = 0;
+	int nsecs = t.as_ticks(1000000000);
+
+	logerror("cs %d clk %d di %d do %d time %6d.%03d-%03d-%03d\n", m_eeprom_reg & 2 ? ASSERT_LINE : CLEAR_LINE, m_eeprom_reg & 4 ? CLEAR_LINE : ASSERT_LINE, m_eeprom_reg & 8 ? 1 : 0, m_eeprom->do_read(),
+			 secs, nsecs/1000000, (nsecs/1000) % 1000, nsecs % 1000);
+#endif
+
 	return (m_eeprom_reg & 0xef) | (m_eeprom->do_read() << 4);
 }
 
 WRITE8_MEMBER(indigo_state::eeprom_w)
 {
-	if((data ^ m_eeprom_reg) & 1)
+	if(false && ((data ^ m_eeprom_reg) & 1))
 		logerror("CPU led %s\n", data & 1 ? "on" : "off");
 	m_eeprom_reg = data;
+	//	logerror("cs %d clk %d di %d\n", m_eeprom_reg & 2 ? ASSERT_LINE : CLEAR_LINE, m_eeprom_reg & 4 ? CLEAR_LINE : ASSERT_LINE, m_eeprom_reg & 8 ? 1 : 0);
 	m_eeprom->di_write(m_eeprom_reg & 8 ? 1 : 0 );
-	m_eeprom->cs_write(m_eeprom_reg & 2 ? CLEAR_LINE : ASSERT_LINE );
+	m_eeprom->cs_write(m_eeprom_reg & 2 ? ASSERT_LINE : CLEAR_LINE );
 	m_eeprom->clk_write(m_eeprom_reg & 4 ? CLEAR_LINE : ASSERT_LINE );	
 }
 
@@ -305,47 +174,219 @@ READ32_MEMBER(indigo_state::misc_status_r)
 WRITE32_MEMBER(indigo_state::misc_status_w)
 {
 	COMBINE_DATA(&m_misc_status);
-	logerror("Misc status: sram %dK irqa %s%s dsp %s\n",
+	logerror("Misc status: %ssram %dK irqa %s%s dsp %s\n",
+			 (m_misc_status & 0x70) == 0x70 ? "pbus-gio 8->32 " : (m_misc_status & 0x70) == 0x60 ? "pbus-gio 16->32 " : (m_misc_status & 0x70) == 0x40 ? "pbus-gio 24->32 " : "",
 			 m_misc_status & 8 ? 32 : 8,
 			 m_misc_status & 4 ? "high" : "low",
 			 m_misc_status & 2 ? " forced" : "",
 			 m_misc_status & 1 ? "reset" : "normal");
 }
 
-/*
-  bfc02c60:
-  read   5f, drop it
-  write  5b, 0x5a
-  read  e57 to r16
-  write e57, 0xa5
-  read  e5b to r4
-  write e5b, 0x5a
-  read  e57, check it's a5 (RTC ram) (r15 |= 4)
-  read  e5b, check it's 5a (RTC ram)
-  write e57, r16
-  write e5b, r4
+READ8_MEMBER(indigo_state::isr0_r)
+{
+	return m_isr;
+}
 
-  write 1c7, 0xa5
-  write 1db, 0x5a
-  read  1c7, check it's a5 (r15 |= 8)
-  read  1db, check it's 5a (r15 |= 8)
-  write 1c7, 0x00
-  write 1db, 0x00
+WRITE8_MEMBER(indigo_state::isr0_w)
+{
+	logerror("isr0_w %02x\n", data);
+}
 
-  if r15 != 0 "Data path test failed"
+READ8_MEMBER(indigo_state::isr1_r)
+{
+	return m_isr >> 8;
+}
 
-  bfc00730: Ram test, including size
+WRITE8_MEMBER(indigo_state::isr1_w)
+{
+	logerror("isr1_w %02x\n", data);
+}
 
-*/
+READ8_MEMBER(indigo_state::imr0_r)
+{
+	return m_imr;
+}
 
+WRITE8_MEMBER(indigo_state::imr0_w)
+{
+	m_imr = (m_imr & 0xff00) | data;
+	logerror("imr_w %04x\n", m_imr);
+}
+
+READ8_MEMBER(indigo_state::imr1_r)
+{
+	return m_imr >> 8;
+}
+
+WRITE8_MEMBER(indigo_state::imr1_w)
+{
+	m_imr = (m_imr & 0x00ff) | (data << 8);
+	logerror("imr_w %04x\n", m_imr);
+}
+
+READ8_MEMBER(indigo_state::vmeisr_r)
+{
+	return m_vmeisr;
+}
+
+WRITE8_MEMBER(indigo_state::vmeisr_w)
+{
+	logerror("vmeisr_w %02x\n", data);
+}
+
+READ8_MEMBER(indigo_state::vmeimr0_r)
+{
+	return m_vmeimr;
+}
+
+WRITE8_MEMBER(indigo_state::vmeimr0_w)
+{
+	m_vmeimr = (m_vmeimr & 0xff00) | data;
+	logerror("vmeimr_w %04x\n", m_vmeimr);
+}
+
+READ8_MEMBER(indigo_state::vmeimr1_r)
+{
+	return m_vmeimr >> 8;
+}
+
+WRITE8_MEMBER(indigo_state::vmeimr1_w)
+{
+	m_vmeimr = (m_vmeimr & 0x00ff) | (data << 8);
+	logerror("vmeimr_w %04x\n", m_vmeimr);
+}
+
+
+READ32_MEMBER (indigo_state::scsi0_bc_r)
+{
+	return m_scsi0_bc;
+}
+
+WRITE32_MEMBER(indigo_state::scsi0_bc_w)
+{
+	COMBINE_DATA(&m_scsi0_bc);
+	scsi0_dma_run();
+}
+
+READ32_MEMBER (indigo_state::scsi0_cbp_r)
+{
+	return m_scsi0_cbp;
+}
+
+WRITE32_MEMBER(indigo_state::scsi0_cbp_w)
+{
+	COMBINE_DATA(&m_scsi0_cbp);
+	scsi0_dma_run();
+}
+
+READ32_MEMBER (indigo_state::scsi0_nbdp_r)
+{
+	return m_scsi0_nbdp;
+}
+
+WRITE32_MEMBER(indigo_state::scsi0_ndbp_w)
+{
+	COMBINE_DATA(&m_scsi0_nbdp);
+}
+
+READ32_MEMBER (indigo_state::scsi0_ctrl_r)
+{
+	return m_scsi0_ctrl;
+}
+
+WRITE32_MEMBER(indigo_state::scsi0_ctrl_w)
+{
+	u32 ctrl = m_scsi0_ctrl;
+	COMBINE_DATA(&m_scsi0_ctrl);
+	if(!(ctrl & 0x80) && (m_scsi0_ctrl & 0x80))
+		m_scsi0_cbp &= 0x7fffffff;
+	scsi0_dma_run();
+}
+
+READ32_MEMBER (indigo_state::scsi0_pntr_r)
+{
+	return m_scsi0_pntr;
+}
+
+WRITE32_MEMBER(indigo_state::scsi0_pntr_w)
+{
+	COMBINE_DATA(&m_scsi0_pntr);
+	scsi0_dma_run();
+}
+
+READ32_MEMBER (indigo_state::scsi0_fifo_r)
+{
+	return scsi0_dma_fifo_r();
+}
+
+WRITE32_MEMBER(indigo_state::scsi0_fifo_w)
+{
+	scsi0_dma_fifo_w(data);
+}
+
+u8 indigo_state::scsi0_dma_fifo_r()
+{
+	if(m_scsi0_pntr) {
+		u8 res = m_scsi0_fifo[0];
+		std::copy(&m_scsi0_fifo[1], std::end(m_scsi0_fifo), &m_scsi0_fifo[0]);
+		m_scsi0_pntr --;
+		return res;
+	}
+	return 0;
+}
+
+void indigo_state::scsi0_dma_fifo_w(u8 data)
+{
+	if(m_scsi0_pntr < 64)
+		m_scsi0_fifo[m_scsi0_pntr++] = data;
+}
+
+void indigo_state::scsi0_dma_run()
+{
+	if(m_scsi0_ctrl & 0x01) {
+		m_wd33c93->reset();
+		m_scsi0_ctrl &= 0x01;
+		m_scsi0_pntr = 0;
+		m_scsi0_bc = 0;
+		m_scsi0_cbp = 0x80000000;
+		m_scsi0_nbdp = 0;
+		return;
+	}
+
+	if(m_scsi0_ctrl & 0x02) {
+		m_scsi0_pntr = 0;
+		m_scsi0_ctrl &= 0x7f;
+		return;
+	}
+
+	if(!(m_scsi0_ctrl & 0x80))
+		return;
+
+}
 
 void indigo_state::indigo_map(address_map &map)
 {
-	map(0x00000000, 0x00ffffff).ram();
-	map(0x1fb800c0, 0x1fb800c3).lr32("endianness", [](address_space &, offs_t, u32) -> u32 { return 0x40; }); // Rev 1, all big-endian (dsp, par, scsi, enet, cpu)
-	map(0x1fb80120, 0x1fb80127).rw(m_wd33c93, FUNC(wd33c93_device::read), FUNC(wd33c93_device::write)).umask32(0x0000ff00);
+	map(0x00000000, 0x05ffffff).ram();
+
+	map(0x1fb80088, 0x1fb8008b).rw(FUNC(indigo_state::scsi0_bc_r), FUNC(indigo_state::scsi0_bc_w));
+	map(0x1fb8008c, 0x1fb8008f).rw(FUNC(indigo_state::scsi0_cbp_r), FUNC(indigo_state::scsi0_cbp_w));
+	map(0x1fb80090, 0x1fb80093).rw(FUNC(indigo_state::scsi0_nbdp_r), FUNC(indigo_state::scsi0_ndbp_w));
+	map(0x1fb80094, 0x1fb80097).rw(FUNC(indigo_state::scsi0_ctrl_r), FUNC(indigo_state::scsi0_ctrl_w));
+	map(0x1fb80098, 0x1fb8009b).rw(FUNC(indigo_state::scsi0_pntr_r), FUNC(indigo_state::scsi0_pntr_w));
+	map(0x1fb8009c, 0x1fb8009f).rw(FUNC(indigo_state::scsi0_fifo_r), FUNC(indigo_state::scsi0_fifo_w));
+
+	map(0x1fb800c0, 0x1fb800c3).lr32("endianness", [](address_space &, offs_t, u32) -> u32 { return 0x40; }).nopw(); // Rev 1, all big-endian (dsp, par, scsi, enet, cpu)
+	map(0x1fb80120, 0x1fb80127).m(m_wd33c93, FUNC(wd33c93_device::map)).umask32(0x0000ff00);
 	map(0x1fb801b0, 0x1fb801b3).rw(FUNC(indigo_state::misc_status_r), FUNC(indigo_state::misc_status_w));
 	map(0x1fb801bf, 0x1fb801bf).rw(FUNC(indigo_state::eeprom_r), FUNC(indigo_state::eeprom_w));
+	map(0x1fb801c3, 0x1fb801c3).rw(FUNC(indigo_state::isr0_r), FUNC(indigo_state::isr0_w));
+	map(0x1fb801c7, 0x1fb801c7).rw(FUNC(indigo_state::imr0_r), FUNC(indigo_state::imr0_w));
+	map(0x1fb801cb, 0x1fb801cb).rw(FUNC(indigo_state::isr1_r), FUNC(indigo_state::isr1_w));
+	map(0x1fb801cf, 0x1fb801cf).rw(FUNC(indigo_state::imr0_r), FUNC(indigo_state::imr0_w));
+	map(0x1fb801d3, 0x1fb801d3).rw(FUNC(indigo_state::vmeisr_r), FUNC(indigo_state::vmeisr_w));
+	map(0x1fb801d7, 0x1fb801d7).rw(FUNC(indigo_state::vmeimr0_r), FUNC(indigo_state::vmeimr0_w));
+	map(0x1fb801db, 0x1fb801db).rw(FUNC(indigo_state::vmeimr1_r), FUNC(indigo_state::vmeimr1_w));
+	map(0x1fb801f0, 0x1fb801ff).rw(m_pit, FUNC(pit8254_device::read), FUNC(pit8254_device::write)).umask32(0x000000ff);
 
 	map(0x1fb80d03, 0x1fb80d03).rw(m_scc0, FUNC(scc8530_device::cb_r), FUNC(scc8530_device::cb_w));
 	map(0x1fb80d07, 0x1fb80d07).rw(m_scc0, FUNC(scc8530_device::db_r), FUNC(scc8530_device::db_w));
@@ -355,19 +396,14 @@ void indigo_state::indigo_map(address_map &map)
 	map(0x1fb80d17, 0x1fb80d17).rw(m_scc1, FUNC(scc8530_device::db_r), FUNC(scc8530_device::db_w));
 	map(0x1fb80d1b, 0x1fb80d1b).rw(m_scc1, FUNC(scc8530_device::ca_r), FUNC(scc8530_device::ca_w));
 	map(0x1fb80d1f, 0x1fb80d1f).rw(m_scc1, FUNC(scc8530_device::da_r), FUNC(scc8530_device::da_w));
-	map(0x1fb80d23, 0x1fb80d23).rw(m_scc2, FUNC(scc8530_device::cb_r), FUNC(scc8530_device::cb_w));
-	map(0x1fb80d27, 0x1fb80d27).rw(m_scc2, FUNC(scc8530_device::db_r), FUNC(scc8530_device::db_w));
-	map(0x1fb80d2b, 0x1fb80d2b).rw(m_scc2, FUNC(scc8530_device::ca_r), FUNC(scc8530_device::ca_w));
-	map(0x1fb80d2f, 0x1fb80d2f).rw(m_scc2, FUNC(scc8530_device::da_r), FUNC(scc8530_device::da_w));
 
 	map(0x1fb80e00, 0x1fb80e7f).m(m_rtc, FUNC(dp8573a_device::map)).umask32(0x000000ff);
 
-	//	map(0x1fb80000, 0x1fb8ffff).rw(FUNC(indigo_state::hpc_r), FUNC(indigo_state::hpc_w));
+	map(0x1fbd0000, 0x1fbd0003).lr32("revision", [](address_space &, offs_t, u32) -> u32 { return 0x2000; });
+
+	map(0x1fbe0000, 0x1fbfffff).ram(); // DSP ram, 32k*24 bits
+
 	//	map(0x1fbd9000, 0x1fbd903f).rw(FUNC(indigo_state::int_r), FUNC(indigo_state::int_w));
-
-
-	map(0x1fb801c7, 0x1fb801c7).lr8("hack3", [](address_space &, offs_t, u8) -> u8 { return 0xa5; });
-	map(0x1fb801db, 0x1fb801db).lr8("hack4", [](address_space &, offs_t, u8) -> u8 { return 0x5a; });
 }
 
 void indigo_state::indigo3k_map(address_map &map)
@@ -389,17 +425,34 @@ WRITE_LINE_MEMBER(indigo_state::scsi_irq)
 
 void indigo_state::machine_start()
 {
-	m_hpc.m_misc_status = 0;
-	m_hpc.m_parbuf_ptr = 0;
-	m_hpc.m_local_ioreg0_mask = 0;
-	m_hpc.m_local_ioreg1_mask = 0;
-	m_hpc.m_vme_intmask0 = 0;
-	m_hpc.m_vme_intmask1 = 0;
-
 	m_misc_status = 0x00000000;
 	m_eeprom_reg = 0x00;
+	m_isr = 0;
+	m_imr = 0;
+	m_vmeisr = 0;
+	m_vmeimr = 0;
+
+	m_scsi0_bc = 0;
+	m_scsi0_cbp = 0x80000000;
+	m_scsi0_nbdp = 0;
+	m_scsi0_ctrl = 0;
+	m_scsi0_pntr = 0;
+	std::fill(std::begin(m_scsi0_fifo), std::end(m_scsi0_fifo), 0);
+
+	m_scsi0_cache = m_maincpu->space(AS_PROGRAM).cache<2, 0, ENDIANNESS_BIG>();
+
 	save_item(NAME(m_misc_status));
 	save_item(NAME(m_eeprom_reg));
+	save_item(NAME(m_isr));
+	save_item(NAME(m_imr));
+	save_item(NAME(m_vmeisr));
+	save_item(NAME(m_vmeimr));
+	save_item(NAME(m_scsi0_bc));
+	save_item(NAME(m_scsi0_cbp));
+	save_item(NAME(m_scsi0_nbdp));
+	save_item(NAME(m_scsi0_ctrl));
+	save_item(NAME(m_scsi0_pntr));
+	save_item(NAME(m_scsi0_fifo));
 }
 
 static INPUT_PORTS_START( indigo )
@@ -407,9 +460,26 @@ static INPUT_PORTS_START( indigo )
 	PORT_BIT ( 0xff, IP_ACTIVE_HIGH, IPT_UNUSED )
 INPUT_PORTS_END
 
+device_slot_interface &indigo_state::scsi_devices(device_slot_interface &device)
+{
+	device.option_add("cdrom", NSCSI_CDROM);
+	device.option_add("harddisk", NSCSI_HARDDISK);
+	device.set_option_machine_config("cdrom", cdrom_config);
+	return device;
+}
+
 void indigo_state::cdrom_config(device_t *device)
 {
+#if 0 // cdda not in nscsi_cd yet
 	device->subdevice<cdda_device>("cdda")->add_route(ALL_OUTPUTS, "^^mono", 1.0);
+#endif
+}
+
+void indigo_state::wd33c93(device_t *device)
+{
+	auto wd = downcast<wd33c93_device *>(device);
+	wd->irq_cb().set(":", FUNC(indigo_state::scsi0_irq));
+	wd->drq_cb().set(":", FUNC(indigo_state::scsi0_drq));
 }
 
 void indigo_state::indigo3k(machine_config &config)
@@ -445,18 +515,27 @@ void indigo_state::indigo3k(machine_config &config)
 	brg.signal_handler().append(m_scc1, FUNC(scc8530_device::rxcb_w));
 	brg.signal_handler().append(m_scc1, FUNC(scc8530_device::txcb_w));
 
-	auto &scsi_port(SCSI_PORT(config, "scsi"));
-	auto &cdrom(*scsi_port.subdevice<scsi_port_slot_device>("1"));
-	cdrom.option_add("cdrom", SCSICD);
-	cdrom.set_default_option("cdrom");
-	cdrom.set_option_device_input_defaults("cdrom", DEVICE_INPUT_DEFAULTS_NAME(SCSI_ID_4));
-	cdrom.set_option_machine_config("cdrom", cdrom_config);
+	NSCSI_BUS(config, "scsibus");
 
-	WD33C93(config, m_wd33c93, 10000000);
-	m_wd33c93->set_scsi_port(scsi_port);
-	m_wd33c93->set_irq_callback(DEVCB_WRITELINE(*this, indigo_state, scsi_irq));      /* command completion IRQ */
+	auto &id0(NSCSI_CONNECTOR(config, "scsibus:0"));
+	id0.option_add_internal("wd33c93", WD33C93);
+	id0.set_default_option("wd33c93");
+	id0.set_fixed(true);
+
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:1")).set_default_option("harddisk");
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:2"));
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:3"));
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:4")).set_default_option("cdrom");
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:5"));
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:6"));
+	scsi_devices(NSCSI_CONNECTOR(config, "scsibus:7"));
 
 	EEPROM_SERIAL_93C56_16BIT(config, m_eeprom);
+
+	PIT8254(config, m_pit, 0);
+	m_pit->set_clk<2>(1000000);
+	m_pit->out_handler<2>().set(m_pit, FUNC(pit8253_device::write_clk0));
+	m_pit->out_handler<2>().append(m_pit, FUNC(pit8253_device::write_clk1));
 }
 
 void indigo_state::indigo4k(machine_config &config)

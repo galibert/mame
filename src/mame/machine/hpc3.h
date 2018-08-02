@@ -40,7 +40,8 @@ public:
 	DECLARE_READ32_MEMBER(unkpbus0_r);
 	DECLARE_WRITE32_MEMBER(unkpbus0_w);
 
-	DECLARE_WRITE_LINE_MEMBER(scsi_irq);
+	void scsi_irq(int state);
+	void scsi_drq(int state);
 
 	TIMER_CALLBACK_MEMBER(do_dma);
 

@@ -2119,13 +2119,6 @@ void z80scc_channel::do_sccreg_wr7(uint8_t data)
 /* WR8 is the transmit buffer register */
 void z80scc_channel::do_sccreg_wr8(uint8_t data)
 {
-	m_log_buffer += char(data);
-	if (data == 0x0a)
-	{
-		LOGTXTEXT("Transmit: %s", m_log_buffer);
-		m_log_buffer.clear();
-	}
-
 	LOGTX("%s(%02x) \"%s\": %c : Transmit Buffer write %02x\n", FUNCNAME, data, owner()->tag(), 'A' + m_index, data);
 	data_write(data);
 }
@@ -2580,6 +2573,14 @@ WRITE8_MEMBER (z80scc_device::db_w) { m_chanB->data_write(data); }
 //-------------------------------------------------
 void z80scc_channel::data_write(uint8_t data)
 {
+	if((data >= 32 && data < 127) || data == 0xa || data == 9)
+		m_log_buffer += char(data);
+	if (data == 0x0a)
+	{
+		LOGTXTEXT("Transmit: %s", m_log_buffer);
+		m_log_buffer.clear();
+	}
+
 	/* Tx FIFO is full or...? */
 	LOG("%s \"%s\": %c : Data Register Write: %02d '%c'\n", FUNCNAME, owner()->tag(), 'A' + m_index, data, isprint(data) ? data : ' ');
 

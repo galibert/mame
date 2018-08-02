@@ -150,7 +150,7 @@ READ32_MEMBER(hpc3_device::hd0_r)
 //      //verboselog((machine, 2, "HPC3 HD0 Status Read: %08x (%08x): %08x\n", 0x1fb90000 + ( offset << 2), mem_mask, nHPC3_hd0_regs[0x17] );
 		if (ACCESSING_BITS_0_7)
 		{
-			return m_wd33c93->read( space, 0 );
+			return m_wd33c93->adr_r( space, 0 );
 		}
 		else
 		{
@@ -161,7 +161,7 @@ READ32_MEMBER(hpc3_device::hd0_r)
 //      //verboselog((machine, 2, "HPC3 HD0 Register Read: %08x (%08x): %08x\n", 0x1fb90000 + ( offset << 2), mem_mask, nHPC3_hd0_regs[nHPC3_hd0_register] );
 		if (ACCESSING_BITS_0_7)
 		{
-			return m_wd33c93->read( space, 1 );
+			return m_wd33c93->data_r( space, 0 );
 		}
 		else
 		{
@@ -182,7 +182,7 @@ WRITE32_MEMBER(hpc3_device::hd0_w)
 //      //verboselog((machine, 2, "HPC3 HD0 Register Select Write: %08x\n", data );
 		if (ACCESSING_BITS_0_7)
 		{
-			m_wd33c93->write( space, 0, data & 0x000000ff );
+			m_wd33c93->adr_w( space, 0, data & 0x000000ff );
 		}
 		break;
 	case 0x0004/4:
@@ -190,7 +190,7 @@ WRITE32_MEMBER(hpc3_device::hd0_w)
 //      //verboselog((machine, 2, "HPC3 HD0 Register %d Write: %08x\n", nHPC3_hd0_register, data );
 		if (ACCESSING_BITS_0_7)
 		{
-			m_wd33c93->write( space, 1,  data & 0x000000ff );
+			m_wd33c93->data_w( space, 0, data & 0x000000ff );
 		}
 		break;
 	default:
@@ -343,6 +343,7 @@ WRITE_LINE_MEMBER(hpc3_device::scsi_irq)
 
 	if (state)
 	{
+#if 0
 		if (m_wd33c93->get_dma_count())
 		{
 			logerror("m_wd33c93->get_dma_count() is %d\n", m_wd33c93->get_dma_count() );
@@ -441,6 +442,7 @@ WRITE_LINE_MEMBER(hpc3_device::scsi_irq)
 
 				// clear DMA on the controller too
 				m_wd33c93->clear_dma();
+#endif
 #if 0
 				uint32_t dptr, tmpword;
 				uint32_t bc = space.read_dword(m_scsi0_desc + 4);
