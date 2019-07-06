@@ -84,16 +84,13 @@ c0   8 data bits, Rx disabled
 #include "machine/6522via.h"
 #include "machine/z80scc.h"
 #include "machine/ncr5380.h"
-#include "machine/applefdc.h"
-#include "machine/swim.h"
-#include "machine/sonydriv.h"
+#include "machine/iwm.h"
 #include "machine/mackbd.h"
 #include "machine/macrtc.h"
 #include "machine/ram.h"
 #include "machine/timer.h"
 #include "sound/dac.h"
 #include "sound/volt_reg.h"
-#include "formats/ap_dsk35.h"
 #include "bus/scsi/scsi.h"
 #include "bus/scsi/scsihd.h"
 #include "bus/scsi/scsicd.h"
@@ -151,6 +148,7 @@ public:
 		m_ram(*this, RAM_TAG),
 		m_ncr5380(*this, "ncr5380"),
 		m_iwm(*this, "fdc"),
+		m_floppy(*this, "fdc:%d", 0U),
 		m_mackbd(*this, MACKBD_TAG),
 		m_rtc(*this,"rtc"),
 		m_mouse0(*this, "MOUSE0"),
@@ -176,7 +174,8 @@ private:
 	required_device<via6522_device> m_via;
 	required_device<ram_device> m_ram;
 	optional_device<ncr5380_device> m_ncr5380;
-	required_device<applefdc_base_device> m_iwm;
+	required_device<iwm_device> m_iwm;
+	required_device_array<floppy_connector, 2> m_floppy;
 	optional_device<mackbd_device> m_mackbd;
 	optional_device<rtc3430042_device> m_rtc;
 
@@ -233,6 +232,9 @@ private:
 	void vblank_irq();
 	void mouse_callback();
 
+	void fdc_w(offs_t offset, u8 data);
+	u8 fdc_r(offs_t offset);
+
 	DECLARE_READ16_MEMBER ( ram_r );
 	DECLARE_WRITE16_MEMBER ( ram_w );
 	DECLARE_READ16_MEMBER ( ram_600000_r );
@@ -241,8 +243,6 @@ private:
 	DECLARE_WRITE16_MEMBER ( mac_via_w );
 	DECLARE_READ16_MEMBER ( mac_autovector_r );
 	DECLARE_WRITE16_MEMBER ( mac_autovector_w );
-	DECLARE_READ16_MEMBER ( mac_iwm_r );
-	DECLARE_WRITE16_MEMBER ( mac_iwm_w );
 	DECLARE_READ16_MEMBER ( macplus_scsi_r );
 	DECLARE_WRITE16_MEMBER ( macplus_scsi_w );
 	DECLARE_WRITE_LINE_MEMBER(mac_scsi_irq);
@@ -654,7 +654,7 @@ void mac128_state::scc_mouse_irq(int x, int y)
 	}
 }
 
-READ16_MEMBER ( mac128_state::mac_iwm_r )
+u8 mac128_state::fdc_r(offs_t offset)
 {
 	/* The first time this is called is in a floppy test, which goes from
 	 * $400104 to $400126.  After that, all access to the floppy goes through
@@ -666,23 +666,20 @@ READ16_MEMBER ( mac128_state::mac_iwm_r )
 
 	uint16_t result = 0;
 
-	result = m_iwm->read(offset >> 8);
+	result = m_iwm->read(offset >> 9);
 
 	if (LOG_MAC_IWM)
-		printf("mac_iwm_r: offset=0x%08x mem_mask %04x = %02x (PC %x)\n", offset, mem_mask, result, m_maincpu->pc());
+		printf("fdc_r: offset=0x%08x = %02x (PC %x)\n", offset, result, m_maincpu->pc());
 
-	return (result << 8) | result;
+	return result;
 }
 
-WRITE16_MEMBER ( mac128_state::mac_iwm_w )
+void mac128_state::fdc_w(offs_t offset, u8 data)
 {
 	if (LOG_MAC_IWM)
-		printf("mac_iwm_w: offset=0x%08x data=0x%04x mask %04x (PC=%x)\n", offset, data, mem_mask, m_maincpu->pc());
+		printf("fdc_w: offset=0x%08x data=0x%02x (PC=%x)\n", offset, data, m_maincpu->pc());
 
-	if (ACCESSING_BITS_0_7)
-		m_iwm->write((offset >> 8), data & 0xff);
-	else
-		m_iwm->write((offset >> 8), data>>8);
+	m_iwm->write((offset >> 9), data);
 }
 
 WRITE_LINE_MEMBER(mac128_state::mac_via_irq)
@@ -770,7 +767,7 @@ WRITE8_MEMBER(mac128_state::mac_via_out_a)
 
 	//set_scc_waitrequest((data & 0x80) >> 7);
 	m_screen_buffer = (data & 0x40) >> 6;
-	sony_set_sel_line(m_iwm, (data & 0x20) >> 5);
+	//	sony_set_sel_line(m_iwm, (data & 0x20) >> 5);
 
 	m_main_buffer = ((data & 0x08) == 0x08) ? true : false;
 	m_snd_vol = data & 0x07;
@@ -1297,7 +1294,7 @@ void mac128_state::mac512ke_map(address_map &map)
 	map(0x600000, 0x6fffff).rw(FUNC(mac128_state::ram_600000_r), FUNC(mac128_state::ram_600000_w));
 	map(0x800000, 0x9fffff).r(m_scc, FUNC(z80scc_device::dc_ab_r)).umask16(0xff00);
 	map(0xa00000, 0xbfffff).w(m_scc, FUNC(z80scc_device::dc_ab_w)).umask16(0x00ff);
-	map(0xc00000, 0xdfffff).rw(FUNC(mac128_state::mac_iwm_r), FUNC(mac128_state::mac_iwm_w));
+	map(0xc00000, 0xdfffff).rw(FUNC(mac128_state::fdc_r), FUNC(mac128_state::fdc_w));
 	map(0xe80000, 0xefffff).rw(FUNC(mac128_state::mac_via_r), FUNC(mac128_state::mac_via_w));
 	map(0xfffff0, 0xffffff).rw(FUNC(mac128_state::mac_autovector_r), FUNC(mac128_state::mac_autovector_w));
 }
@@ -1309,35 +1306,14 @@ void mac128_state::macplus_map(address_map &map)
 	map(0x580000, 0x5fffff).rw(FUNC(mac128_state::macplus_scsi_r), FUNC(mac128_state::macplus_scsi_w));
 	map(0x800000, 0x9fffff).r(m_scc, FUNC(z80scc_device::dc_ab_r)).umask16(0xff00);
 	map(0xa00000, 0xbfffff).w(m_scc, FUNC(z80scc_device::dc_ab_w)).umask16(0x00ff);
-	map(0xc00000, 0xdfffff).rw(FUNC(mac128_state::mac_iwm_r), FUNC(mac128_state::mac_iwm_w));
+	map(0xc00000, 0xdfffff).rw(FUNC(mac128_state::fdc_r), FUNC(mac128_state::fdc_w));
 	map(0xe80000, 0xefffff).rw(FUNC(mac128_state::mac_via_r), FUNC(mac128_state::mac_via_w));
 	map(0xfffff0, 0xffffff).rw(FUNC(mac128_state::mac_autovector_r), FUNC(mac128_state::mac_autovector_w));
 }
 
 /***************************************************************************
-    DEVICE CONFIG
-***************************************************************************/
-
-static const applefdc_interface mac_iwm_interface =
-{
-	sony_set_lines,
-	sony_set_enable_lines,
-
-	sony_read_data,
-	sony_write_data,
-	sony_read_status
-};
-
-/***************************************************************************
     MACHINE DRIVERS
 ***************************************************************************/
-
-static const floppy_interface mac_floppy_interface =
-{
-	FLOPPY_STANDARD_3_5_DSHD,
-	LEGACY_FLOPPY_OPTIONS_NAME(apple35_mac),
-	"floppy_3_5"
-};
 
 static void mac_pds_cards(device_slot_interface &device)
 {
@@ -1370,8 +1346,9 @@ void mac128_state::mac512ke(machine_config &config)
 
 	/* devices */
 	RTC3430042(config, m_rtc, 32.768_kHz_XTAL);
-	IWM(config, m_iwm, 0).set_config(&mac_iwm_interface);
-	sonydriv_floppy_image_device::legacy_2_drives_add(config, &mac_floppy_interface);
+	IWM(config, m_iwm, C7M, 1021800*2);
+	applefdc_device::add_35(config, m_floppy[0]);
+	applefdc_device::add_35(config, m_floppy[1]);
 
 	SCC85C30(config, m_scc, C7M);
 	m_scc->configure_channels(C3_7M, 0, C3_7M, 0);

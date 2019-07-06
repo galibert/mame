@@ -106,19 +106,17 @@ Address bus A0-A11 is Y0-Y11
 #include "cpu/z80/z80.h"
 #include "imagedev/cassette.h"
 #include "imagedev/flopdrv.h"
-#include "machine/appldriv.h"
 #include "machine/bankdev.h"
 #include "machine/kb3600.h"
 #include "machine/mos6551.h"
 #include "machine/ram.h"
-#include "machine/sonydriv.h"
 #include "machine/timer.h"
 #include "machine/ds1315.h"
 #include "machine/apple2common.h"
 
 #include "bus/a2bus/a2bus.h"
 #include "bus/a2bus/a2diskii.h"
-#include "bus/a2bus/a2diskiing.h"
+#include "bus/a2bus/a2iwm.h"
 #include "bus/a2bus/a2mockingboard.h"
 #include "bus/a2bus/a2cffa.h"
 #include "bus/a2bus/a2memexp.h"
@@ -164,9 +162,6 @@ Address bus A0-A11 is Y0-Y11
 #include "softlist.h"
 #include "speaker.h"
 
-#include "formats/ap2_dsk.h"
-#include "formats/ap_dsk35.h"
-
 
 #define A2_CPU_TAG "maincpu"
 #define A2_KBDC_TAG "ay3600"
@@ -176,8 +171,6 @@ Address bus A0-A11 is Y0-Y11
 #define A2_UPPERBANK_TAG "inhbank"
 #define IIC_ACIA1_TAG "acia1"
 #define IIC_ACIA2_TAG "acia2"
-#define IICP_IWM_TAG    "fdc"
-#define LASER128_UDC_TAG "l128udc"
 #define PRINTER_PORT_TAG "printer"
 #define MODEM_PORT_TAG "modem"
 #define A2_AUXSLOT_TAG "auxbus"
@@ -245,9 +238,9 @@ public:
 		m_lcbank(*this, A2_LCBANK_TAG),
 		m_acia1(*this, IIC_ACIA1_TAG),
 		m_acia2(*this, IIC_ACIA2_TAG),
-		m_laserudc(*this, LASER128_UDC_TAG),
-		m_iicpiwm(*this, IICP_IWM_TAG),
-		m_ds1315(*this, "nsc")
+		m_fdc(*this, "fdc"),
+		m_ds1315(*this, "nsc"),
+		m_floppy(*this, "fdc:%d", 0U)
 	{ }
 
 	required_device<cpu_device> m_maincpu;
@@ -281,9 +274,9 @@ public:
 	required_device<address_map_bank_device> m_c800bank;
 	required_device<address_map_bank_device> m_lcbank;
 	optional_device<mos6551_device> m_acia1, m_acia2;
-	optional_device<applefdc_base_device> m_laserudc;
-	optional_device<iwm_device> m_iicpiwm;
+	optional_device<applefdc_device> m_fdc;
 	required_device<ds1315_device> m_ds1315;
+	optional_device_array<floppy_connector, 4> m_floppy;
 
 	TIMER_DEVICE_CALLBACK_MEMBER(apple2_interrupt);
 	TIMER_DEVICE_CALLBACK_MEMBER(ay3600_repeat);
@@ -400,6 +393,7 @@ public:
 	void spectred_keyb_map(address_map &map);
 
 	bool m_35sel, m_hdsel, m_intdrive;
+	u8 m_devsel;
 
 private:
 	int m_speaker_state;
@@ -487,8 +481,47 @@ private:
 	void mig_w(uint16_t offset, uint8_t data);
 
 	offs_t dasm_trampoline(std::ostream &stream, offs_t pc, const util::disasm_interface::data_buffer &opcodes, const util::disasm_interface::data_buffer &params);
+
+	void update_devsel();
+	void phases_w(u8 data);
+	void devsel_w(u8 data);
 };
 
+void apple2e_state::update_devsel()
+{
+	if(m_floppy[2]) {
+		if(m_35sel && (m_devsel & 1))
+			m_fdc->set_floppy(m_floppy[2]->get_device());
+		else if(m_35sel && m_devsel & 2)
+			m_fdc->set_floppy(m_floppy[3]->get_device());
+		else if(m_devsel & 1)
+			m_fdc->set_floppy(m_floppy[0]->get_device());
+		else if(m_devsel & 2)
+			m_fdc->set_floppy(m_floppy[1]->get_device());
+		else
+			m_fdc->set_floppy(nullptr);
+	} else {
+		if(m_devsel & 1)
+			m_fdc->set_floppy(m_floppy[0]->get_device());
+		else if(m_devsel & 2)
+			m_fdc->set_floppy(m_floppy[1]->get_device());
+		else
+			m_fdc->set_floppy(nullptr);
+	}
+}
+
+void apple2e_state::devsel_w(u8 data)
+{
+	m_devsel = data;
+	update_devsel();
+}
+
+void apple2e_state::phases_w(u8 data)
+{
+	auto flp = m_fdc->get_floppy();
+	if(flp)
+		flp->seek_phase_w(data);
+}
 
 offs_t apple2e_state::dasm_trampoline(std::ostream &stream, offs_t pc, const util::disasm_interface::data_buffer &opcodes, const util::disasm_interface::data_buffer &params)
 {
@@ -516,13 +549,11 @@ uint8_t apple2e_state::mig_r(uint16_t offset)
 	if ((offset >= 0x240) && (offset < 0x260))
 	{
 		m_hdsel = false;
-		sony_set_sel_line(m_iicpiwm, 0);
 	}
 
 	if ((offset >= 0x260) && (offset < 0x280))
 	{
 		m_hdsel = true;
-		sony_set_sel_line(m_iicpiwm, 0x80);
 	}
 
 	// reset MIG RAM window
@@ -540,7 +571,7 @@ void apple2e_state::mig_w(uint16_t offset, uint8_t data)
 
 	if (offset == 0x40)
 	{
-		m_iicpiwm->device_reset();
+		m_fdc->reset();
 		return;
 	}
 
@@ -577,12 +608,14 @@ void apple2e_state::mig_w(uint16_t offset, uint8_t data)
 	if ((offset >= 0x240) && (offset < 0x260))
 	{
 		m_35sel = false;
+		update_devsel();
 		return;
 	}
 
 	if ((offset >= 0x260) && (offset < 0x280))
 	{
 		m_35sel = true;
+		update_devsel();
 		return;
 	}
 
@@ -959,6 +992,8 @@ void apple2e_state::machine_start()
 
 void apple2e_state::machine_reset()
 {
+	m_devsel = 0;
+	m_35sel = false;
 	m_page2 = false;
 	m_video->m_page2 = false;
 	m_video->m_monohgr = false;
@@ -2250,7 +2285,7 @@ READ8_MEMBER(apple2e_state::c080_r)
 		{
 			if ((m_isiicplus) && (slot == 6))
 			{
-				return m_iicpiwm->read(offset % 0x10);
+				return m_fdc->read(offset % 0x10);
 			}
 
 			if (m_slotdevice[slot] != nullptr)
@@ -2285,7 +2320,7 @@ WRITE8_MEMBER(apple2e_state::c080_w)
 	{
 		if ((m_isiicplus) && (slot == 6))
 		{
-			m_iicpiwm->write(offset % 0x10, data);
+			m_fdc->write(offset % 0x10, data);
 			return;
 		}
 
@@ -2911,7 +2946,7 @@ void apple2e_state::laser128_map(address_map &map)
 //  AM_RANGE(0xc098, 0xc09b) AM_DEVREADWRITE(IIC_ACIA1_TAG, mos6551_device, read, write)
 //  AM_RANGE(0xc0a8, 0xc0ab) AM_DEVREADWRITE(IIC_ACIA2_TAG, mos6551_device, read, write)
 	map(0xc0d0, 0xc0d3).rw(FUNC(apple2e_state::memexp_r), FUNC(apple2e_state::memexp_w));
-	map(0xc0e0, 0xc0ef).rw(m_laserudc, FUNC(applefdc_base_device::bus_r), FUNC(applefdc_base_device::bus_w));
+	map(0xc0e0, 0xc0ef).rw(m_fdc, FUNC(applefdc_device::read), FUNC(applefdc_device::write));
 	map(0xc100, 0xc2ff).m(m_c100bank, FUNC(address_map_bank_device::amap8));
 	map(0xc300, 0xc3ff).m(m_c300bank, FUNC(address_map_bank_device::amap8));
 	map(0xc400, 0xc7ff).m(m_c400bank, FUNC(address_map_bank_device::amap8));
@@ -4382,9 +4417,8 @@ INPUT_PORTS_END
 
 static void apple2_cards(device_slot_interface &device)
 {
-	device.option_add("diskii", A2BUS_DISKII);  /* Disk II Controller Card */
-	device.option_add("diskiing", A2BUS_DISKIING);  /* Disk II Controller Card, cycle-accurate version */
-	device.option_add("diskiing13", A2BUS_DISKIING13);  /* Disk II Controller Card, cycle-accurate version */
+	device.option_add("diskii", A2BUS_DISKII);  /* Disk II Controller Card, cycle-accurate version */
+	device.option_add("diskii13", A2BUS_DISKII13);  /* Disk II Controller Card, cycle-accurate version */
 	device.option_add("mockingboard", A2BUS_MOCKINGBOARD);  /* Sweet Micro Systems Mockingboard */
 	device.option_add("phasor", A2BUS_PHASOR);  /* Applied Engineering Phasor */
 	device.option_add("cffa2", A2BUS_CFFA2);  /* CFFA2000 Compact Flash for Apple II (www.dreher.net), 65C02/65816 firmware */
@@ -4537,7 +4571,7 @@ void apple2e_state::apple2e(machine_config &config)
 	A2BUS_SLOT(config, "sl3", m_a2bus, apple2_cards, nullptr);
 	A2BUS_SLOT(config, "sl4", m_a2bus, apple2_cards, "mockingboard");
 	A2BUS_SLOT(config, "sl5", m_a2bus, apple2_cards, nullptr);
-	A2BUS_SLOT(config, "sl6", m_a2bus, apple2_cards, "diskiing");
+	A2BUS_SLOT(config, "sl6", m_a2bus, apple2_cards, "diskii");
 	A2BUS_SLOT(config, "sl7", m_a2bus, apple2_cards, nullptr);
 
 	A2EAUXSLOT(config, m_a2eauxslot, 0);
@@ -4643,115 +4677,13 @@ void apple2e_state::apple2c(machine_config &config)
 
 	// TODO: populate the IIc's other virtual slots with ONBOARD_ADD
 	A2BUS_MOCKINGBOARD(config, "sl4", A2BUS_7M_CLOCK).set_onboard(m_a2bus); // Mockingboard 4C
-	A2BUS_DISKIING(config, "sl6", A2BUS_7M_CLOCK).set_onboard(m_a2bus);
+	A2BUS_DISKII(config, "sl6", A2BUS_7M_CLOCK).set_onboard(m_a2bus);
 
 	config.device_remove("aux");
 	config.device_remove(A2_AUXSLOT_TAG);
 
 	m_ram->set_default_size("128K").set_extra_options("128K");
 }
-
-static void apple2cp_set_lines(device_t *device, uint8_t lines)
-{
-	apple2e_state *state = device->machine().driver_data<apple2e_state>();
-
-	if (state->m_35sel)
-	{
-		sony_set_lines(device, lines);
-	}
-	else
-	{
-		apple525_set_lines(device, lines);
-	}
-}
-
-static void apple2cp_set_enable_lines(device_t *device,int enable_mask)
-{
-	apple2e_state *state = device->machine().driver_data<apple2e_state>();
-
-//  printf("set_enable_lines: 35sel %d int %d enable_mask %d\n", state->m_35sel, state->m_intdrive, enable_mask);
-
-	if ((state->m_35sel) && (state->m_intdrive) && (enable_mask == 2))
-	{
-		sony_set_enable_lines(device, 1);
-	}
-	else if (!state->m_35sel)
-	{
-		apple525_set_enable_lines(device, enable_mask);
-	}
-	else
-	{
-		sony_set_enable_lines(device, 0);
-	}
-}
-
-static uint8_t apple2cp_read_data(device_t *device)
-{
-	apple2e_state *state = device->machine().driver_data<apple2e_state>();
-
-	if (state->m_35sel)
-	{
-		return sony_read_data(device);
-	}
-	else
-	{
-		return apple525_read_data(device);
-	}
-
-	return 0;
-}
-
-static void apple2cp_write_data(device_t *device, uint8_t data)
-{
-	apple2e_state *state = device->machine().driver_data<apple2e_state>();
-
-	if (state->m_35sel)
-	{
-		sony_write_data(device, data);
-	}
-	else
-	{
-		apple525_write_data(device, data);
-	}
-}
-
-static int apple2cp_read_status(device_t *device)
-{
-	apple2e_state *state = device->machine().driver_data<apple2e_state>();
-
-	if (state->m_35sel)
-	{
-		return sony_read_status(device);
-	}
-	else
-	{
-		return apple525_read_status(device);
-	}
-}
-
-const applefdc_interface a2cp_interface =
-{
-	apple2cp_set_lines,         /* set_lines */
-	apple2cp_set_enable_lines,  /* set_enable_lines */
-
-	apple2cp_read_data,         /* read_data */
-	apple2cp_write_data,    /* write_data */
-	apple2cp_read_status    /* read_status */
-};
-
-static const floppy_interface apple2cp_floppy35_floppy_interface =
-{
-	FLOPPY_STANDARD_5_25_DSHD,
-	LEGACY_FLOPPY_OPTIONS_NAME(apple35_iigs),
-	"floppy_3_5"
-};
-
-static const floppy_interface floppy_interface =
-{
-	FLOPPY_STANDARD_5_25_DSHD,
-	LEGACY_FLOPPY_OPTIONS_NAME(apple2),
-	"floppy_5_25"
-};
 
 void apple2e_state::apple2cp(machine_config &config)
 {
@@ -4762,11 +4694,14 @@ void apple2e_state::apple2cp(machine_config &config)
 
 	config.device_remove("sl4");
 	config.device_remove("sl6");
-	IWM(config, m_iicpiwm, &a2cp_interface);
-	FLOPPY_APPLE(config, FLOPPY_0, &floppy_interface, 15, 16);
-	FLOPPY_APPLE(config, FLOPPY_1, &floppy_interface, 15, 16);
-	FLOPPY_SONY(config, FLOPPY_2, &apple2cp_floppy35_floppy_interface);
-	FLOPPY_SONY(config, FLOPPY_3, &apple2cp_floppy35_floppy_interface);
+	IWM(config, m_fdc, A2BUS_7M_CLOCK, 1021800*2);
+	m_fdc->devsel_cb().set(FUNC(apple2e_state::devsel_w));
+	m_fdc->phases_cb().set(FUNC(apple2e_state::phases_w));
+
+	applefdc_device::add_525(config, m_floppy[0]);
+	applefdc_device::add_525(config, m_floppy[1]);
+	applefdc_device::add_35(config, m_floppy[2]);
+	applefdc_device::add_35(config, m_floppy[3]);
 
 	m_ram->set_default_size("128K").set_extra_options("128K, 384K, 640K, 896K, 1152K");
 }
@@ -4776,7 +4711,7 @@ void apple2e_state::apple2c_iwm(machine_config &config)
 	apple2c(config);
 
 	config.device_remove("sl6");
-	A2BUS_IWM_FDC(config, "sl6", A2BUS_7M_CLOCK).set_onboard(m_a2bus);
+	A2BUS_IWM(config, "sl6", A2BUS_7M_CLOCK).set_onboard(m_a2bus);
 }
 
 void apple2e_state::apple2c_mem(machine_config &config)
@@ -4787,20 +4722,10 @@ void apple2e_state::apple2c_mem(machine_config &config)
 	m_maincpu->set_dasm_override(FUNC(apple2e_state::dasm_trampoline));
 
 	config.device_remove("sl6");
-	A2BUS_IWM_FDC(config, "sl6", A2BUS_7M_CLOCK).set_onboard(m_a2bus);
+	A2BUS_IWM(config, "sl6", A2BUS_7M_CLOCK).set_onboard(m_a2bus);
 
 	m_ram->set_default_size("128K").set_extra_options("128K, 384K, 640K, 896K, 1152K");
 }
-
-const applefdc_interface fdc_interface =
-{
-	apple525_set_lines,         /* set_lines */
-	apple525_set_enable_lines,  /* set_enable_lines */
-
-	apple525_read_data,         /* read_data */
-	apple525_write_data,    /* write_data */
-	apple525_read_status    /* read_status */
-};
 
 void apple2e_state::laser128(machine_config &config)
 {
@@ -4808,9 +4733,11 @@ void apple2e_state::laser128(machine_config &config)
 	M65C02(config.replace(), m_maincpu, 1021800);
 	m_maincpu->set_addrmap(AS_PROGRAM, &apple2e_state::laser128_map);
 
-	APPLEFDC(config, m_laserudc, &fdc_interface);
-	FLOPPY_APPLE(config, FLOPPY_0, &floppy_interface, 15, 16);
-	FLOPPY_APPLE(config, FLOPPY_1, &floppy_interface, 15, 16);
+	DISKII(config, m_fdc, 1021800*2);
+	m_fdc->devsel_cb().set(FUNC(apple2e_state::devsel_w));
+	m_fdc->phases_cb().set(FUNC(apple2e_state::phases_w));
+	applefdc_device::add_525(config, m_floppy[0]);
+	applefdc_device::add_525(config, m_floppy[1]);
 
 	config.device_remove("sl4");
 	config.device_remove("sl6");
@@ -4832,9 +4759,11 @@ void apple2e_state::laser128ex2(machine_config &config)
 	M65C02(config.replace(), m_maincpu, 1021800);
 	m_maincpu->set_addrmap(AS_PROGRAM, &apple2e_state::laser128_map);
 
-	APPLEFDC(config, m_laserudc, &fdc_interface);
-	FLOPPY_APPLE(config, FLOPPY_0, &floppy_interface, 15, 16);
-	FLOPPY_APPLE(config, FLOPPY_1, &floppy_interface, 15, 16);
+	DISKII(config, m_fdc, 1021800*2);
+	m_fdc->devsel_cb().set(FUNC(apple2e_state::devsel_w));
+	m_fdc->phases_cb().set(FUNC(apple2e_state::phases_w));
+	applefdc_device::add_525(config, m_floppy[0]);
+	applefdc_device::add_525(config, m_floppy[1]);
 
 	config.device_remove("sl4");
 	config.device_remove("sl6");
@@ -4861,7 +4790,7 @@ void apple2e_state::cec(machine_config &config)
 	config.device_remove("sl6");
 	config.device_remove("sl7");
 
-	A2BUS_DISKIING(config, "sl6", A2BUS_7M_CLOCK).set_onboard(m_a2bus);
+	A2BUS_DISKII(config, "sl6", A2BUS_7M_CLOCK).set_onboard(m_a2bus);
 
 	SOFTWARE_LIST(config, "flop525_cec").set_original("cecflop");
 

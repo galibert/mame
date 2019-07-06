@@ -92,7 +92,6 @@
 
 #include "emu.h"
 #include "includes/mac.h"
-#include "machine/sonydriv.h"
 
 #define AUDIO_IS_CLASSIC (m_model <= MODEL_MAC_CLASSIC)
 #define MAC_HAS_VIA2    ((m_model >= MODEL_MAC_II) && (m_model != MODEL_MAC_IIFX))
@@ -131,17 +130,17 @@ void mac_fdc_set_enable_lines(device_t *device, int enable_mask)
 
 	if (mac->m_model != mac_state::MODEL_MAC_SE)
 	{
-		sony_set_enable_lines(device, enable_mask);
+		//		sony_set_enable_lines(device, enable_mask);
 	}
 	else
 	{
 		if (enable_mask)
 		{
-			sony_set_enable_lines(device, mac->m_drive_select ? 1 : 2);
+			//			sony_set_enable_lines(device, mac->m_drive_select ? 1 : 2);
 		}
 		else
 		{
-			sony_set_enable_lines(device, enable_mask);
+			//			sony_set_enable_lines(device, enable_mask);
 		}
 	}
 }
@@ -1185,37 +1184,14 @@ WRITE16_MEMBER ( mac_state::mac_scc_2_w )
 	m_scc->reg_w(space, offset, data >> 8);
 }
 
-/* ********************************** *
- * IWM Code specific to the Mac Plus  *
- * ********************************** */
-
-READ16_MEMBER ( mac_state::mac_iwm_r )
+void mac_state::fdc_w(offs_t offset, u8 data)
 {
-	/* The first time this is called is in a floppy test, which goes from
-	 * $400104 to $400126.  After that, all access to the floppy goes through
-	 * the disk driver in the MacOS
-	 *
-	 * I just thought this would be on interest to someone trying to further
-	 * this driver along
-	 */
-
-	uint16_t result = m_fdc->read(offset >> 8);
-
-	if (LOG_MAC_IWM)
-		printf("%s mac_iwm_r: offset=0x%08x mem_mask %04x = %02x\n", machine().describe_context().c_str(), offset, mem_mask, result);
-
-	return (result << 8) | result;
+	m_fdc->write((offset >> 9) & 0xf, data);
 }
 
-WRITE16_MEMBER ( mac_state::mac_iwm_w )
+u8 mac_state::fdc_r(offs_t offset)
 {
-	if (LOG_MAC_IWM)
-		printf("mac_iwm_w: offset=0x%08x data=0x%04x mask %04x (PC=%x)\n", offset, data, mem_mask, m_maincpu->pc());
-
-	if (ACCESSING_BITS_0_7)
-		m_fdc->write((offset >> 8), data & 0xff);
-	else
-		m_fdc->write((offset >> 8), data>>8);
+	return m_fdc->read((offset >> 9) & 0xf);
 }
 
 WRITE_LINE_MEMBER(mac_state::mac_adb_via_out_cb2)
@@ -1448,7 +1424,7 @@ WRITE8_MEMBER(mac_state::mac_via_out_a)
 
 	set_scc_waitrequest((data & 0x80) >> 7);
 	m_screen_buffer = (data & 0x40) >> 6;
-	sony_set_sel_line(m_fdc.target(), (data & 0x20) >> 5);
+	//	sony_set_sel_line(m_fdc.target(), (data & 0x20) >> 5);
 	if (m_model == MODEL_MAC_SE)    // on SE this selects which floppy drive (0 = upper, 1 = lower)
 	{
 		m_drive_select = ((data & 0x10) >> 4);
@@ -1587,7 +1563,7 @@ WRITE8_MEMBER(mac_state::mac_via_out_b_pmu)
 {
 //  printf("%s VIA1 OUT B: %02x\n", machine().describe_context().c_str(), data);
 
-	sony_set_sel_line(m_fdc.target(), (data & 0x20) >> 5);
+//	sony_set_sel_line(m_fdc.target(), (data & 0x20) >> 5);
 	m_drive_select = ((data & 0x10) >> 4);
 
 	if ((data & 1) && !(m_pm_req & 1))

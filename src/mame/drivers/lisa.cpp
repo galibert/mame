@@ -13,7 +13,6 @@
 #include "emu.h"
 #include "includes/lisa.h"
 #include "cpu/cop400/cop400.h"
-#include "formats/ap_dsk35.h"
 #include "screen.h"
 #include "softlist.h"
 #include "speaker.h"
@@ -45,52 +44,6 @@ void lisa_state::lisa210_fdc_map(address_map &map)
 	map(0x0c00, 0x0fff).noprw();                                     /* nothing, or IO port wrap-around ??? */
 	map(0x1000, 0x1fff).rom().region("fdccpu", 0x1000).share("fdc_rom");         /* ROM */
 }
-
-
-
-/***************************************************************************
-    DEVICE CONFIG
-***************************************************************************/
-
-static void lisa2_set_iwm_enable_lines(device_t *device,int enable_mask)
-{
-	/* E1 & E2 is connected to the Sony SEL line (?) */
-	/*logerror("new sel line state %d\n", (enable_mask) ? 0 : 1);*/
-	sony_set_sel_line(device,(enable_mask) ? 0 : 1);
-}
-
-static void lisa210_set_iwm_enable_lines(device_t *device,int enable_mask)
-{
-	/* E2 is connected to the Sony enable line (?) */
-	sony_set_enable_lines(device,enable_mask >> 1);
-}
-
-static const applefdc_interface lisa2_fdc_interface =
-{
-	sony_set_lines,
-	lisa2_set_iwm_enable_lines,
-
-	sony_read_data,
-	sony_write_data,
-	sony_read_status
-};
-
-static const applefdc_interface lisa210_fdc_interface =
-{
-	sony_set_lines,
-	lisa210_set_iwm_enable_lines,
-
-	sony_read_data,
-	sony_write_data,
-	sony_read_status
-};
-
-static const floppy_interface lisa_floppy_interface =
-{
-	FLOPPY_STANDARD_5_25_DSHD,
-	LEGACY_FLOPPY_OPTIONS_NAME(apple35_mac),
-	"floppy_5_25"
-};
 
 /***************************************************************************
     MACHINE DRIVER
@@ -147,8 +100,9 @@ void lisa_state::lisa(machine_config &config)
 	m_nvram->set_custom_handler(FUNC(lisa_state::nvram_init));
 
 	/* devices */
-	IWM(config, m_fdc, &lisa2_fdc_interface);
-	sonydriv_floppy_image_device::legacy_2_drives_add(config, &lisa_floppy_interface);
+	IWM(config, m_fdc, 8000000, 1021800*2);
+	applefdc_device::add_35(config, m_floppy[0]);
+	applefdc_device::add_35(config, m_floppy[1]);
 
 	/* software lists */
 	SOFTWARE_LIST(config, "disk_list").set_type("lisa", SOFTWARE_LIST_ORIGINAL_SYSTEM);
@@ -170,9 +124,6 @@ void lisa_state::lisa210(machine_config &config)
 {
 	lisa(config);
 	m_fdc_cpu->set_addrmap(AS_PROGRAM, &lisa_state::lisa210_fdc_map);
-
-	/* Lisa 2/10 and MacXL had a slightly different FDC interface */
-	m_fdc->set_config(&lisa210_fdc_interface);
 
 	/* via */
 	m_via0->set_clock(1250000);

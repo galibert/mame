@@ -995,7 +995,7 @@ void lisa_state::machine_reset()
 	{
 		if (m_features.floppy_hardware == sony_lisa2)
 		{
-			sony_set_enable_lines(m_fdc, 1);   /* on lisa2, drive unit 1 is always selected (?) */
+			//			sony_set_enable_lines(m_fdc, 1);   /* on lisa2, drive unit 1 is always selected (?) */
 		}
 	}
 }
@@ -1125,9 +1125,9 @@ void lisa_state::lisa_fdc_ttl_glue_access(offs_t offset)
 			if (m_MT1 && ! oldMT1)
 			{
 				m_PWM_floppy_motor_speed = (m_PWM_floppy_motor_speed << 1) & 0xff;
-				if (m_fdc->get_lines() & APPLEFDC_PH0)
-					m_PWM_floppy_motor_speed |= 1;
-				sony_set_speed(((256-m_PWM_floppy_motor_speed) * 1.3) + 237);
+				//				if (m_fdc->get_lines() & APPLEFDC_PH0)
+				//					m_PWM_floppy_motor_speed |= 1;
+				//				sony_set_speed(((256-m_PWM_floppy_motor_speed) * 1.3) + 237);
 			}
 		}
 		/*else
@@ -1143,8 +1143,8 @@ void lisa_state::lisa_fdc_ttl_glue_access(offs_t offset)
 			twiggy_set_head_line(offset & 1);
 		else
 #endif
-		if (m_features.floppy_hardware == sony_lisa210)
-			sony_set_sel_line(m_fdc, offset & 1);
+			//		if (m_features.floppy_hardware == sony_lisa210)
+			//			sony_set_sel_line(m_fdc, offset & 1);
 		break;
 	case 6:
 		m_DISK_DIAG = offset & 1;
@@ -1204,8 +1204,8 @@ WRITE8_MEMBER(lisa_state::lisa_fdc_io_w)
 			twiggy_set_speed((256-data) * 1.3 /* ??? */ + 237 /* ??? */);
 		else
 #endif
-		if (m_features.floppy_hardware == sony_lisa210)
-			sony_set_speed(((256-data) * 1.3) + 237);
+			//		if (m_features.floppy_hardware == sony_lisa210)
+			//			sony_set_speed(((256-data) * 1.3) + 237);
 		break;
 
 	case 3: /* not used */

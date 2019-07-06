@@ -60,7 +60,6 @@ II Plus: RAM options reduced to 16/32/48 KB.
 #include "bus/a2bus/a2cffa.h"
 #include "bus/a2bus/a2corvus.h"
 #include "bus/a2bus/a2diskii.h"
-#include "bus/a2bus/a2diskiing.h"
 #include "bus/a2bus/a2dx1.h"
 #include "bus/a2bus/a2echoii.h"
 #include "bus/a2bus/a2mcms.h"
@@ -1221,9 +1220,8 @@ static void apple2_slot0_cards(device_slot_interface &device)
 
 static void apple2_cards(device_slot_interface &device)
 {
-	device.option_add("diskii", A2BUS_DISKII);  /* Disk II Controller Card */
-	device.option_add("diskiing", A2BUS_DISKIING);  /* Disk II Controller Card, cycle-accurate version */
-	device.option_add("diskiing13", A2BUS_DISKIING13);  /* Disk II Controller Card, cycle-accurate version */
+	device.option_add("diskii", A2BUS_DISKII);  /* Disk II Controller Card, cycle-accurate version */
+	device.option_add("diskii13", A2BUS_DISKII13);  /* Disk II Controller Card, cycle-accurate version */
 	device.option_add("mockingboard", A2BUS_MOCKINGBOARD);  /* Sweet Micro Systems Mockingboard */
 	device.option_add("phasor", A2BUS_PHASOR);  /* Applied Engineering Phasor */
 	device.option_add("cffa2", A2BUS_CFFA2);  /* CFFA2000 Compact Flash for Apple II (www.dreher.net), 65C02/65816 firmware */
@@ -1340,7 +1338,7 @@ void apple2_state::apple2_common(machine_config &config)
 	A2BUS_SLOT(config, "sl3", m_a2bus, apple2_cards, nullptr);
 	A2BUS_SLOT(config, "sl4", m_a2bus, apple2_cards, "mockingboard");
 	A2BUS_SLOT(config, "sl5", m_a2bus, apple2_cards, nullptr);
-	A2BUS_SLOT(config, "sl6", m_a2bus, apple2_cards, "diskiing");
+	A2BUS_SLOT(config, "sl6", m_a2bus, apple2_cards, "diskii");
 	A2BUS_SLOT(config, "sl7", m_a2bus, apple2_cards, nullptr);
 
 	/* Set up the softlists: clean cracks priority, originals second, others last */

@@ -673,7 +673,11 @@ MACHINES["TI99_HD"] = true
 MACHINES["STRATA"] = true
 MACHINES["STEPPERS"] = true
 MACHINES["CORVUSHD"] = true
-MACHINES["WOZFDC"] = true
+MACHINES["DISKII"] = true
+MACHINES["IWM"] = true
+MACHINES["SWIM1"] = true
+MACHINES["SWIM2"] = true
+MACHINES["SWIM3"] = true
 MACHINES["DIABLO_HD"] = true
 MACHINES["TMS1024"] = true
 MACHINES["NSC810"] = true
@@ -1641,8 +1645,8 @@ files {
 	MAME_DIR .. "src/mame/machine/macrtc.h",
 	MAME_DIR .. "src/mame/machine/mackbd.cpp",
 	MAME_DIR .. "src/mame/machine/mackbd.h",
-	MAME_DIR .. "src/mame/machine/swim.cpp",
-	MAME_DIR .. "src/mame/machine/swim.h",
+	MAME_DIR .. "src/mame/machine/applefdc.cpp",
+	MAME_DIR .. "src/mame/machine/applefdc.h",
 	MAME_DIR .. "src/mame/video/mac.cpp",
 	MAME_DIR .. "src/mame/drivers/macpci.cpp",
 	MAME_DIR .. "src/mame/includes/macpci.h",

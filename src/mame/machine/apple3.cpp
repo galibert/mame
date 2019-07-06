@@ -245,7 +245,7 @@ uint8_t apple3_state::apple3_c0xx_r(offs_t offset)
 		case 0xd0: case 0xd1: case 0xd2: case 0xd3:
 		case 0xd4: case 0xd5: case 0xd6: case 0xd7:
 			/* external drive stuff */
-			m_fdc->read_c0dx(offset&0xf);
+			//			m_fdc->read_c0dx(offset&0xf);
 			result = 0x00;
 			break;
 
@@ -426,7 +426,7 @@ void apple3_state::apple3_c0xx_w(offs_t offset, uint8_t data)
 		case 0xd0: case 0xd1: case 0xd2: case 0xd3:
 		case 0xd4: case 0xd5: case 0xd6: case 0xd7:
 			/* external drive stuff */
-			m_fdc->write_c0dx(offset&0xf, data);
+			//			m_fdc->write_c0dx(offset&0xf, data);
 			break;
 
 		case 0xd8: case 0xd9:
@@ -642,8 +642,6 @@ void apple3_state::machine_reset()
 	m_analog_sel = 0;
 	m_ramp_active = false;
 	m_charwrt = false;
-
-	m_fdc->set_floppies_4(floppy0, floppy1, floppy2, floppy3);
 
 	m_scanstart->adjust(m_screen->time_until_pos(0, 0));
 	m_scanend->adjust(attotime::never);

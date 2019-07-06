@@ -22,7 +22,7 @@
 #include "machine/kb3600.h"
 #include "machine/mm58167.h"
 #include "sound/dac.h"
-#include "machine/wozfdc.h"
+#include "machine/diskii.h"
 #include "imagedev/floppy.h"
 #include "formats/flopimg.h"
 #include "emupal.h"
@@ -47,6 +47,7 @@ public:
 		m_via(*this, "via6522_%u", 0),
 		m_acia(*this, "acia"),
 		m_fdc(*this, "fdc"),
+		m_floppy(*this, "fdc:%u", 0U),
 		m_ay3600(*this, "ay3600"),
 		m_a2bus(*this, "a2bus"),
 		m_rtc(*this, "rtc"),
@@ -60,11 +61,7 @@ public:
 		m_joy2x(*this, "joy_2_x"),
 		m_joy2y(*this, "joy_2_y"),
 		m_joybuttons(*this, "joy_buttons"),
-		m_pdltimer(*this, "pdltimer"),
-		floppy0(*this, "0"),
-		floppy1(*this, "1"),
-		floppy2(*this, "2"),
-		floppy3(*this, "3")
+		m_pdltimer(*this, "pdltimer")
 	{
 	}
 
@@ -72,7 +69,8 @@ public:
 	required_device<ram_device> m_ram;
 	required_device_array<via6522_device, 2> m_via;
 	required_device<mos6551_device> m_acia;
-	required_device<appleiii_fdc_device> m_fdc;
+	required_device<diskii_device> m_fdc;
+	required_device_array<floppy_connector, 4> m_floppy;
 	required_device<ay3600_device> m_ay3600;
 	required_device<a2bus_device> m_a2bus;
 	required_device<mm58167_device> m_rtc;
@@ -83,10 +81,6 @@ public:
 	required_device<screen_device> m_screen;
 	required_ioport m_joy1x, m_joy1y, m_joy2x, m_joy2y, m_joybuttons;
 	required_device<timer_device> m_pdltimer;
-	required_device<floppy_connector> floppy0;
-	required_device<floppy_connector> floppy1;
-	required_device<floppy_connector> floppy2;
-	required_device<floppy_connector> floppy3;
 
 	uint8_t apple3_memory_r(offs_t offset);
 	void apple3_memory_w(offs_t offset, uint8_t data);

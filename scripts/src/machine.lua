@@ -3515,12 +3515,56 @@ end
 
 ---------------------------------------------------
 --
---@src/devices/machine/wozfdc.h,MACHINES["WOZFDC"] = true
+--@src/devices/machine/diskii.h,MACHINES["DISKII"] = true
 ---------------------------------------------------
-if (MACHINES["WOZFDC"]~=null) then
+if (MACHINES["DISKII"]~=null) then
 	files {
-		MAME_DIR .. "src/devices/machine/wozfdc.cpp",
-		MAME_DIR .. "src/devices/machine/wozfdc.h",
+		MAME_DIR .. "src/devices/machine/diskii.cpp",
+		MAME_DIR .. "src/devices/machine/diskii.h",
+	}
+end
+
+---------------------------------------------------
+--
+--@src/devices/machine/iwm.h,MACHINES["IWM"] = true
+---------------------------------------------------
+if (MACHINES["IWM"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/machine/iwm.cpp",
+		MAME_DIR .. "src/devices/machine/iwm.h",
+	}
+end
+
+---------------------------------------------------
+--
+--@src/devices/machine/swim1.h,MACHINES["SWIM1"] = true
+---------------------------------------------------
+if (MACHINES["SWIM1"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/machine/swim1.cpp",
+		MAME_DIR .. "src/devices/machine/swim1.h",
+	}
+end
+
+---------------------------------------------------
+--
+--@src/devices/machine/swim2.h,MACHINES["SWIM2"] = true
+---------------------------------------------------
+if (MACHINES["SWIM2"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/machine/swim2.cpp",
+		MAME_DIR .. "src/devices/machine/swim2.h",
+	}
+end
+
+---------------------------------------------------
+--
+--@src/devices/machine/swim3.h,MACHINES["SWIM3"] = true
+---------------------------------------------------
+if (MACHINES["SWIM3"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/machine/swim3.cpp",
+		MAME_DIR .. "src/devices/machine/swim3.h",
 	}
 end
 
@@ -3681,34 +3725,12 @@ end
 
 ---------------------------------------------------
 --
---@src/devices/machine/appldriv.h,MACHINES["APPLE_DRIVE"] = true
----------------------------------------------------
-if (MACHINES["APPLE_DRIVE"]~=null) then
-	files {
-		MAME_DIR .. "src/devices/machine/appldriv.cpp",
-		MAME_DIR .. "src/devices/machine/appldriv.h",
-	}
-end
-
----------------------------------------------------
---
 --@src/devices/machine/applefdc.h,MACHINES["APPLE_FDC"] = true
 ---------------------------------------------------
 if (MACHINES["APPLE_FDC"]~=null) then
 	files {
 		MAME_DIR .. "src/devices/machine/applefdc.cpp",
 		MAME_DIR .. "src/devices/machine/applefdc.h",
-	}
-end
-
----------------------------------------------------
---
---@src/devices/machine/sonydriv.h,MACHINES["SONY_DRIVE"] = true
----------------------------------------------------
-if (MACHINES["SONY_DRIVE"]~=null) then
-	files {
-		MAME_DIR .. "src/devices/machine/sonydriv.cpp",
-		MAME_DIR .. "src/devices/machine/sonydriv.h",
 	}
 end
 

@@ -19,7 +19,6 @@
 #include "emu.h"
 #include "includes/apple3.h"
 #include "sound/volt_reg.h"
-#include "formats/ap2_dsk.h"
 
 #include "bus/a2bus/a2cffa.h"
 #include "bus/a2bus/a2applicard.h"
@@ -47,15 +46,6 @@ static void apple3_cards(device_slot_interface &device)
 	device.option_add("mouse", A2BUS_MOUSE);            // Apple II Mouse Card
 	device.option_add("focusdrive", A2BUS_FOCUSDRIVE);  // Focus Drive IDE card
 }
-
-static void a3_floppies(device_slot_interface &device)
-{
-	device.option_add("525", FLOPPY_525_SD);
-}
-
-FLOPPY_FORMATS_MEMBER( apple3_state::floppy_formats )
-	FLOPPY_A216S_FORMAT, FLOPPY_RWTS18_FORMAT, FLOPPY_EDD_FORMAT, FLOPPY_WOZ_FORMAT
-FLOPPY_FORMATS_END
 
 void apple3_state::apple3(machine_config &config)
 {
@@ -109,11 +99,11 @@ void apple3_state::apple3(machine_config &config)
 	A2BUS_SLOT(config, "sl4", m_a2bus, apple3_cards, nullptr);
 
 	/* fdc */
-	APPLEIII_FDC(config, m_fdc, 1021800*2);
-	FLOPPY_CONNECTOR(config, "0", a3_floppies, "525", apple3_state::floppy_formats);
-	FLOPPY_CONNECTOR(config, "1", a3_floppies, "525", apple3_state::floppy_formats);
-	FLOPPY_CONNECTOR(config, "2", a3_floppies, "525", apple3_state::floppy_formats);
-	FLOPPY_CONNECTOR(config, "3", a3_floppies, "525", apple3_state::floppy_formats);
+	DISKII(config, m_fdc, 1021800*2);
+	applefdc_device::add_525(config, m_floppy[0]);
+	applefdc_device::add_525(config, m_floppy[1]);
+	applefdc_device::add_525(config, m_floppy[2]);
+	applefdc_device::add_525(config, m_floppy[3]);
 
 	/* softlist for fdc */
 	SOFTWARE_LIST(config, "flop525_list").set_original("apple3");

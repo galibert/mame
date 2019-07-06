@@ -43,12 +43,7 @@
 #include "machine/kb3600.h"
 #include "machine/nvram.h"
 
-#include "machine/applefdc.h"
-#include "machine/sonydriv.h"
-#include "machine/appldriv.h"
-#include "imagedev/flopdrv.h"
-#include "formats/ap2_dsk.h"
-#include "formats/ap_dsk35.h"
+#include "machine/iwm.h"
 
 #include "bus/rs232/rs232.h"
 
@@ -58,7 +53,7 @@
 
 #include "bus/a2bus/a2bus.h"
 #include "bus/a2bus/ramcard16k.h"
-#include "bus/a2bus/a2diskiing.h"
+#include "bus/a2bus/a2diskii.h"
 #include "bus/a2bus/a2mockingboard.h"
 #include "bus/a2bus/a2cffa.h"
 #include "bus/a2bus/a2memexp.h"
@@ -107,7 +102,7 @@
 #define A2GS_AUXUPPER_TAG "inhaux"
 #define A2GS_00UPPER_TAG "inh00"
 #define A2GS_01UPPER_TAG "inh01"
-#define A2GS_IWM_TAG    "fdc"   // must be "fdc" or sonydriv pukes
+#define A2GS_IWM_TAG    "fdc"
 #define A2GS_DOC_TAG    "doc"
 #define A2GS_VIDEO_TAG "a2video"
 #define SCC_TAG    "scc"
@@ -203,7 +198,8 @@ public:
 		m_ay3600(*this, "ay3600"),
 		m_kbdrom(*this, "keyboard"),
 		m_adb_mousex(*this, "adb_mouse_x"),
-		m_adb_mousey(*this, "adb_mouse_y")
+		m_adb_mousey(*this, "adb_mouse_y"),
+		m_floppy(*this, "fdc:%d", 0U)
 	{ }
 
 	required_device<g65816_device> m_maincpu;
@@ -225,12 +221,13 @@ public:
 	required_device<address_map_bank_device> m_lcbank, m_lcaux, m_lc00, m_lc01, m_bank0_atc, m_bank1_at0, m_bank1_atc;
 	required_device<z80scc_device> m_scc;
 	required_device<es5503_device> m_doc;
-	required_device<applefdc_base_device> m_iwm;
+	required_device<iwm_device> m_iwm;
 	optional_ioport m_ky0, m_ky1, m_ky2, m_ky3, m_ky4, m_ky5, m_ky6, m_ky7, m_ky8, m_ky9;
 	required_ioport m_kbspecial;
 	optional_device<ay3600_device> m_ay3600;
 	required_memory_region m_kbdrom;
 	required_ioport m_adb_mousex, m_adb_mousey;
+	required_device_array<floppy_connector, 4> m_floppy;
 
 	enum glu_reg_names
 	{
@@ -390,11 +387,6 @@ public:
 	void rb2000bank_map(address_map &map);
 	void rb4000bank_map(address_map &map);
 	void a2gs_es5503_map(address_map &map);
-
-	// temp old IWM hookup
-	int apple2_fdc_has_35();
-	int apple2_fdc_has_525();
-	void apple2_iwm_setdiskreg(uint8_t data);
 
 	uint8_t m_diskreg;  // move into private when we can
 
@@ -2507,7 +2499,7 @@ WRITE8_MEMBER(apple2gs_state::c000_w)
 
 		case 0x31:  // DISKREG
 			m_diskreg = data;
-			apple2_iwm_setdiskreg(m_diskreg);
+			//			apple2_iwm_setdiskreg(m_diskreg);
 			break;
 
 		case 0x32:  // VGCINTCLEAR
@@ -4049,165 +4041,6 @@ READ8_MEMBER(apple2gs_state::doc_adc_read)
 	return 0x80;
 }
 
-// temporary hookup of old IWM
-
-int apple2gs_state::apple2_fdc_has_35()
-{
-	return device_type_iterator<sonydriv_floppy_image_device>(*this).count(); // - apple525_get_count(machine)) > 0;
-}
-
-int apple2gs_state::apple2_fdc_has_525()
-{
-	return 1; //apple525_get_count(machine) > 0;
-}
-
-static void apple2_fdc_set_lines(device_t *device, uint8_t lines)
-{
-	apple2gs_state *state = device->machine().driver_data<apple2gs_state>();
-	if (state->m_diskreg & 0x40)
-	{
-		if (state->apple2_fdc_has_35())
-		{
-			/* slot 5: 3.5" disks */
-			sony_set_lines(device,lines);
-		}
-	}
-	else
-	{
-		if (state->apple2_fdc_has_525())
-		{
-			/* slot 6: 5.25" disks */
-			apple525_set_lines(device,lines);
-		}
-	}
-}
-
-static void apple2_fdc_set_enable_lines(device_t *device,int enable_mask)
-{
-	apple2gs_state *state = device->machine().driver_data<apple2gs_state>();
-	int slot5_enable_mask = 0;
-	int slot6_enable_mask = 0;
-
-	if (state->m_diskreg & 0x40)
-		slot5_enable_mask = enable_mask;
-	else
-		slot6_enable_mask = enable_mask;
-
-	if (state->apple2_fdc_has_35())
-	{
-		/* set the 3.5" enable lines */
-		sony_set_enable_lines(device,slot5_enable_mask);
-	}
-
-	if (state->apple2_fdc_has_525())
-	{
-		/* set the 5.25" enable lines */
-		apple525_set_enable_lines(device,slot6_enable_mask);
-	}
-}
-
-static uint8_t apple2_fdc_read_data(device_t *device)
-{
-	apple2gs_state *state = device->machine().driver_data<apple2gs_state>();
-	uint8_t result = 0x00;
-
-	if (state->m_diskreg & 0x40)
-	{
-		if (state->apple2_fdc_has_35())
-		{
-			/* slot 5: 3.5" disks */
-			result = sony_read_data(device);
-		}
-	}
-	else
-	{
-		if (state->apple2_fdc_has_525())
-		{
-			/* slot 6: 5.25" disks */
-			result = apple525_read_data(device);
-		}
-	}
-	return result;
-}
-
-static void apple2_fdc_write_data(device_t *device, uint8_t data)
-{
-	apple2gs_state *state = device->machine().driver_data<apple2gs_state>();
-	if (state->m_diskreg & 0x40)
-	{
-		if (state->apple2_fdc_has_35())
-		{
-			/* slot 5: 3.5" disks */
-			sony_write_data(device,data);
-		}
-	}
-	else
-	{
-		if (state->apple2_fdc_has_525())
-		{
-			/* slot 6: 5.25" disks */
-			apple525_write_data(device,data);
-		}
-	}
-}
-
-static int apple2_fdc_read_status(device_t *device)
-{
-	apple2gs_state *state = device->machine().driver_data<apple2gs_state>();
-	int result = 0;
-
-	if (state->m_diskreg & 0x40)
-	{
-		if (state->apple2_fdc_has_35())
-		{
-			/* slot 5: 3.5" disks */
-			result = sony_read_status(device);
-		}
-	}
-	else
-	{
-		if (state->apple2_fdc_has_525())
-		{
-			/* slot 6: 5.25" disks */
-			result = apple525_read_status(device);
-		}
-	}
-	return result;
-}
-
-void apple2gs_state::apple2_iwm_setdiskreg(uint8_t data)
-{
-	if (apple2_fdc_has_35())
-	{
-		sony_set_sel_line(m_iwm, m_diskreg & 0x80);
-	}
-}
-
-const applefdc_interface apple2_fdc_interface =
-{
-	apple2_fdc_set_lines,           /* set_lines */
-	apple2_fdc_set_enable_lines,    /* set_enable_lines */
-
-	apple2_fdc_read_data,           /* read_data */
-	apple2_fdc_write_data,          /* write_data */
-	apple2_fdc_read_status          /* read_status */
-};
-
-static const floppy_interface apple2gs_floppy35_floppy_interface =
-{
-	FLOPPY_STANDARD_5_25_DSHD,
-	LEGACY_FLOPPY_OPTIONS_NAME(apple35_iigs),
-	"floppy_3_5"
-};
-
-static const floppy_interface apple2gs_floppy525_floppy_interface =
-{
-	FLOPPY_STANDARD_5_25_DSHD,
-	LEGACY_FLOPPY_OPTIONS_NAME(apple2),
-	"floppy_5_25"
-};
-
-
 /***************************************************************************
     INPUT PORTS
 ***************************************************************************/
@@ -4467,7 +4300,7 @@ INPUT_PORTS_END
 
 static void apple2_cards(device_slot_interface &device)
 {
-	device.option_add("diskiing", A2BUS_DISKIING);  /* Disk II Controller Card, cycle-accurate version */
+	device.option_add("diskii", A2BUS_DISKII);  /* Disk II Controller Card, cycle-accurate version */
 	device.option_add("mockingboard", A2BUS_MOCKINGBOARD);  /* Sweet Micro Systems Mockingboard */
 	device.option_add("phasor", A2BUS_PHASOR);  /* Applied Engineering Phasor */
 	device.option_add("cffa2", A2BUS_CFFA2);  /* CFFA2000 Compact Flash for Apple II (www.dreher.net), 65C02/65816 firmware */
@@ -4684,18 +4517,15 @@ void apple2gs_state::apple2gs(machine_config &config)
 	A2BUS_SLOT(config, "sl6", m_a2bus, apple2_cards, nullptr);
 	A2BUS_SLOT(config, "sl7", m_a2bus, apple2_cards, nullptr);
 
-	IWM(config, m_iwm, &apple2_fdc_interface);
-
-	FLOPPY_APPLE(config, FLOPPY_0, &apple2gs_floppy525_floppy_interface, 15, 16);
-	FLOPPY_APPLE(config, FLOPPY_1, &apple2gs_floppy525_floppy_interface, 15, 16);
-
-	FLOPPY_SONY(config, FLOPPY_2, &apple2gs_floppy35_floppy_interface);
-	FLOPPY_SONY(config, FLOPPY_3, &apple2gs_floppy35_floppy_interface);
+	IWM(config, m_iwm, A2GS_7M, A2GS_MASTER_CLOCK/14);
+	applefdc_device::add_525(config, m_floppy[0]);
+	applefdc_device::add_525(config, m_floppy[1]);
+	applefdc_device::add_35(config, m_floppy[2]);
+	applefdc_device::add_35(config, m_floppy[3]);
 
 	SOFTWARE_LIST(config, "flop35_list").set_original("apple2gs");
 	SOFTWARE_LIST(config, "flop525_clean").set_compatible("apple2_flop_clcracked"); // No filter on clean cracks yet.
-	// As WOZ images won't load in the 2GS driver yet, comment out the softlist entry.
-	//SOFTWARE_LIST(config, "flop525_orig").set_compatible("apple2_flop_orig").set_filter("A2GS");  // Filter list to compatible disks for this machine.
+	SOFTWARE_LIST(config, "flop525_orig").set_compatible("apple2_flop_orig").set_filter("A2GS");  // Filter list to compatible disks for this machine.
 	SOFTWARE_LIST(config, "flop525_misc").set_compatible("apple2_misc");
 }
 

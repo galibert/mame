@@ -50,10 +50,10 @@
 #include "cpu/m68000/m68000.h"
 #include "cpu/powerpc/ppc.h"
 #include "cpu/m6805/m6805.h"
-#include "machine/applefdc.h"
-#include "machine/swim.h"
-#include "machine/sonydriv.h"
-#include "formats/ap_dsk35.h"
+#include "machine/iwm.h"
+#include "machine/swim1.h"
+#include "machine/swim2.h"
+#include "machine/swim3.h"
 #include "bus/scsi/scsi.h"
 #include "bus/scsi/scsihd.h"
 #include "bus/scsi/scsicd.h"
@@ -577,7 +577,7 @@ void mac_state::mac512ke_map(address_map &map)
 {
 	map(0x800000, 0x9fffff).r(FUNC(mac_state::mac_scc_r));
 	map(0xa00000, 0xbfffff).w(FUNC(mac_state::mac_scc_w));
-	map(0xc00000, 0xdfffff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w));
+	map(0xc00000, 0xdfffff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w));
 	map(0xe80000, 0xefffff).rw(FUNC(mac_state::mac_via_r), FUNC(mac_state::mac_via_w));
 	map(0xfffff0, 0xffffff).rw(FUNC(mac_state::mac_autovector_r), FUNC(mac_state::mac_autovector_w));
 }
@@ -587,7 +587,7 @@ void mac_state::macplus_map(address_map &map)
 	map(0x580000, 0x5fffff).rw(FUNC(mac_state::macplus_scsi_r), FUNC(mac_state::macplus_scsi_w));
 	map(0x800000, 0x9fffff).r(FUNC(mac_state::mac_scc_r));
 	map(0xa00000, 0xbfffff).w(FUNC(mac_state::mac_scc_w));
-	map(0xc00000, 0xdfffff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w));
+	map(0xc00000, 0xdfffff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w));
 	map(0xe80000, 0xefffff).rw(FUNC(mac_state::mac_via_r), FUNC(mac_state::mac_via_w));
 	map(0xfffff0, 0xffffff).rw(FUNC(mac_state::mac_autovector_r), FUNC(mac_state::mac_autovector_w));
 }
@@ -597,7 +597,7 @@ void mac_state::macse_map(address_map &map)
 	map(0x580000, 0x5fffff).rw(FUNC(mac_state::macplus_scsi_r), FUNC(mac_state::macplus_scsi_w));
 	map(0x900000, 0x9fffff).r(FUNC(mac_state::mac_scc_r));
 	map(0xb00000, 0xbfffff).w(FUNC(mac_state::mac_scc_w));
-	map(0xd00000, 0xdfffff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w));
+	map(0xd00000, 0xdfffff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w));
 	map(0xe80000, 0xefffff).rw(FUNC(mac_state::mac_via_r), FUNC(mac_state::mac_via_w));
 	map(0xfffff0, 0xffffff).rw(FUNC(mac_state::mac_autovector_r), FUNC(mac_state::mac_autovector_w));
 }
@@ -605,7 +605,7 @@ void mac_state::macse_map(address_map &map)
 void mac_state::macprtb_map(address_map &map)
 {
 	map(0x900000, 0x93ffff).rom().region("bootrom", 0).mirror(0x0c0000);
-	map(0xf60000, 0xf6ffff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w));
+	map(0xf60000, 0xf6ffff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w));
 	map(0xf70000, 0xf7ffff).rw(FUNC(mac_state::mac_via_r), FUNC(mac_state::mac_via_w));
 	map(0xf90000, 0xf9ffff).rw(FUNC(mac_state::macplus_scsi_r), FUNC(mac_state::macplus_scsi_w));
 	map(0xfa8000, 0xfaffff).ram().share("vram16");  // VRAM
@@ -627,7 +627,7 @@ void mac_state::maclc_map(address_map &map)
 	map(0xf10000, 0xf11fff).rw(FUNC(mac_state::macplus_scsi_r), FUNC(mac_state::macii_scsi_w));
 	map(0xf12000, 0xf13fff).rw(FUNC(mac_state::macii_scsi_drq_r), FUNC(mac_state::macii_scsi_drq_w));
 	map(0xf14000, 0xf15fff).rw(m_asc, FUNC(asc_device::read), FUNC(asc_device::write));
-	map(0xf16000, 0xf17fff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w));
+	map(0xf16000, 0xf17fff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w));
 	map(0xf24000, 0xf24003).rw(FUNC(mac_state::rbv_ramdac_r), FUNC(mac_state::ariel_ramdac_w));
 	map(0xf26000, 0xf27fff).rw(FUNC(mac_state::mac_rbv_r), FUNC(mac_state::mac_rbv_w));    // VIA2 (V8)
 	map(0xf40000, 0xfbffff).ram().share("vram");
@@ -643,7 +643,7 @@ void mac_state::maclc3_map(address_map &map)
 	map(0x50010000, 0x50011fff).rw(FUNC(mac_state::macplus_scsi_r), FUNC(mac_state::macii_scsi_w)).mirror(0x00f00000);
 	map(0x50012000, 0x50013fff).rw(FUNC(mac_state::macii_scsi_drq_r), FUNC(mac_state::macii_scsi_drq_w)).mirror(0x00f00000);
 	map(0x50014000, 0x50015fff).rw(m_asc, FUNC(asc_device::read), FUNC(asc_device::write)).mirror(0x00f00000);
-	map(0x50016000, 0x50017fff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w)).mirror(0x00f00000);
+	map(0x50016000, 0x50017fff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w)).mirror(0x00f00000);
 	map(0x50024000, 0x50025fff).w(FUNC(mac_state::ariel_ramdac_w)).mirror(0x00f00000);
 	map(0x50026000, 0x50027fff).rw(FUNC(mac_state::mac_rbv_r), FUNC(mac_state::mac_rbv_w)).mirror(0x00f00000);
 	map(0x50028000, 0x50028003).rw(FUNC(mac_state::mac_sonora_vctl_r), FUNC(mac_state::mac_sonora_vctl_w)).mirror(0x00f00000);
@@ -666,7 +666,7 @@ void mac_state::macii_map(address_map &map)
 	map(0x50010000, 0x50011fff).rw(FUNC(mac_state::macplus_scsi_r), FUNC(mac_state::macii_scsi_w)).mirror(0x00f00000);
 	map(0x50012060, 0x50012063).r(FUNC(mac_state::macii_scsi_drq_r)).mirror(0x00f00000);
 	map(0x50014000, 0x50015fff).rw(m_asc, FUNC(asc_device::read), FUNC(asc_device::write)).mirror(0x00f00000);
-	map(0x50016000, 0x50017fff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w)).mirror(0x00f00000);
+	map(0x50016000, 0x50017fff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w)).mirror(0x00f00000);
 	map(0x50040000, 0x50041fff).rw(FUNC(mac_state::mac_via_r), FUNC(mac_state::mac_via_w)).mirror(0x00f00000);
 }
 
@@ -680,7 +680,7 @@ void mac_state::maciici_map(address_map &map)
 	map(0x50010000, 0x50011fff).rw(FUNC(mac_state::macplus_scsi_r), FUNC(mac_state::macii_scsi_w)).mirror(0x00f00000);
 	map(0x50012060, 0x50012063).r(FUNC(mac_state::macii_scsi_drq_r)).mirror(0x00f00000);
 	map(0x50014000, 0x50015fff).rw(m_asc, FUNC(asc_device::read), FUNC(asc_device::write)).mirror(0x00f00000);
-	map(0x50016000, 0x50017fff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w)).mirror(0x00f00000);
+	map(0x50016000, 0x50017fff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w)).mirror(0x00f00000);
 	map(0x50024000, 0x50024007).w(FUNC(mac_state::rbv_ramdac_w)).mirror(0x00f00000);
 	map(0x50026000, 0x50027fff).rw(FUNC(mac_state::mac_rbv_r), FUNC(mac_state::mac_rbv_w)).mirror(0x00f00000);
 	map(0x50040000, 0x50041fff).rw(FUNC(mac_state::mac_via_r), FUNC(mac_state::mac_via_w)).mirror(0x00f00000);
@@ -697,7 +697,7 @@ void mac_state::macse30_map(address_map &map)
 	map(0x50010000, 0x50011fff).rw(FUNC(mac_state::macplus_scsi_r), FUNC(mac_state::macii_scsi_w)).mirror(0x00f00000);
 	map(0x50012060, 0x50012063).r(FUNC(mac_state::macii_scsi_drq_r)).mirror(0x00f00000);
 	map(0x50014000, 0x50015fff).rw(m_asc, FUNC(asc_device::read), FUNC(asc_device::write)).mirror(0x00f00000);
-	map(0x50016000, 0x50017fff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w)).mirror(0x00f00000);
+	map(0x50016000, 0x50017fff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w)).mirror(0x00f00000);
 	map(0x50040000, 0x50041fff).rw(FUNC(mac_state::mac_via_r), FUNC(mac_state::mac_via_w)).mirror(0x00f00000); // mirror
 
 	map(0xfe000000, 0xfe00ffff).ram().share("vram");
@@ -735,7 +735,7 @@ void mac_state::macpb140_map(address_map &map)
 	map(0x50010000, 0x50011fff).rw(FUNC(mac_state::macplus_scsi_r), FUNC(mac_state::macii_scsi_w)).mirror(0x01f00000);
 	map(0x50012060, 0x50012063).r(FUNC(mac_state::macii_scsi_drq_r)).mirror(0x01f00000);
 	map(0x50014000, 0x50015fff).rw(m_asc, FUNC(asc_device::read), FUNC(asc_device::write)).mirror(0x01f00000);
-	map(0x50016000, 0x50017fff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w)).mirror(0x01f00000);
+	map(0x50016000, 0x50017fff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w)).mirror(0x00f00000);
 	map(0x50024000, 0x50027fff).r(FUNC(mac_state::buserror_r)).mirror(0x01f00000);   // bus error here to make sure we aren't mistaken for another decoder
 
 	map(0xfee08000, 0xfeffffff).ram().share("vram");
@@ -752,7 +752,7 @@ void mac_state::macpb160_map(address_map &map)
 	map(0x50f10000, 0x50f11fff).rw(FUNC(mac_state::macplus_scsi_r), FUNC(mac_state::macii_scsi_w));
 	map(0x50f12060, 0x50f12063).r(FUNC(mac_state::macii_scsi_drq_r));
 	map(0x50f14000, 0x50f15fff).rw(m_asc, FUNC(asc_device::read), FUNC(asc_device::write));
-	map(0x50f16000, 0x50f17fff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w));
+	map(0x50f16000, 0x50f17fff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w));
 	map(0x50f20000, 0x50f21fff).rw(FUNC(mac_state::mac_gsc_r), FUNC(mac_state::mac_gsc_w));
 	map(0x50f24000, 0x50f27fff).r(FUNC(mac_state::buserror_r));   // bus error here to make sure we aren't mistaken for another decoder
 
@@ -770,7 +770,7 @@ void mac_state::macpb165c_map(address_map &map)
 	map(0x50f10000, 0x50f11fff).rw(FUNC(mac_state::macplus_scsi_r), FUNC(mac_state::macii_scsi_w));
 	map(0x50f12060, 0x50f12063).r(FUNC(mac_state::macii_scsi_drq_r));
 	map(0x50f14000, 0x50f15fff).rw(m_asc, FUNC(asc_device::read), FUNC(asc_device::write));
-	map(0x50f16000, 0x50f17fff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w));
+	map(0x50f16000, 0x50f17fff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w));
 	map(0x50f20000, 0x50f21fff).r(FUNC(mac_state::buserror_r));    // bus error here to detect we're not the grayscale 160/165/180
 	map(0x50f24000, 0x50f27fff).r(FUNC(mac_state::buserror_r));   // bus error here to make sure we aren't mistaken for another decoder
 
@@ -793,7 +793,7 @@ void mac_state::macpd210_map(address_map &map)
 	map(0x50f10000, 0x50f11fff).rw(FUNC(mac_state::macplus_scsi_r), FUNC(mac_state::macii_scsi_w));
 	map(0x50f12060, 0x50f12063).r(FUNC(mac_state::macii_scsi_drq_r));
 	map(0x50f14000, 0x50f15fff).rw(m_asc, FUNC(asc_device::read), FUNC(asc_device::write));
-	map(0x50f16000, 0x50f17fff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w));
+	map(0x50f16000, 0x50f17fff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w));
 	map(0x50f20000, 0x50f21fff).rw(FUNC(mac_state::mac_gsc_r), FUNC(mac_state::mac_gsc_w));
 	map(0x50f24000, 0x50f27fff).r(FUNC(mac_state::buserror_r));   // bus error here to make sure we aren't mistaken for another decoder
 
@@ -814,7 +814,7 @@ void mac_state::quadra700_map(address_map &map)
 	map(0x5000f000, 0x5000f3ff).rw(FUNC(mac_state::mac_5396_r), FUNC(mac_state::mac_5396_w)).mirror(0x00fc0000);
 	map(0x5000c000, 0x5000dfff).rw(FUNC(mac_state::mac_scc_r), FUNC(mac_state::mac_scc_2_w)).mirror(0x00fc0000);
 	map(0x50014000, 0x50015fff).rw(m_asc, FUNC(asc_device::read), FUNC(asc_device::write)).mirror(0x00fc0000);
-	map(0x5001e000, 0x5001ffff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w)).mirror(0x00fc0000);
+	map(0x5001e000, 0x5001ffff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w)).mirror(0x00fc0000);
 
 	// f9800000 = VDAC / DAFB
 	map(0xf9000000, 0xf91fffff).ram().share("vram");
@@ -835,7 +835,7 @@ void mac_state::pwrmac_map(address_map &map)
 	map(0x50010000, 0x50011fff).rw(FUNC(mac_state::macplus_scsi_r), FUNC(mac_state::macii_scsi_w)).mirror(0x00f00000);
 	// 50014000 = sound registers (AWACS)
 	map(0x50014000, 0x50015fff).rw(m_awacs, FUNC(awacs_device::read), FUNC(awacs_device::write)).mirror(0x01f00000);
-	map(0x50016000, 0x50017fff).rw(FUNC(mac_state::mac_iwm_r), FUNC(mac_state::mac_iwm_w)).mirror(0x00f00000);
+	map(0x50016000, 0x50017fff).rw(FUNC(mac_state::fdc_r), FUNC(mac_state::fdc_w)).mirror(0x00f00000);
 	map(0x50024000, 0x50025fff).w(FUNC(mac_state::ariel_ramdac_w)).mirror(0x00f00000);
 	map(0x50026000, 0x50027fff).rw(FUNC(mac_state::mac_via2_r), FUNC(mac_state::mac_via2_w)).mirror(0x00f00000);
 	map(0x50028000, 0x50028007).rw(FUNC(mac_state::mac_sonora_vctl_r), FUNC(mac_state::mac_sonora_vctl_w)).mirror(0x00f00000);
@@ -852,16 +852,6 @@ void mac_state::pwrmac_map(address_map &map)
 /***************************************************************************
     DEVICE CONFIG
 ***************************************************************************/
-
-static const applefdc_interface mac_iwm_interface =
-{
-	sony_set_lines,
-	mac_fdc_set_enable_lines,
-
-	sony_read_data,
-	sony_write_data,
-	sony_read_status
-};
 
 static void mac_nubus_cards(device_slot_interface &device)
 {
@@ -905,23 +895,34 @@ static void mac_lcpds_cards(device_slot_interface &device)
     MACHINE DRIVERS
 ***************************************************************************/
 
-static const floppy_interface mac_floppy_interface =
-{
-	FLOPPY_STANDARD_3_5_DSHD,
-	LEGACY_FLOPPY_OPTIONS_NAME(apple35_mac),
-	"floppy_3_5"
-};
-
-void mac_state::add_base_devices(machine_config &config, bool rtc, bool super_woz)
+void mac_state::add_base_devices(machine_config &config, bool rtc, int woz_version)
 {
 	if (rtc)
-		RTC3430042(config, m_rtc, XTAL(32'768));
+		RTC3430042(config, m_rtc, XTAL(32768));
 
-	if (super_woz)
-		SWIM(config, m_fdc, &mac_iwm_interface);
-	else
-		IWM(config, m_fdc, &mac_iwm_interface);
-	sonydriv_floppy_image_device::legacy_2_drives_add(config, &mac_floppy_interface);
+	switch (woz_version) {
+	case 0:
+		IWM(config, m_fdc, C7M, 1021800*2);
+		break;
+
+	case 1:
+		SWIM1(config, m_fdc, C15M);
+		break;
+
+	case 2:
+		SWIM2(config, m_fdc, C15M);
+		break;
+
+	case 3:
+		SWIM3(config, m_fdc, C15M);
+		break;
+	}
+
+	m_fdc->phases_cb().set([this](u8 data) { logerror("fdc phases = %x\n", data);});
+	m_fdc->sel35_cb().set([this](int data) { logerror("fdc sel35 = %d\n", data);});
+
+	applefdc_device::add_35(config, m_floppy[0]);
+	applefdc_device::add_35_nc(config, m_floppy[1]);
 
 	SCC8530(config, m_scc, C7M);
 	m_scc->intrq_callback().set(FUNC(mac_state::set_scc_interrupt));
@@ -1035,7 +1036,7 @@ void mac_state::add_pb1xx_vias(machine_config &config)
 	m_via2->irq_handler().set(FUNC(mac_state::mac_via2_irq));
 }
 
-void mac_state::mac512ke_base(machine_config &config)
+void mac_state::mac512ke_base(machine_config &config, int woz_version)
 {
 	M68000(config, m_maincpu, C7M);       /* 7.8336 MHz */
 	m_maincpu->set_addrmap(AS_PROGRAM, &mac_state::mac512ke_map);
@@ -1058,7 +1059,7 @@ void mac_state::mac512ke_base(machine_config &config)
 	vreg.add_route(0, "dac", 1.0, DAC_VREF_POS_INPUT);
 	vreg.add_route(0, "dac", -1.0, DAC_VREF_NEG_INPUT);
 
-	add_base_devices(config, true, false);
+	add_base_devices(config, true, woz_version);
 
 	VIA6522(config, m_via1, 1000000);
 	m_via1->readpa_handler().set(FUNC(mac_state::mac_via_in_a));
@@ -1072,9 +1073,9 @@ void mac_state::mac512ke_base(machine_config &config)
 	m_ram->set_default_size("512K");
 }
 
-void mac_state::mac512ke(machine_config &config)
+void mac_state::mac512ke(machine_config &config, int woz_version)
 {
-	mac512ke_base(config);
+	mac512ke_base(config, woz_version);
 	add_mackbd(config);
 }
 
@@ -1155,7 +1156,7 @@ void mac_state::macse(machine_config &config)
 
 void mac_state::macclasc(machine_config &config)
 {
-	mac512ke_base(config);
+	mac512ke_base(config, 1);
 	add_macplus_additions(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &mac_state::macse_map);
 
@@ -1184,7 +1185,7 @@ void mac_state::macprtb(machine_config &config)
 	MCFG_VIDEO_START_OVERRIDE(mac_state,macprtb)
 
 	/* devices */
-	add_base_devices(config);
+	add_base_devices(config, true, 1);
 	add_scsi(config);
 	add_asc(config, asc_device::asc_type::ASC);
 
@@ -1201,7 +1202,7 @@ void mac_state::macprtb(machine_config &config)
 	m_ram->set_extra_options("1M,3M,5M,7M,9M");
 }
 
-void mac_state::macii(machine_config &config, bool cpu, asc_device::asc_type asc_type, bool nubus, bool nubus_bank1, bool nubus_bank2)
+void mac_state::macii(machine_config &config, bool cpu, asc_device::asc_type asc_type, bool nubus, bool nubus_bank1, bool nubus_bank2, int woz_version)
 {
 	if (cpu)
 	{
@@ -1213,7 +1214,7 @@ void mac_state::macii(machine_config &config, bool cpu, asc_device::asc_type asc
 	PALETTE(config, m_palette).set_entries(256);
 
 	add_asc(config, asc_type);
-	add_base_devices(config);
+	add_base_devices(config, true, woz_version);
 	add_scsi(config, true);
 	if (nubus)
 		add_nubus(config, nubus_bank1, nubus_bank2);
@@ -1245,7 +1246,7 @@ void mac_state::maciifx(machine_config &config)
 	m_maincpu->set_dasm_override(FUNC(mac_state::mac_dasm_override));
 
 	add_asc(config, asc_device::asc_type::ASC);
-	add_base_devices(config);
+	add_base_devices(config, true, 1);
 	add_scsi(config);
 
 	VIA6522(config, m_via1, C7M/10);
@@ -1265,9 +1266,9 @@ void mac_state::maciifx(machine_config &config)
 	add_nubus(config);
 }
 
-void mac_state::maclc(machine_config &config, bool cpu, bool egret, asc_device::asc_type asc_type)
+void mac_state::maclc(machine_config &config, bool cpu, bool egret, asc_device::asc_type asc_type, int woz_version)
 {
-	macii(config, false, asc_type, false);
+	macii(config, false, asc_type, false, true, true, woz_version);
 
 	if (cpu)
 	{
@@ -1298,9 +1299,9 @@ void mac_state::maclc(machine_config &config, bool cpu, bool egret, asc_device::
 		add_egret(config, EGRET_341S0850);
 }
 
-void mac_state::maclc2(machine_config &config, bool egret)
+void mac_state::maclc2(machine_config &config, bool egret, int woz_version)
 {
-	maclc(config, false, egret);
+	maclc(config, false, egret, asc_device::asc_type::V8, woz_version);
 
 	M68030(config, m_maincpu, C15M);
 	m_maincpu->set_addrmap(AS_PROGRAM, &mac_state::maclc_map);
@@ -1312,14 +1313,14 @@ void mac_state::maclc2(machine_config &config, bool egret)
 
 void mac_state::maccclas(machine_config &config)
 {
-	maclc2(config, false);
+	maclc2(config, false, 2);
 	add_cuda(config, CUDA_341S0788); // should be 0417, but that version won't sync up properly with the '030 right now
 	m_via1->writepb_handler().set(FUNC(mac_state::mac_via_out_b_cdadb));
 }
 
 void mac_state::maclc3(machine_config &config, bool egret)
 {
-	maclc(config, false, false, asc_device::asc_type::SONORA);
+	maclc(config, false, false, asc_device::asc_type::SONORA, 2);
 
 	M68030(config, m_maincpu, 25000000);
 	m_maincpu->set_addrmap(AS_PROGRAM, &mac_state::maclc3_map);
@@ -1408,7 +1409,7 @@ void mac_state::macse30(machine_config &config)
 
 	MCFG_VIDEO_START_OVERRIDE(mac_state,mac)
 
-	add_base_devices(config, true, true);
+	add_base_devices(config, true, 1);
 	add_asc(config, asc_device::asc_type::ASC);
 	add_scsi(config);
 
@@ -1439,7 +1440,7 @@ void mac_state::macpb140(machine_config &config)
 
 	add_asc(config, asc_device::asc_type::ASC);
 	add_scsi(config);
-	add_base_devices(config, false, true);
+	add_base_devices(config, false, 1);
 	add_pb1xx_vias(config);
 
 	RAM(config, m_ram);
@@ -1484,7 +1485,7 @@ void mac_state::macpb160(machine_config &config)
 
 	add_asc(config, asc_device::asc_type::ASC);
 	add_scsi(config);
-	add_base_devices(config, false, true);
+	add_base_devices(config, false, 1);
 	add_pb1xx_vias(config);
 
 	RAM(config, m_ram);
@@ -1545,7 +1546,7 @@ void mac_state::macclas2(machine_config &config)
 
 void mac_state::maciici(machine_config &config)
 {
-	macii(config, false, asc_device::asc_type::ASC, true, false, true);
+	macii(config, false, asc_device::asc_type::ASC, true, false, true, 1);
 
 	M68030(config, m_maincpu, 25000000);
 	m_maincpu->set_addrmap(AS_PROGRAM, &mac_state::maciici_map);
@@ -1569,7 +1570,7 @@ void mac_state::maciici(machine_config &config)
 
 void mac_state::maciisi(machine_config &config)
 {
-	macii(config, false, asc_device::asc_type::ASC, false);
+	macii(config, false, asc_device::asc_type::ASC, false, false, false, 1);
 
 	M68030(config, m_maincpu, 20000000);
 	m_maincpu->set_addrmap(AS_PROGRAM, &mac_state::maciici_map);
@@ -1619,7 +1620,7 @@ void mac_state::pwrmac(machine_config &config)
 	m_awacs->add_route(1, "rspeaker", 1.0);
 
 	add_scsi(config);
-	add_base_devices(config, false, false);
+	add_base_devices(config, false, 3);
 
 	add_via1_adb(config, false);
 	m_via1->writepb_handler().set(FUNC(mac_state::mac_via_out_b_cdadb));
@@ -1653,7 +1654,7 @@ void mac_state::macqd700(machine_config &config)
 	PALETTE(config, m_palette).set_entries(256);
 
 	add_asc(config, asc_device::asc_type::EASC);
-	add_base_devices(config, true, false);
+	add_base_devices(config, true, 1);
 
 	add_nubus(config, false, false);
 	NUBUS_SLOT(config, "nbd", "nubus", mac_nubus_cards, nullptr);
@@ -2033,35 +2034,35 @@ ROM_END
 
 /*    YEAR  NAME       PARENT    COMPAT  MACHINE   INPUT    CLASS      INIT                COMPANY           FULLNAME */
 //COMP( 1983, mactw,     0,        0,      mac128k,  macplus, mac_state, init_mac128k512k,   "Apple Computer", "Macintosh (4.3T Prototype)",  MACHINE_NOT_WORKING )
-COMP( 1987, macse,     0,        0,      macse,    macadb,  mac_state, init_macse,         "Apple Computer", "Macintosh SE",  MACHINE_NOT_WORKING )
-COMP( 1987, macsefd,   0,        0,      macse,    macadb,  mac_state, init_macse,         "Apple Computer", "Macintosh SE (FDHD)",  MACHINE_NOT_WORKING )
-COMP( 1987, macii,     0,        0,      macii,    macadb,  mac_state, init_macii,         "Apple Computer", "Macintosh II",  MACHINE_NOT_WORKING )
-COMP( 1987, maciihmu,  macii,    0,      maciihmu, macadb,  mac_state, init_macii,         "Apple Computer", "Macintosh II (w/o 68851 MMU)", MACHINE_NOT_WORKING )
-COMP( 1988, mac2fdhd,  0,        0,      macii,    macadb,  mac_state, init_maciifdhd,     "Apple Computer", "Macintosh II (FDHD)",  MACHINE_NOT_WORKING )
-COMP( 1988, maciix,    mac2fdhd, 0,      maciix,   macadb,  mac_state, init_maciix,        "Apple Computer", "Macintosh IIx",  MACHINE_NOT_WORKING )
-COMP( 1989, macprtb,   0,        0,      macprtb,  macadb,  mac_state, init_macprtb,       "Apple Computer", "Macintosh Portable", MACHINE_NOT_WORKING )
-COMP( 1989, macse30,   mac2fdhd, 0,      macse30,  macadb,  mac_state, init_macse30,       "Apple Computer", "Macintosh SE/30",  MACHINE_NOT_WORKING )
-COMP( 1989, maciicx,   mac2fdhd, 0,      maciicx,  macadb,  mac_state, init_maciicx,       "Apple Computer", "Macintosh IIcx",  MACHINE_NOT_WORKING )
-COMP( 1989, maciici,   0,        0,      maciici,  maciici, mac_state, init_maciici,       "Apple Computer", "Macintosh IIci", MACHINE_NOT_WORKING )
-COMP( 1990, maciifx,   0,        0,      maciifx,  macadb,  mac_state, init_maciifx,       "Apple Computer", "Macintosh IIfx",  MACHINE_NOT_WORKING )
-COMP( 1990, macclasc,  0,        0,      macclasc, macadb,  mac_state, init_macclassic,    "Apple Computer", "Macintosh Classic",  MACHINE_NOT_WORKING )
-COMP( 1990, maclc,     0,        0,      maclc,    maciici, mac_state, init_maclc,         "Apple Computer", "Macintosh LC", MACHINE_IMPERFECT_SOUND )
-COMP( 1990, maciisi,   0,        0,      maciisi,  maciici, mac_state, init_maciisi,       "Apple Computer", "Macintosh IIsi", MACHINE_NOT_WORKING )
-COMP( 1991, macpb100,  0,        0,      macprtb,  macadb,  mac_state, init_macprtb,       "Apple Computer", "Macintosh PowerBook 100", MACHINE_NOT_WORKING )
-COMP( 1991, macpb140,  0,        0,      macpb140, macadb,  mac_state, init_macpb140,      "Apple Computer", "Macintosh PowerBook 140", MACHINE_NOT_WORKING )
-COMP( 1991, macpb170,  macpb140, 0,      macpb170, macadb,  mac_state, init_macpb140,      "Apple Computer", "Macintosh PowerBook 170", MACHINE_NOT_WORKING )
-COMP( 1991, macqd700,  macpb140, 0,      macqd700, macadb,  mac_state, init_macquadra700,  "Apple Computer", "Macintosh Quadra 700", MACHINE_NOT_WORKING )
-COMP( 1991, macclas2,  0,        0,      macclas2, macadb,  mac_state, init_macclassic2,   "Apple Computer", "Macintosh Classic II", MACHINE_NOT_WORKING|MACHINE_IMPERFECT_SOUND )
-COMP( 1991, maclc2,    0,        0,      maclc2,   maciici, mac_state, init_maclc2,        "Apple Computer", "Macintosh LC II",  MACHINE_NOT_WORKING|MACHINE_IMPERFECT_SOUND )
-COMP( 1992, macpb145,  macpb140, 0,      macpb145, macadb,  mac_state, init_macpb140,      "Apple Computer", "Macintosh PowerBook 145", MACHINE_NOT_WORKING )
-COMP( 1992, macpb160,  0,        0,      macpb160, macadb,  mac_state, init_macpb160,      "Apple Computer", "Macintosh PowerBook 160", MACHINE_NOT_WORKING )
-COMP( 1992, macpb180,  macpb160, 0,      macpb180, macadb,  mac_state, init_macpb160,      "Apple Computer", "Macintosh PowerBook 180", MACHINE_NOT_WORKING )
-COMP( 1992, macpb180c, macpb160, 0,      macpb180c,macadb,  mac_state, init_macpb160,      "Apple Computer", "Macintosh PowerBook 180c", MACHINE_NOT_WORKING )
-COMP( 1992, macpd210,  0,        0,      macpd210, macadb,  mac_state, init_macpd210,      "Apple Computer", "Macintosh PowerBook Duo 210", MACHINE_NOT_WORKING )
-COMP( 1993, maccclas,  0,        0,      maccclas, macadb,  mac_state, init_maclrcclassic, "Apple Computer", "Macintosh Color Classic", MACHINE_NOT_WORKING )
-COMP( 1992, macpb145b, macpb140, 0,      macpb170, macadb,  mac_state, init_macpb140,      "Apple Computer", "Macintosh PowerBook 145B", MACHINE_NOT_WORKING )
-COMP( 1993, maclc3,    0,        0,      maclc3,   maciici, mac_state, init_maclc3,        "Apple Computer", "Macintosh LC III",  MACHINE_NOT_WORKING|MACHINE_IMPERFECT_SOUND )
-COMP( 1993, maciivx,   0,        0,      maciivx,  maciici, mac_state, init_maciivx,       "Apple Computer", "Macintosh IIvx", MACHINE_NOT_WORKING|MACHINE_IMPERFECT_SOUND )
-COMP( 1993, maciivi,   maciivx,  0,      maciivi,  maciici, mac_state, init_maciivx,       "Apple Computer", "Macintosh IIvi", MACHINE_NOT_WORKING|MACHINE_IMPERFECT_SOUND )
-COMP( 1993, maclc520,  0,        0,      maclc520, maciici, mac_state, init_maclc520,      "Apple Computer", "Macintosh LC 520",  MACHINE_NOT_WORKING )
-COMP( 1994, pmac6100,  0,        0,      pwrmac,   macadb,  mac_state, init_macpm6100,     "Apple Computer", "Power Macintosh 6100/60",  MACHINE_NOT_WORKING | MACHINE_IMPERFECT_SOUND )
+COMP( 1987, macse,     0,        0,      macse,    macadb,  mac_state, init_macse,         "Apple Computer", "Macintosh SE",  MACHINE_NOT_WORKING ) // iwm/swim
+COMP( 1987, macsefd,   0,        0,      macse,    macadb,  mac_state, init_macse,         "Apple Computer", "Macintosh SE (FDHD)",  MACHINE_NOT_WORKING ) // iwm/swim
+COMP( 1987, macii,     0,        0,      macii,    macadb,  mac_state, init_macii,         "Apple Computer", "Macintosh II",  MACHINE_NOT_WORKING ) // iwm/swim
+COMP( 1987, maciihmu,  macii,    0,      maciihmu, macadb,  mac_state, init_macii,         "Apple Computer", "Macintosh II (w/o 68851 MMU)", MACHINE_NOT_WORKING ) // iwm/swim
+COMP( 1988, mac2fdhd,  0,        0,      macii,    macadb,  mac_state, init_maciifdhd,     "Apple Computer", "Macintosh II (FDHD)",  MACHINE_NOT_WORKING ) // iwm/swim
+COMP( 1988, maciix,    mac2fdhd, 0,      maciix,   macadb,  mac_state, init_maciix,        "Apple Computer", "Macintosh IIx",  MACHINE_NOT_WORKING ) // swim
+COMP( 1989, macprtb,   0,        0,      macprtb,  macadb,  mac_state, init_macprtb,       "Apple Computer", "Macintosh Portable", MACHINE_NOT_WORKING ) // swim
+COMP( 1989, macse30,   mac2fdhd, 0,      macse30,  macadb,  mac_state, init_macse30,       "Apple Computer", "Macintosh SE/30",  MACHINE_NOT_WORKING ) // swim
+COMP( 1989, maciicx,   mac2fdhd, 0,      maciicx,  macadb,  mac_state, init_maciicx,       "Apple Computer", "Macintosh IIcx",  MACHINE_NOT_WORKING ) // swim
+COMP( 1989, maciici,   0,        0,      maciici,  maciici, mac_state, init_maciici,       "Apple Computer", "Macintosh IIci", MACHINE_NOT_WORKING ) // swim
+COMP( 1990, maciifx,   0,        0,      maciifx,  macadb,  mac_state, init_maciifx,       "Apple Computer", "Macintosh IIfx",  MACHINE_NOT_WORKING ) // swim + iop
+COMP( 1990, macclasc,  0,        0,      macclasc, macadb,  mac_state, init_macclassic,    "Apple Computer", "Macintosh Classic",  MACHINE_NOT_WORKING ) // swim
+COMP( 1990, maclc,     0,        0,      maclc,    maciici, mac_state, init_maclc,         "Apple Computer", "Macintosh LC", MACHINE_IMPERFECT_SOUND ) // swim
+COMP( 1990, maciisi,   0,        0,      maciisi,  maciici, mac_state, init_maciisi,       "Apple Computer", "Macintosh IIsi", MACHINE_NOT_WORKING ) // swim
+COMP( 1991, macpb100,  0,        0,      macprtb,  macadb,  mac_state, init_macprtb,       "Apple Computer", "Macintosh PowerBook 100", MACHINE_NOT_WORKING ) // swim
+COMP( 1991, macpb140,  0,        0,      macpb140, macadb,  mac_state, init_macpb140,      "Apple Computer", "Macintosh PowerBook 140", MACHINE_NOT_WORKING ) // swim
+COMP( 1991, macpb170,  macpb140, 0,      macpb170, macadb,  mac_state, init_macpb140,      "Apple Computer", "Macintosh PowerBook 170", MACHINE_NOT_WORKING ) // swim
+COMP( 1991, macqd700,  macpb140, 0,      macqd700, macadb,  mac_state, init_macquadra700,  "Apple Computer", "Macintosh Quadra 700", MACHINE_NOT_WORKING ) // swim
+COMP( 1991, macclas2,  0,        0,      macclas2, macadb,  mac_state, init_macclassic2,   "Apple Computer", "Macintosh Classic II", MACHINE_NOT_WORKING|MACHINE_IMPERFECT_SOUND ) // swim
+COMP( 1991, maclc2,    0,        0,      maclc2,   maciici, mac_state, init_maclc2,        "Apple Computer", "Macintosh LC II",  MACHINE_NOT_WORKING|MACHINE_IMPERFECT_SOUND ) // swim
+COMP( 1992, macpb145,  macpb140, 0,      macpb145, macadb,  mac_state, init_macpb140,      "Apple Computer", "Macintosh PowerBook 145", MACHINE_NOT_WORKING ) // swim
+COMP( 1992, macpb160,  0,        0,      macpb160, macadb,  mac_state, init_macpb160,      "Apple Computer", "Macintosh PowerBook 160", MACHINE_NOT_WORKING ) // swim
+COMP( 1992, macpb180,  macpb160, 0,      macpb180, macadb,  mac_state, init_macpb160,      "Apple Computer", "Macintosh PowerBook 180", MACHINE_NOT_WORKING ) // swim
+COMP( 1992, macpb180c, macpb160, 0,      macpb180c,macadb,  mac_state, init_macpb160,      "Apple Computer", "Macintosh PowerBook 180c", MACHINE_NOT_WORKING ) // swim
+COMP( 1992, macpd210,  0,        0,      macpd210, macadb,  mac_state, init_macpd210,      "Apple Computer", "Macintosh PowerBook Duo 210", MACHINE_NOT_WORKING ) // swim
+COMP( 1993, maccclas,  0,        0,      maccclas, macadb,  mac_state, init_maclrcclassic, "Apple Computer", "Macintosh Color Classic", MACHINE_NOT_WORKING ) // swim2
+COMP( 1992, macpb145b, macpb140, 0,      macpb170, macadb,  mac_state, init_macpb140,      "Apple Computer", "Macintosh PowerBook 145B", MACHINE_NOT_WORKING ) // swim
+COMP( 1993, maclc3,    0,        0,      maclc3,   maciici, mac_state, init_maclc3,        "Apple Computer", "Macintosh LC III",  MACHINE_NOT_WORKING|MACHINE_IMPERFECT_SOUND ) // swim2
+COMP( 1993, maciivx,   0,        0,      maciivx,  maciici, mac_state, init_maciivx,       "Apple Computer", "Macintosh IIvx", MACHINE_NOT_WORKING|MACHINE_IMPERFECT_SOUND ) // swim
+COMP( 1993, maciivi,   maciivx,  0,      maciivi,  maciici, mac_state, init_maciivx,       "Apple Computer", "Macintosh IIvi", MACHINE_NOT_WORKING|MACHINE_IMPERFECT_SOUND ) // swim
+COMP( 1993, maclc520,  0,        0,      maclc520, maciici, mac_state, init_maclc520,      "Apple Computer", "Macintosh LC 520",  MACHINE_NOT_WORKING ) // swim2
+COMP( 1994, pmac6100,  0,        0,      pwrmac,   macadb,  mac_state, init_macpm6100,     "Apple Computer", "Power Macintosh 6100/60",  MACHINE_NOT_WORKING | MACHINE_IMPERFECT_SOUND ) // swim3
