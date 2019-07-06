@@ -119,6 +119,7 @@ Address bus A0-A11 is Y0-Y11
 #include "bus/a2bus/a2bus.h"
 #include "bus/a2bus/a2diskii.h"
 #include "bus/a2bus/a2diskiing.h"
+#include "bus/a2bus/iwmng.h"
 #include "bus/a2bus/a2mockingboard.h"
 #include "bus/a2bus/a2cffa.h"
 #include "bus/a2bus/a2memexp.h"
@@ -4776,7 +4777,7 @@ void apple2e_state::apple2c_iwm(machine_config &config)
 	apple2c(config);
 
 	config.device_remove("sl6");
-	A2BUS_IWM_FDC(config, "sl6", A2BUS_7M_CLOCK).set_onboard(m_a2bus);
+	A2BUS_IWMNG(config, "sl6", A2BUS_7M_CLOCK, 1021800*2).set_onboard(m_a2bus);
 }
 
 void apple2e_state::apple2c_mem(machine_config &config)

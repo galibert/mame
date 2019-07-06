@@ -122,6 +122,9 @@ bool mfi_format::load(io_generic *io, uint32_t form_factor, floppy_image *image)
 	std::vector<uint8_t> compressed;
 
 	entry *ent = entries;
+	if(!h.cyl_count)
+		return true;
+
 	for(unsigned int cyl=0; cyl <= (h.cyl_count - 1) << 2; cyl += 4 >> resolution)
 		for(unsigned int head=0; head != h.head_count; head++) {
 			image->set_write_splice_position(cyl >> 2, head, ent->write_splice, cyl & 3);
