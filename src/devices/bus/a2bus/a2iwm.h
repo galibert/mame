@@ -35,19 +35,15 @@ protected:
 	virtual void device_start() override;
 	virtual void device_reset() override;
 	virtual void device_add_mconfig(machine_config &config) override;
-	virtual const tiny_rom_entry *device_rom_region() const override;
 
 	// overrides of standard a2bus slot functions
 	virtual uint8_t read_c0nx(uint8_t offset) override;
 	virtual void write_c0nx(uint8_t offset, uint8_t data) override;
-	virtual uint8_t read_cnxx(uint8_t offset) override;
 
 	required_device<iwm_device> m_iwm;
 	required_device_array<floppy_connector, 2> m_floppy;
 
 private:
-	const uint8_t *m_rom;
-
 	void devsel_w(u8 data);
 	void phases_w(u8 data);
 };
