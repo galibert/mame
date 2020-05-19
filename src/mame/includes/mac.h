@@ -73,7 +73,7 @@ public:
 		m_via2(*this, "via6522_1"),
 		m_asc(*this, "asc"),
 		m_awacs(*this, "awacs"),
-		m_egret(*this, EGRET_TAG),
+		m_egret(*this, "egret"),
 		m_cuda(*this, CUDA_TAG),
 		m_ram(*this, RAM_TAG),
 		m_scc(*this, "scc"),
@@ -111,7 +111,7 @@ public:
 	void add_via2(machine_config &config);
 	void add_pb1xx_vias(machine_config &config);
 	void add_pb1xx_screen(machine_config &config);
-	void add_egret(machine_config &config, int type);
+	template<typename T> void add_egret(machine_config &config, const T &etype);
 	void add_cuda(machine_config &config, int type);
 
 	void mac512ke_base(machine_config &config);

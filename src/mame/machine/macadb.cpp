@@ -1248,7 +1248,7 @@ WRITE_LINE_MEMBER(mac_state::adb_linechange_w)
 
 	if (ADB_IS_EGRET)
 	{
-		dtime = m_egret->get_adb_dtime();
+		abort();
 	}
 	else if (ADB_IS_CUDA)
 	{
@@ -1415,7 +1415,7 @@ void mac_state::set_adb_line(int linestate)
 {
 	if (ADB_IS_EGRET)
 	{
-		m_egret->set_adb_line(linestate);
+		abort();
 	}
 	else if (ADB_IS_CUDA)
 	{

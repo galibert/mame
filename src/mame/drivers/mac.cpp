@@ -979,14 +979,15 @@ void mac_state::add_via2(machine_config &config)
 	m_via2->irq_handler().set(FUNC(mac_state::mac_via2_irq));
 }
 
-void mac_state::add_egret(machine_config &config, int type)
+template<typename T> void mac_state::add_egret(machine_config &config, const T &etype)
 {
-	EGRET(config, m_egret, type);
+	etype(config, m_egret, 0);
 	m_egret->reset_callback().set(FUNC(mac_state::cuda_reset_w));
-	m_egret->linechange_callback().set(FUNC(mac_state::adb_linechange_w));
 	m_egret->via_clock_callback().set(m_via1, FUNC(via6522_device::write_cb1));
 	m_egret->via_data_callback().set(m_via1, FUNC(via6522_device::write_cb2));
 	config.set_perfect_quantum(m_maincpu);
+
+	ADB_CONNECTOR(config, "adb1", adb_device::default_devices, "hle", false);
 }
 
 void mac_state::add_cuda(machine_config &config, int type)
@@ -1348,7 +1349,7 @@ void mac_state::maclc520(machine_config &config)
 
 void mac_state::maciivx(machine_config &config)
 {
-	maclc(config, false, true, asc_device::asc_type::VASP);
+	maclc(config, false, false, asc_device::asc_type::VASP);
 
 	M68030(config, m_maincpu, C32M);
 	m_maincpu->set_addrmap(AS_PROGRAM, &mac_state::maclc3_map);
@@ -1364,7 +1365,7 @@ void mac_state::maciivx(machine_config &config)
 	m_ram->set_default_size("4M");
 	m_ram->set_extra_options("8M,12M,16M,20M,24M,28M,32M,36M,40M,44M,48M,52M,56M,60M,64M");
 
-	m_egret->set_type(EGRET_341S0851);
+	add_egret(config, EGRET_341S0851);
 }
 
 void mac_state::maciivi(machine_config &config)
@@ -1524,7 +1525,7 @@ void mac_state::macpd210(machine_config &config)
 
 void mac_state::macclas2(machine_config &config)
 {
-	maclc(config, false, true, asc_device::asc_type::EAGLE);
+	maclc(config, false, false, asc_device::asc_type::EAGLE);
 
 	M68030(config, m_maincpu, C15M);
 	m_maincpu->set_addrmap(AS_PROGRAM, &mac_state::maclc_map);
@@ -1542,7 +1543,7 @@ void mac_state::macclas2(machine_config &config)
 	m_ram->set_default_size("10M");
 	m_ram->set_extra_options("2M,4M,6M,8M,10M");
 
-	m_egret->set_type(EGRET_341S0851);
+	add_egret(config, EGRET_341S0851);
 }
 
 void mac_state::maciici(machine_config &config)
@@ -1839,9 +1840,6 @@ ROM_END
 ROM_START( maclc )
 	ROM_REGION32_BE(0x100000, "bootrom", 0)
 	ROM_LOAD("350eacf0.rom", 0x000000, 0x080000, CRC(71681726) SHA1(6bef5853ae736f3f06c2b4e79772f65910c3b7d4))
-
-	ROM_REGION(0x1100, "egret", 0)
-	ROM_LOAD( "341s0851.bin", 0x000000, 0x001100, CRC(ea9ea6e4) SHA1(8b0dae3ec66cdddbf71567365d2c462688aeb571) )
 ROM_END
 
 ROM_START( macii )
