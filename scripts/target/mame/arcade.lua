@@ -839,6 +839,7 @@ BUSES["VECTREX"] = true
 --BUSES["X68K"] = true
 --BUSES["Z88"] = true
 BUSES["ZORRO"] = true
+--BUSES["THOMSON"] = true
 
 
 --------------------------------------------------

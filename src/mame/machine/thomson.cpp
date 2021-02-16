@@ -10,8 +10,6 @@
 
 #include "emu.h"
 #include "includes/thomson.h"
-#include "machine/thomflop.h"
-#include "formats/thom_dsk.h"
 #include "machine/6821pia.h"
 #include "machine/ram.h"
 
@@ -915,7 +913,8 @@ void thomson_state::to7_game_reset()
 
 uint8_t thomson_state::to7_midi_r()
 {
-	logerror( "to7_midi_r: not implemented\n" );
+	if(!machine().side_effects_disabled())
+		logerror( "to7_midi_r: not implemented\n" );
 	return 0;
 }
 
@@ -953,9 +952,11 @@ MACHINE_RESET_MEMBER( thomson_state, to7 )
 	/* subsystems */
 	thom_irq_reset();
 	to7_game_reset();
-	to7_floppy_reset();
 	to7_modem_reset();
 	to7_midi_reset();
+
+	m_extension->rom_map(m_maincpu->space(AS_PROGRAM), 0xe000, 0xe7bf);
+	m_extension->io_map (m_maincpu->space(AS_PROGRAM), 0xe7d0, 0xe7df);
 
 	/* video */
 	thom_set_video_mode( THOM_VMODE_TO770 );
@@ -986,9 +987,11 @@ MACHINE_START_MEMBER( thomson_state, to7 )
 
 	/* subsystems */
 	to7_game_init();
-	to7_floppy_init();
 	to7_modem_init();
 	to7_midi_init();
+
+	m_extension->rom_map(m_maincpu->space(AS_PROGRAM), 0xe000, 0xe7bf);
+	m_extension->io_map (m_maincpu->space(AS_PROGRAM), 0xe7d0, 0xe7df);
 
 	/* memory */
 	m_thom_cart_bank = 0;
@@ -1175,9 +1178,11 @@ MACHINE_RESET_MEMBER( thomson_state, to770 )
 	/* subsystems */
 	thom_irq_reset();
 	to7_game_reset();
-	to7_floppy_reset();
 	to7_modem_reset();
 	to7_midi_reset();
+
+	m_extension->rom_map(m_maincpu->space(AS_PROGRAM), 0xe000, 0xe7bf);
+	m_extension->io_map (m_maincpu->space(AS_PROGRAM), 0xe7d0, 0xe7df);
 
 	/* video */
 	thom_set_video_mode( THOM_VMODE_TO770 );
@@ -1210,9 +1215,11 @@ MACHINE_START_MEMBER( thomson_state, to770 )
 
 	/* subsystems */
 	to7_game_init();
-	to7_floppy_init();
 	to7_modem_init();
 	to7_midi_init();
+
+	m_extension->rom_map(m_maincpu->space(AS_PROGRAM), 0xe000, 0xe7bf);
+	m_extension->io_map (m_maincpu->space(AS_PROGRAM), 0xe7d0, 0xe7df);
 
 	/* memory */
 	m_thom_cart_bank = 0;
@@ -1554,7 +1561,6 @@ MACHINE_RESET_MEMBER( thomson_state, mo5 )
 	/* subsystems */
 	thom_irq_reset();
 	to7_game_reset();
-	to7_floppy_reset();
 	to7_modem_reset();
 	to7_midi_reset();
 	mo5_init_timer();
@@ -1589,10 +1595,12 @@ MACHINE_START_MEMBER( thomson_state, mo5 )
 
 	/* subsystems */
 	to7_game_init();
-	to7_floppy_init();
 	to7_modem_init();
 	to7_midi_init();
 	m_mo5_periodic_timer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(thomson_state::mo5_periodic_cb),this));
+
+	m_extension->rom_map(m_maincpu->space(AS_PROGRAM), 0xa000, 0xa7bf);
+	m_extension->io_map (m_maincpu->space(AS_PROGRAM), 0xa7d0, 0xa7df);
 
 	/* memory */
 	m_thom_cart_bank = 0;
@@ -2495,10 +2503,12 @@ MACHINE_RESET_MEMBER( thomson_state, to9 )
 	/* subsystems */
 	thom_irq_reset();
 	to7_game_reset();
-	to9_floppy_reset();
 	to9_kbd_reset();
 	to7_modem_reset();
 	to7_midi_reset();
+
+	m_extension->rom_map(m_maincpu->space(AS_PROGRAM), 0xe000, 0xe7bf);
+	m_extension->io_map (m_maincpu->space(AS_PROGRAM), 0xe7d0, 0xe7df);
 
 	/* video */
 	thom_set_video_mode( THOM_VMODE_TO9 );
@@ -2524,7 +2534,6 @@ MACHINE_RESET_MEMBER( thomson_state, to9 )
 
 MACHINE_START_MEMBER( thomson_state, to9 )
 {
-	uint8_t* mem = memregion("maincpu")->base();
 	uint8_t* cartmem = &m_cart_rom[0];
 	uint8_t* ram = m_ram->pointer();
 
@@ -2532,11 +2541,13 @@ MACHINE_START_MEMBER( thomson_state, to9 )
 
 	/* subsystems */
 	to7_game_init();
-	to9_floppy_init( mem + 0xe000 );
 	to9_kbd_init();
 	to9_palette_init();
 	to7_modem_init();
 	to7_midi_init();
+
+	m_extension->rom_map(m_maincpu->space(AS_PROGRAM), 0xe000, 0xe7bf);
+	m_extension->io_map (m_maincpu->space(AS_PROGRAM), 0xe7d0, 0xe7df);
 
 	/* memory */
 	m_thom_vram = ram;
@@ -2880,29 +2891,6 @@ void thomson_state::to8_kbd_init()
 
 /* ------------ RAM / ROM banking ------------ */
 
-void thomson_state::to8_update_floppy_bank()
-{
-	int bank = (m_to8_reg_sys1 & 0x80) ? m_to7_floppy_bank : (m_to8_bios_bank + TO7_NB_FLOP_BANK);
-
-	if ( bank != m_old_floppy_bank )
-	{
-		LOG_BANK(( "to8_update_floppy_bank: floppy ROM is %s bank %i\n",
-							(m_to8_reg_sys1 & 0x80) ? "external" : "internal",
-							bank % TO7_NB_FLOP_BANK ));
-		m_flopbank->set_entry( bank );
-		m_old_floppy_bank = bank;
-	}
-}
-
-
-
-void thomson_state::to8_update_floppy_bank_postload()
-{
-	to8_update_floppy_bank();
-}
-
-
-
 void thomson_state::to8_update_ram_bank()
 {
 	address_space& space = m_maincpu->space(AS_PROGRAM);
@@ -3140,58 +3128,6 @@ uint8_t thomson_state::to8_cartridge_r(offs_t offset)
 }
 
 
-/* ------------ floppy / network controller dispatch ------------ */
-
-
-
-void thomson_state::to8_floppy_init()
-{
-	to7_floppy_init();
-}
-
-
-
-void thomson_state::to8_floppy_reset()
-{
-	uint8_t* mem = memregion("maincpu")->base();
-	to7_floppy_reset();
-	if ( THOM_FLOPPY_INT )
-		m_thmfc->floppy_reset();
-	m_flopbank->configure_entries( TO7_NB_FLOP_BANK, 2, mem + 0x20000, 0x2000 );
-}
-
-
-
-uint8_t thomson_state::to8_floppy_r(offs_t offset)
-{
-	if ( machine().side_effects_disabled() )
-		return 0;
-
-	if ( (m_to8_reg_sys1 & 0x80) && THOM_FLOPPY_EXT )
-		/* external controller */
-		return to7_floppy_r( offset );
-	else if ( ! (m_to8_reg_sys1 & 0x80) && THOM_FLOPPY_INT )
-		/* internal controller */
-		return m_thmfc->floppy_r( offset );
-	else
-		/* no controller */
-		return 0;
-}
-
-
-
-void thomson_state::to8_floppy_w(offs_t offset, uint8_t data)
-{
-	if ( (m_to8_reg_sys1 & 0x80) && THOM_FLOPPY_EXT )
-		/* external controller */
-		to7_floppy_w( offset, data );
-	else if ( ! (m_to8_reg_sys1 & 0x80) && THOM_FLOPPY_INT )
-		/* internal controller */
-		m_thmfc->floppy_w( offset, data );
-}
-
-
-
 /* ------------ system gate-array ------------ */
 
 
@@ -3286,7 +3222,6 @@ void thomson_state::to8_gatearray_w(offs_t offset, uint8_t data)
 
 	case 3: /* system register 1 */
 		m_to8_reg_sys1 = data;
-		to8_update_floppy_bank();
 		to8_update_ram_bank();
 		to8_update_cart_bank();
 		break;
@@ -3311,10 +3246,7 @@ uint8_t thomson_state::to8_vreg_r(offs_t offset)
 		if ( machine().side_effects_disabled() )
 			return 0;
 
-		if ( THOM_FLOPPY_EXT )
-			return to7_floppy_r( 0xc );
-		else
-			return 0;
+		abort(); // return to7_floppy_r( 0xc );
 	}
 
 	switch ( offset )
@@ -3376,8 +3308,7 @@ void thomson_state::to8_vreg_w(offs_t offset, uint8_t data)
 		/* 0xe7dc from external floppy drive aliases the video gate-array */
 		if ( ( offset == 3 ) && ( m_to8_reg_ram & 0x80 ) && ( m_to8_reg_sys1 & 0x80 ) )
 		{
-			if ( THOM_FLOPPY_EXT )
-				to7_floppy_w( 0xc, data );
+			abort(); // to7_floppy_w( 0xc, data );
 		}
 		else
 		{
@@ -3448,7 +3379,6 @@ void thomson_state::to8_timer_port_out(uint8_t data)
 	thom_set_mode_point( data & 1 );       /* bit 0: video bank switch */
 	m_biosbank->set_entry( m_to8_bios_bank );
 	m_to8_soft_select = (data & 0x04) ? 1 : 0; /* bit 2: internal ROM select */
-	to8_update_floppy_bank();
 	to8_update_cart_bank();
 	to8_kbd_set_ack(ack);
 }
@@ -3490,7 +3420,6 @@ MACHINE_RESET_MEMBER( thomson_state, to8 )
 	/* subsystems */
 	thom_irq_reset();
 	to7_game_reset();
-	to8_floppy_reset();
 	to8_kbd_reset();
 	to7_modem_reset();
 	to7_midi_reset();
@@ -3516,14 +3445,12 @@ MACHINE_RESET_MEMBER( thomson_state, to8 )
 	m_old_ram_bank = -1;
 	m_old_cart_bank = -1;
 	m_old_cart_bank_was_read_only = 0;
-	m_old_floppy_bank = -1;
 	m_to8_cart_vpage = 0;
 	m_to8_data_vpage = 0;
 	m_to8_soft_bank = 0;
 	m_to8_bios_bank = 0;
 	to8_update_ram_bank();
 	to8_update_cart_bank();
-	to8_update_floppy_bank();
 	m_biosbank->set_entry( 0 );
 	/* thom_cart_bank not reset */
 }
@@ -3540,11 +3467,13 @@ MACHINE_START_MEMBER( thomson_state, to8 )
 
 	/* subsystems */
 	to7_game_init();
-	to8_floppy_init();
 	to8_kbd_init();
 	to9_palette_init();
 	to7_modem_init();
 	to7_midi_init();
+
+	m_extension->rom_map(m_maincpu->space(AS_PROGRAM), 0xe000, 0xe7bf);
+	m_extension->io_map (m_maincpu->space(AS_PROGRAM), 0xe7d0, 0xe7df);
 
 	/* memory */
 	m_thom_cart_bank = 0;
@@ -3596,7 +3525,6 @@ MACHINE_START_MEMBER( thomson_state, to8 )
 	save_pointer(NAME(cartmem), 0x10000 );
 	machine().save().register_postload(save_prepost_delegate(FUNC(thomson_state::to8_update_ram_bank_postload), this));
 	machine().save().register_postload(save_prepost_delegate(FUNC(thomson_state::to8_update_cart_bank_postload), this));
-	machine().save().register_postload(save_prepost_delegate(FUNC(thomson_state::to8_update_floppy_bank_postload), this));
 }
 
 
@@ -3629,7 +3557,6 @@ void thomson_state::to9p_timer_port_out(uint8_t data)
 	thom_set_mode_point( data & 1 );       /* bit 0: video bank switch */
 	m_biosbank->set_entry( bios_bank );
 	m_to8_soft_select = (data & 0x04) ? 1 : 0; /* bit 2: internal ROM select */
-	to8_update_floppy_bank();
 	to8_update_cart_bank();
 }
 
@@ -3642,7 +3569,6 @@ MACHINE_RESET_MEMBER( thomson_state, to9p )
 	/* subsystems */
 	thom_irq_reset();
 	to7_game_reset();
-	to8_floppy_reset();
 	to9_kbd_reset();
 	to7_modem_reset();
 	to7_midi_reset();
@@ -3667,14 +3593,12 @@ MACHINE_RESET_MEMBER( thomson_state, to9p )
 	/* memory */
 	m_old_ram_bank = -1;
 	m_old_cart_bank = -1;
-	m_old_floppy_bank = -1;
 	m_to8_cart_vpage = 0;
 	m_to8_data_vpage = 0;
 	m_to8_soft_bank = 0;
 	m_to8_bios_bank = 0;
 	to8_update_ram_bank();
 	to8_update_cart_bank();
-	to8_update_floppy_bank();
 	m_biosbank->set_entry( 0 );
 	/* thom_cart_bank not reset */
 }
@@ -3691,11 +3615,13 @@ MACHINE_START_MEMBER( thomson_state, to9p )
 
 	/* subsystems */
 	to7_game_init();
-	to8_floppy_init();
 	to9_kbd_init();
 	to9_palette_init();
 	to7_modem_init();
 	to7_midi_init();
+
+	m_extension->rom_map(m_maincpu->space(AS_PROGRAM), 0xe000, 0xe7bf);
+	m_extension->io_map (m_maincpu->space(AS_PROGRAM), 0xe7d0, 0xe7df);
 
 	/* memory */
 	m_thom_cart_bank = 0;
@@ -3735,7 +3661,6 @@ MACHINE_START_MEMBER( thomson_state, to9p )
 	save_pointer(NAME(cartmem), 0x10000 );
 	machine().save().register_postload(save_prepost_delegate(FUNC(thomson_state::to8_update_ram_bank_postload), this));
 	machine().save().register_postload(save_prepost_delegate(FUNC(thomson_state::to8_update_cart_bank_postload), this));
-	machine().save().register_postload(save_prepost_delegate(FUNC(thomson_state::to8_update_floppy_bank_postload), this));
 }
 
 
@@ -3748,7 +3673,7 @@ MACHINE_START_MEMBER( thomson_state, to9p )
 
 
 
-void thomson_state::mo6_update_ram_bank()
+void mo6_state::mo6_update_ram_bank()
 {
 	uint8_t bank = 0;
 
@@ -3767,14 +3692,14 @@ void thomson_state::mo6_update_ram_bank()
 
 
 
-void thomson_state::mo6_update_ram_bank_postload()
+void mo6_state::mo6_update_ram_bank_postload()
 {
 	mo6_update_ram_bank();
 }
 
 
 
-void thomson_state::mo6_update_cart_bank()
+void mo6_state::mo6_update_cart_bank()
 {
 	address_space& space = m_maincpu->space(AS_PROGRAM);
 	int b = (m_pia_sys->a_output() >> 5) & 1;
@@ -3804,8 +3729,8 @@ void thomson_state::mo6_update_cart_bank()
 						}
 						else
 						{
-							space.install_write_handler( 0xb000, 0xbfff, write8sm_delegate(*this, FUNC(thomson_state::mo6_vcart_lo_w)));
-							space.install_write_handler( 0xc000, 0xefff, write8sm_delegate(*this, FUNC(thomson_state::mo6_vcart_hi_w)));
+							space.install_write_handler( 0xb000, 0xbfff, write8sm_delegate(*this, FUNC(mo6_state::mo6_vcart_lo_w)));
+							space.install_write_handler( 0xc000, 0xefff, write8sm_delegate(*this, FUNC(mo6_state::mo6_vcart_hi_w)));
 						}
 					}
 				}
@@ -3840,8 +3765,8 @@ void thomson_state::mo6_update_cart_bank()
 				{
 					if (m_to8_cart_vpage < 4)
 					{
-						space.install_write_handler( 0xb000, 0xbfff, write8sm_delegate(*this, FUNC(thomson_state::mo6_vcart_lo_w)));
-						space.install_write_handler( 0xc000, 0xefff, write8sm_delegate(*this, FUNC(thomson_state::mo6_vcart_hi_w)));
+						space.install_write_handler( 0xb000, 0xbfff, write8sm_delegate(*this, FUNC(mo6_state::mo6_vcart_lo_w)));
+						space.install_write_handler( 0xc000, 0xefff, write8sm_delegate(*this, FUNC(mo6_state::mo6_vcart_hi_w)));
 					}
 					else
 					{
@@ -3936,7 +3861,7 @@ void thomson_state::mo6_update_cart_bank()
 				{
 					space.install_read_bank( 0xb000, 0xbfff, m_cartlobank );
 					space.install_read_bank( 0xc000, 0xefff, m_carthibank );
-					space.install_write_handler( 0xb000, 0xefff, write8sm_delegate(*this, FUNC(thomson_state::mo6_cartridge_w)) );
+					space.install_write_handler( 0xb000, 0xefff, write8sm_delegate(*this, FUNC(mo6_state::mo6_cartridge_w)) );
 				}
 				LOG_BANK(( "mo6_update_cart_bank: CART is internal ROM bank %i\n", b ));
 			}
@@ -3953,8 +3878,8 @@ void thomson_state::mo6_update_cart_bank()
 					{
 						space.install_read_bank( 0xb000, 0xbfff, m_cartlobank );
 						space.install_read_bank( 0xc000, 0xefff, m_carthibank );
-						space.install_write_handler( 0xb000, 0xefff, write8sm_delegate(*this, FUNC(thomson_state::mo6_cartridge_w)) );
-						space.install_read_handler( 0xbffc, 0xbfff, read8sm_delegate(*this, FUNC(thomson_state::mo6_cartridge_r)) );
+						space.install_write_handler( 0xb000, 0xefff, write8sm_delegate(*this, FUNC(mo6_state::mo6_cartridge_w)) );
+						space.install_read_handler( 0xbffc, 0xbfff, read8sm_delegate(*this, FUNC(mo6_state::mo6_cartridge_r)) );
 					}
 					LOG_BANK(( "mo6_update_cart_bank: CART is external cartridge bank %i\n", bank ));
 				}
@@ -3980,7 +3905,7 @@ void thomson_state::mo6_update_cart_bank()
 
 
 
-void thomson_state::mo6_update_cart_bank_postload()
+void mo6_state::mo6_update_cart_bank_postload()
 {
 	mo6_update_cart_bank();
 }
@@ -3988,7 +3913,7 @@ void thomson_state::mo6_update_cart_bank_postload()
 
 
 /* write signal generates a bank switch */
-void thomson_state::mo6_cartridge_w(offs_t offset, uint8_t data)
+void mo6_state::mo6_cartridge_w(offs_t offset, uint8_t data)
 {
 	if ( offset >= 0x2000 )
 		return;
@@ -4000,7 +3925,7 @@ void thomson_state::mo6_cartridge_w(offs_t offset, uint8_t data)
 
 
 /* read signal generates a bank switch */
-uint8_t thomson_state::mo6_cartridge_r(offs_t offset)
+uint8_t mo6_state::mo6_cartridge_r(offs_t offset)
 {
 	uint8_t data = m_cart_rom[offset + 0x3ffc + (m_thom_cart_bank % m_thom_cart_nb_banks) * 0x4000];
 	if ( !machine().side_effects_disabled() )
@@ -4013,7 +3938,7 @@ uint8_t thomson_state::mo6_cartridge_r(offs_t offset)
 
 
 
-void thomson_state::mo6_ext_w(uint8_t data)
+void mo6_state::mo6_ext_w(uint8_t data)
 {
 	/* MO5 network extension compatible */
 	m_mo5_reg_cart = data;
@@ -4027,13 +3952,13 @@ void thomson_state::mo6_ext_w(uint8_t data)
 /* similar to SX 90-018, but with a few differences: mute, printer */
 
 
-WRITE_LINE_MEMBER( thomson_state::mo6_centronics_busy )
+WRITE_LINE_MEMBER( mo6_state::mo6_centronics_busy )
 {
 	m_pia_game->cb1_w(state);
 }
 
 
-void thomson_state::mo6_game_porta_out(uint8_t data)
+void mo6_state::mo6_game_porta_out(uint8_t data)
 {
 	LOG (( "$%04x %f mo6_game_porta_out: CENTRONICS set data=$%02X\n", m_maincpu->pc(), machine().time().as_double(), data ));
 
@@ -4043,7 +3968,7 @@ void thomson_state::mo6_game_porta_out(uint8_t data)
 
 
 
-WRITE_LINE_MEMBER( thomson_state::mo6_game_cb2_out )
+WRITE_LINE_MEMBER( mo6_state::mo6_game_cb2_out )
 {
 	LOG (( "$%04x %f mo6_game_cb2_out: CENTRONICS set strobe=%i\n", m_maincpu->pc(), machine().time().as_double(), state ));
 
@@ -4053,7 +3978,7 @@ WRITE_LINE_MEMBER( thomson_state::mo6_game_cb2_out )
 
 
 
-TIMER_CALLBACK_MEMBER(thomson_state::mo6_game_update_cb)
+TIMER_CALLBACK_MEMBER(mo6_state::mo6_game_update_cb)
 {
 	/* unlike the TO8, CB1 & CB2 are not connected to buttons */
 	if ( m_io_config->read() & 1 )
@@ -4073,10 +3998,10 @@ TIMER_CALLBACK_MEMBER(thomson_state::mo6_game_update_cb)
 
 
 
-void thomson_state::mo6_game_init()
+void mo6_state::mo6_game_init()
 {
 	LOG (( "mo6_game_init called\n" ));
-	m_to7_game_timer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(thomson_state::mo6_game_update_cb),this));
+	m_to7_game_timer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(mo6_state::mo6_game_update_cb),this));
 	m_to7_game_timer->adjust(TO7_GAME_POLL_PERIOD, 0, TO7_GAME_POLL_PERIOD);
 	save_item(NAME(m_to7_game_sound));
 	save_item(NAME(m_to7_game_mute));
@@ -4084,7 +4009,7 @@ void thomson_state::mo6_game_init()
 
 
 
-void thomson_state::mo6_game_reset()
+void mo6_state::mo6_game_reset()
 {
 	LOG (( "mo6_game_reset called\n" ));
 	m_pia_game->ca1_w( 0 );
@@ -4099,7 +4024,7 @@ void thomson_state::mo6_game_reset()
 
 
 
-uint8_t thomson_state::mo6_sys_porta_in()
+uint8_t mo6_state::mo6_sys_porta_in()
 {
 	return
 		((m_io_lightpen_button->read() & 1) ? 2 : 0) | /* bit 1: lightpen button */
@@ -4110,7 +4035,7 @@ uint8_t thomson_state::mo6_sys_porta_in()
 
 
 
-uint8_t thomson_state::mo6_sys_portb_in()
+uint8_t mo6_state::mo6_sys_portb_in()
 {
 	/* keyboard: 9 lines of 8 keys */
 	uint8_t porta = m_pia_sys->a_output();
@@ -4128,7 +4053,7 @@ uint8_t thomson_state::mo6_sys_portb_in()
 
 
 
-void thomson_state::mo6_sys_porta_out(uint8_t data)
+void mo6_state::mo6_sys_porta_out(uint8_t data)
 {
 	thom_set_mode_point( data & 1 );                /* bit 0: video bank switch */
 	m_to7_game_mute = data & 4;                       /* bit 2: sound mute */
@@ -4140,7 +4065,7 @@ void thomson_state::mo6_sys_porta_out(uint8_t data)
 
 
 
-WRITE_LINE_MEMBER( thomson_state::mo6_sys_cb2_out )
+WRITE_LINE_MEMBER( mo6_state::mo6_sys_cb2_out )
 {
 	/* SCART pin 8 = slow switch (?) */
 	LOG(( "mo6_sys_cb2_out: SCART slow switch set to %i\n", state ));
@@ -4154,7 +4079,7 @@ WRITE_LINE_MEMBER( thomson_state::mo6_sys_cb2_out )
 
 
 
-uint8_t thomson_state::mo6_gatearray_r(offs_t offset)
+uint8_t mo6_state::mo6_gatearray_r(offs_t offset)
 {
 	struct thom_vsignal v = thom_get_vsignal();
 	struct thom_vsignal l = thom_get_lightpen_vsignal( MO6_LIGHTPEN_DECAL, m_to7_lightpen_step - 1, 6 );
@@ -4213,7 +4138,7 @@ uint8_t thomson_state::mo6_gatearray_r(offs_t offset)
 
 
 
-void thomson_state::mo6_gatearray_w(offs_t offset, uint8_t data)
+void mo6_state::mo6_gatearray_w(offs_t offset, uint8_t data)
 {
 	LOG_VIDEO(( "$%04x %f mo6_gatearray_w: off=%i ($%04X) data=$%02X\n",
 			m_maincpu->pc(), machine().time().as_double(),
@@ -4254,13 +4179,13 @@ void thomson_state::mo6_gatearray_w(offs_t offset, uint8_t data)
 
 
 
-uint8_t thomson_state::mo6_vreg_r(offs_t offset)
+uint8_t mo6_state::mo6_vreg_r(offs_t offset)
 {
 	/* 0xa7dc from external floppy drive aliases the video gate-array */
 	if ( ( offset == 3 ) && ( m_to8_reg_ram & 0x80 ) )
 		{
 		if ( !machine().side_effects_disabled() )
-			return to7_floppy_r( 0xc );
+			abort(); // return to7_floppy_r( 0xc );
 		}
 
 	switch ( offset )
@@ -4281,7 +4206,7 @@ uint8_t thomson_state::mo6_vreg_r(offs_t offset)
 
 
 
-void thomson_state::mo6_vreg_w(offs_t offset, uint8_t data)
+void mo6_state::mo6_vreg_w(offs_t offset, uint8_t data)
 {
 	LOG_VIDEO(( "$%04x %f mo6_vreg_w: off=%i ($%04X) data=$%02X\n",
 			m_maincpu->pc(), machine().time().as_double(),
@@ -4296,7 +4221,7 @@ void thomson_state::mo6_vreg_w(offs_t offset, uint8_t data)
 
 	case 2: /* display / external floppy register */
 		if ( ( m_to8_reg_sys1 & 0x80 ) && ( m_to8_reg_ram & 0x80 ) )
-			to7_floppy_w( 0xc, data );
+			abort(); // to7_floppy_w( 0xc, data );
 		else
 			to9_set_video_mode( data, 2 );
 		break;
@@ -4304,7 +4229,7 @@ void thomson_state::mo6_vreg_w(offs_t offset, uint8_t data)
 	case 3: /* system register 2 */
 		/* 0xa7dc from external floppy drive aliases the video gate-array */
 		if ( ( offset == 3 ) && ( m_to8_reg_ram & 0x80 ) )
-			to7_floppy_w( 0xc, data );
+			abort(); // to7_floppy_w( 0xc, data );
 		else
 		{
 			m_to8_reg_sys2 = data;
@@ -4325,14 +4250,13 @@ void thomson_state::mo6_vreg_w(offs_t offset, uint8_t data)
 
 
 
-MACHINE_RESET_MEMBER( thomson_state, mo6 )
+MACHINE_RESET_MEMBER( mo6_state, mo6 )
 {
 	LOG (( "mo6: machine reset called\n" ));
 
 	/* subsystems */
 	thom_irq_reset();
 	mo6_game_reset();
-	to7_floppy_reset();
 	to7_modem_reset();
 	to7_midi_reset();
 	mo5_init_timer();
@@ -4347,7 +4271,7 @@ MACHINE_RESET_MEMBER( thomson_state, mo6 )
 
 	/* video */
 	thom_set_video_mode( THOM_VMODE_MO5 );
-	m_thom_lightpen_cb = &thomson_state::to8_lightpen_cb;
+	m_thom_lightpen_cb = &mo6_state::to8_lightpen_cb;
 	thom_set_lightpen_callback( 3 );
 	thom_set_border_color( 0 );
 	thom_set_mode_point( 0 );
@@ -4366,7 +4290,7 @@ MACHINE_RESET_MEMBER( thomson_state, mo6 )
 
 
 
-MACHINE_START_MEMBER( thomson_state, mo6 )
+MACHINE_START_MEMBER( mo6_state, mo6 )
 {
 	uint8_t* mem = memregion("maincpu")->base();
 	uint8_t* cartmem = &m_cart_rom[0];
@@ -4376,11 +4300,13 @@ MACHINE_START_MEMBER( thomson_state, mo6 )
 
 	/* subsystems */
 	mo6_game_init();
-	to7_floppy_init();
 	to9_palette_init();
 	to7_modem_init();
 	to7_midi_init();
-	m_mo5_periodic_timer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(thomson_state::mo5_periodic_cb),this));
+	m_mo5_periodic_timer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(mo6_state::mo5_periodic_cb),this));
+
+	m_extension->rom_map(m_maincpu->space(AS_PROGRAM), 0xa000, 0xa7bf);
+	m_extension->io_map (m_maincpu->space(AS_PROGRAM), 0xa7d0, 0xa7df);
 
 	/* memory */
 	m_thom_cart_bank = 0;
@@ -4424,43 +4350,14 @@ MACHINE_START_MEMBER( thomson_state, mo6 )
 	save_item(NAME(m_to8_cart_vpage));
 	save_item(NAME(m_mo5_reg_cart));
 	save_pointer(NAME(cartmem), 0x10000 );
-	machine().save().register_postload(save_prepost_delegate(FUNC(thomson_state::mo6_update_ram_bank_postload), this));
-	machine().save().register_postload(save_prepost_delegate(FUNC(thomson_state::mo6_update_cart_bank_postload), this));
+	machine().save().register_postload(save_prepost_delegate(FUNC(mo6_state::mo6_update_ram_bank_postload), this));
+	machine().save().register_postload(save_prepost_delegate(FUNC(mo6_state::mo6_update_cart_bank_postload), this));
 }
 
 
 
 /***************************** MO5 NR *************************/
 
-
-
-/* ------------ network ( & external floppy) ------------ */
-
-
-
-uint8_t thomson_state::mo5nr_net_r(offs_t offset)
-{
-	if ( machine().side_effects_disabled() )
-		return 0;
-
-	if ( m_to7_controller_type )
-		return to7_floppy_r ( offset );
-
-	logerror( "$%04x %f mo5nr_net_r: read from reg %i\n", m_maincpu->pc(), machine().time().as_double(), offset );
-
-	return 0;
-}
-
-
-
-void thomson_state::mo5nr_net_w(offs_t offset, uint8_t data)
-{
-	if ( m_to7_controller_type )
-		to7_floppy_w ( offset, data );
-	else
-		logerror( "$%04x %f mo5nr_net_w: write $%02X to reg %i\n",
-				m_maincpu->pc(), machine().time().as_double(), data, offset );
-}
 
 
 /* ------------ printer ------------ */
@@ -4470,7 +4367,7 @@ void thomson_state::mo5nr_net_w(offs_t offset, uint8_t data)
 */
 
 
-uint8_t thomson_state::mo5nr_prn_r()
+uint8_t mo5nr_state::mo5nr_prn_r()
 {
 	uint8_t result = 0;
 
@@ -4480,7 +4377,7 @@ uint8_t thomson_state::mo5nr_prn_r()
 }
 
 
-void thomson_state::mo5nr_prn_w(uint8_t data)
+void mo5nr_state::mo5nr_prn_w(uint8_t data)
 {
 	/* TODO: understand other bits */
 	m_centronics->write_strobe(BIT(data, 3));
@@ -4492,7 +4389,7 @@ void thomson_state::mo5nr_prn_w(uint8_t data)
 
 
 
-uint8_t thomson_state::mo5nr_sys_portb_in()
+uint8_t mo5nr_state::mo5nr_sys_portb_in()
 {
 	/* keyboard: only 8 lines of 8 keys (MO6 has 9 lines) */
 	uint8_t portb = m_pia_sys->b_output();
@@ -4505,7 +4402,7 @@ uint8_t thomson_state::mo5nr_sys_portb_in()
 
 
 
-void thomson_state::mo5nr_sys_porta_out(uint8_t data)
+void mo5nr_state::mo5nr_sys_porta_out(uint8_t data)
 {
 	/* no keyboard LED */
 	thom_set_mode_point( data & 1 );           /* bit 0: video bank switch */
@@ -4523,10 +4420,10 @@ void thomson_state::mo5nr_sys_porta_out(uint8_t data)
 
 
 
-void thomson_state::mo5nr_game_init()
+void mo5nr_state::mo5nr_game_init()
 {
 	LOG (( "mo5nr_game_init called\n" ));
-	m_to7_game_timer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(thomson_state::mo6_game_update_cb),this));
+	m_to7_game_timer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(mo5nr_state::mo6_game_update_cb),this));
 	m_to7_game_timer->adjust( TO7_GAME_POLL_PERIOD, 0, TO7_GAME_POLL_PERIOD );
 	save_item(NAME(m_to7_game_sound));
 	save_item(NAME(m_to7_game_mute));
@@ -4534,7 +4431,7 @@ void thomson_state::mo5nr_game_init()
 
 
 
-void thomson_state::mo5nr_game_reset()
+void mo5nr_state::mo5nr_game_reset()
 {
 	LOG (( "mo5nr_game_reset called\n" ));
 	m_pia_game->ca1_w( 0 );
@@ -4548,15 +4445,20 @@ void thomson_state::mo5nr_game_reset()
 /* ------------ init / reset ------------ */
 
 
+uint8_t mo5nr_state::id_r()
+{
+	return (m_nanoreseau_config->read() >> 1) & 0x1f;
+}
 
-MACHINE_RESET_MEMBER( thomson_state, mo5nr )
+MACHINE_RESET_MEMBER( mo5nr_state, mo5nr )
 {
 	LOG (( "mo5nr: machine reset called\n" ));
+
+	m_extension_view.select(m_nanoreseau_config->read() & 1);
 
 	/* subsystems */
 	thom_irq_reset();
 	mo5nr_game_reset();
-	to7_floppy_reset();
 	to7_modem_reset();
 	to7_midi_reset();
 	mo5_init_timer();
@@ -4571,7 +4473,7 @@ MACHINE_RESET_MEMBER( thomson_state, mo5nr )
 
 	/* video */
 	thom_set_video_mode( THOM_VMODE_MO5 );
-	m_thom_lightpen_cb = &thomson_state::to8_lightpen_cb;
+	m_thom_lightpen_cb = &mo5nr_state::to8_lightpen_cb;
 	thom_set_lightpen_callback( 3 );
 	thom_set_border_color( 0 );
 	thom_set_mode_point( 0 );
@@ -4590,7 +4492,7 @@ MACHINE_RESET_MEMBER( thomson_state, mo5nr )
 
 
 
-MACHINE_START_MEMBER( thomson_state, mo5nr )
+MACHINE_START_MEMBER( mo5nr_state, mo5nr )
 {
 	uint8_t* mem = memregion("maincpu")->base();
 	uint8_t* cartmem = &m_cart_rom[0];
@@ -4600,11 +4502,15 @@ MACHINE_START_MEMBER( thomson_state, mo5nr )
 
 	/* subsystems */
 	mo5nr_game_init();
-	to7_floppy_init();
 	to9_palette_init();
 	to7_modem_init();
 	to7_midi_init();
-	m_mo5_periodic_timer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(thomson_state::mo5_periodic_cb),this));
+	m_mo5_periodic_timer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(mo5nr_state::mo5_periodic_cb),this));
+
+	m_extension->rom_map(m_extension_view[0], 0xa000, 0xa7bf);
+	m_extension->io_map (m_extension_view[0], 0xa7d0, 0xa7df);
+	m_extension_view[1].install_device(0xa000, 0xa7bf, *m_nanoreseau, &nanoreseau_device::rom_map );
+	m_extension_view[1].install_device(0xa7d0, 0xa7df, *m_nanoreseau, &nanoreseau_device::io_map  );
 
 	/* memory */
 	m_thom_cart_bank = 0;
@@ -4649,6 +4555,6 @@ MACHINE_START_MEMBER( thomson_state, mo5nr )
 	save_item(NAME(m_to8_cart_vpage));
 	save_item(NAME(m_mo5_reg_cart));
 	save_pointer(NAME(cartmem), 0x10000 );
-	machine().save().register_postload(save_prepost_delegate(FUNC(thomson_state::mo6_update_ram_bank_postload), this));
-	machine().save().register_postload(save_prepost_delegate(FUNC(thomson_state::mo6_update_cart_bank_postload), this));
+	machine().save().register_postload(save_prepost_delegate(FUNC(mo5nr_state::mo6_update_ram_bank_postload), this));
+	machine().save().register_postload(save_prepost_delegate(FUNC(mo5nr_state::mo6_update_cart_bank_postload), this));
 }

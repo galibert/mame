@@ -17,20 +17,18 @@
 #include "formats/thom_cas.h"
 #include "formats/thom_dsk.h"
 #include "imagedev/cassette.h"
-#include "imagedev/floppy.h"
 #include "machine/6821pia.h"
 #include "machine/6850acia.h"
 #include "machine/input_merger.h"
 #include "machine/mc6843.h"
 #include "machine/mc6846.h"
 #include "machine/mc6846.h"
-#include "machine/mc6854.h"
 #include "machine/mos6551.h"
 #include "machine/ram.h"
-#include "machine/thomflop.h"
-#include "machine/wd_fdc.h"
 #include "sound/dac.h"
 #include "sound/mea8000.h"
+#include "bus/thomson/extension.h"
+#include "bus/thomson/nanoreseau.h"
 
 #include "bus/centronics/ctronics.h"
 #include "bus/generic/slot.h"
@@ -55,7 +53,6 @@
 /* bank-switching */
 #define THOM_CART_BANK  "bank2" /* cartridge ROM */
 #define THOM_RAM_BANK   "bank3" /* data RAM */
-#define THOM_FLOP_BANK  "bank4" /* external floppy controller ROM */
 #define THOM_BASE_BANK  "bank5" /* system RAM */
 
 /* bank-switching */
@@ -104,7 +101,6 @@ class thomson_state : public driver_device
 public:
 	thomson_state(const machine_config &mconfig, device_type type, const char *tag) :
 		driver_device(mconfig, type, tag),
-		m_mc6854(*this, "mc6854"),
 		m_maincpu(*this, "maincpu"),
 		m_cassette(*this, "cassette"),
 		m_dac(*this, "dac"),
@@ -117,10 +113,10 @@ public:
 		m_ram(*this, RAM_TAG),
 		m_mc6846(*this, "mc6846"),
 		m_mc6843(*this, "mc6843"),
-		m_wd2793_fdc(*this, "wd2793"),
 		m_screen(*this, "screen"),
 		m_mainirq(*this, "mainirq"),
 		m_mainfirq(*this, "mainfirq"),
+		m_extension(*this, "extension"),
 		m_io_game_port_directions(*this, "game_port_directions"),
 		m_io_game_port_buttons(*this, "game_port_buttons"),
 		m_io_mouse_x(*this, "mouse_x"),
@@ -132,41 +128,30 @@ public:
 		m_io_config(*this, "config"),
 		m_io_vconfig(*this, "vconfig"),
 		m_io_mconfig(*this, "mconfig"),
-		m_io_fconfig(*this, "fconfig"),
 		m_io_keyboard(*this, "keyboard.%u", 0),
 		m_vrambank(*this, THOM_VRAM_BANK),
 		m_cartbank(*this, THOM_CART_BANK),
 		m_rambank(*this, THOM_RAM_BANK),
-		m_flopbank(*this, THOM_FLOP_BANK),
 		m_basebank(*this, THOM_BASE_BANK),
 		m_syslobank(*this, TO8_SYS_LO),
 		m_syshibank(*this, TO8_SYS_HI),
 		m_datalobank(*this, TO8_DATA_LO),
 		m_datahibank(*this, TO8_DATA_HI),
 		m_biosbank(*this, TO8_BIOS_BANK),
-		m_cartlobank(*this, MO6_CART_LO),
-		m_carthibank(*this, MO6_CART_HI),
 		m_cart_rom(*this, "cartridge"),
-		m_to7qdd(*this, "to7qdd"),
-		m_thmfc(*this, "thmfc"),
-		m_floppy_led(*this, "floppy"),
-		m_floppy_image(*this, "floppy%u", 0U),
 		m_caps_led(*this, "led0")
 	{
 	}
 
 	void to9(machine_config &config);
-	void to7_base(machine_config &config);
+	void to7_base(machine_config &config, bool is_mo);
 	void to7(machine_config &config);
 	void mo5e(machine_config &config);
 	void to770a(machine_config &config);
 	void t9000(machine_config &config);
 	void to8(machine_config &config);
-	void pro128(machine_config &config);
-	void mo6(machine_config &config);
 	void mo5(machine_config &config);
 	void to9p(machine_config &config);
-	void mo5nr(machine_config &config);
 	void to770(machine_config &config);
 	void to8d(machine_config &config);
 
@@ -205,9 +190,6 @@ public:
 
 protected:
 	virtual void video_start() override;
-
-private:
-	static void cd90_640_formats(format_registration &fr);
 
 	DECLARE_DEVICE_IMAGE_LOAD_MEMBER( to7_cartridge );
 	DECLARE_DEVICE_IMAGE_LOAD_MEMBER( mo5_cartridge );
@@ -282,13 +264,10 @@ private:
 	DECLARE_MACHINE_RESET( to9 );
 	DECLARE_MACHINE_START( to9 );
 	TIMER_CALLBACK_MEMBER( to8_kbd_timer_cb );
-	void to8_update_floppy_bank_postload();
 	void to8_update_ram_bank_postload();
 	void to8_update_cart_bank_postload();
 	void to8_cartridge_w(offs_t offset, uint8_t data);
 	uint8_t to8_cartridge_r(offs_t offset);
-	uint8_t to8_floppy_r(offs_t offset);
-	void to8_floppy_w(offs_t offset, uint8_t data);
 	uint8_t to8_gatearray_r(offs_t offset);
 	void to8_gatearray_w(offs_t offset, uint8_t data);
 	uint8_t to8_vreg_r(offs_t offset);
@@ -305,33 +284,6 @@ private:
 	void to9p_timer_port_out(uint8_t data);
 	DECLARE_MACHINE_RESET( to9p );
 	DECLARE_MACHINE_START( to9p );
-	void mo6_update_ram_bank_postload();
-	void mo6_update_cart_bank_postload();
-	void mo6_cartridge_w(offs_t offset, uint8_t data);
-	uint8_t mo6_cartridge_r(offs_t offset);
-	void mo6_ext_w(uint8_t data);
-	DECLARE_WRITE_LINE_MEMBER( mo6_centronics_busy );
-	void mo6_game_porta_out(uint8_t data);
-	DECLARE_WRITE_LINE_MEMBER( mo6_game_cb2_out );
-	TIMER_CALLBACK_MEMBER( mo6_game_update_cb );
-	uint8_t mo6_sys_porta_in();
-	uint8_t mo6_sys_portb_in();
-	void mo6_sys_porta_out(uint8_t data);
-	DECLARE_WRITE_LINE_MEMBER( mo6_sys_cb2_out );
-	uint8_t mo6_gatearray_r(offs_t offset);
-	void mo6_gatearray_w(offs_t offset, uint8_t data);
-	uint8_t mo6_vreg_r(offs_t offset);
-	void mo6_vreg_w(offs_t offset, uint8_t data);
-	DECLARE_MACHINE_RESET( mo6 );
-	DECLARE_MACHINE_START( mo6 );
-	uint8_t mo5nr_net_r(offs_t offset);
-	void mo5nr_net_w(offs_t offset, uint8_t data);
-	uint8_t mo5nr_prn_r();
-	void mo5nr_prn_w(uint8_t data);
-	uint8_t mo5nr_sys_portb_in();
-	void mo5nr_sys_porta_out(uint8_t data);
-	DECLARE_MACHINE_RESET( mo5nr );
-	DECLARE_MACHINE_START( mo5nr );
 
 	TIMER_CALLBACK_MEMBER( thom_lightpen_step );
 	TIMER_CALLBACK_MEMBER( thom_scanline_start );
@@ -343,8 +295,6 @@ private:
 	void to8_data_lo_w(offs_t offset, uint8_t data);
 	void to8_data_hi_w(offs_t offset, uint8_t data);
 	void to8_vcart_w(offs_t offset, uint8_t data);
-	void mo6_vcart_lo_w(offs_t offset, uint8_t data);
-	void mo6_vcart_hi_w(offs_t offset, uint8_t data);
 	TIMER_CALLBACK_MEMBER( thom_set_init );
 
 	DECLARE_WRITE_LINE_MEMBER(thom_vblank);
@@ -357,32 +307,15 @@ private:
 	TIMER_CALLBACK_MEMBER( ans3 );
 	TIMER_CALLBACK_MEMBER( ans2 );
 	TIMER_CALLBACK_MEMBER( ans );
-	uint8_t to7_network_r(offs_t offset);
-	void to7_network_w(offs_t offset, uint8_t data);
-	uint8_t to7_floppy_r(offs_t offset);
-	void to7_floppy_w(offs_t offset, uint8_t data);
-	uint8_t to9_floppy_r(offs_t offset);
-	void to9_floppy_w(offs_t offset, uint8_t data);
-	WRITE_LINE_MEMBER( fdc_index_0_w);
-	WRITE_LINE_MEMBER( fdc_index_1_w);
-	WRITE_LINE_MEMBER( fdc_index_2_w);
-	WRITE_LINE_MEMBER( fdc_index_3_w);
-	void thomson_index_callback(int index, int state);
 	void thom_palette(palette_device &palette);
 	void mo5_palette(palette_device &palette);
-
-	optional_device<mc6854_device> m_mc6854;
 
 	DECLARE_WRITE_LINE_MEMBER(write_centronics_busy);
 
 	int m_centronics_busy;
 	int m_centronics_perror;
 
-	void to7_network_got_frame(uint8_t *data, int length);
-
 	void mo5_map(address_map &map);
-	void mo5nr_map(address_map &map);
-	void mo6_map(address_map &map);
 	void to7_map(address_map &map);
 	void to770_map(address_map &map);
 	void to8_map(address_map &map);
@@ -401,10 +334,10 @@ private:
 	required_device<ram_device> m_ram;
 	optional_device<mc6846_device> m_mc6846;
 	optional_device<mc6843_device> m_mc6843;
-	required_device<wd2793_device> m_wd2793_fdc;
 	required_device<screen_device> m_screen;
 	required_device<input_merger_device> m_mainirq;
 	required_device<input_merger_device> m_mainfirq;
+	required_device<thomson_extension_device> m_extension;
 	required_ioport m_io_game_port_directions;
 	required_ioport m_io_game_port_buttons;
 	required_ioport m_io_mouse_x;
@@ -416,26 +349,17 @@ private:
 	required_ioport m_io_config;
 	required_ioport m_io_vconfig;
 	optional_ioport m_io_mconfig;
-	required_ioport m_io_fconfig;
 	required_ioport_array<10> m_io_keyboard;
 	required_memory_bank m_vrambank;
 	optional_memory_bank m_cartbank;
 	optional_memory_bank m_rambank;
-	required_memory_bank m_flopbank;
 	required_memory_bank m_basebank;
 	required_memory_bank m_syslobank;
 	optional_memory_bank m_syshibank;
 	optional_memory_bank m_datalobank;
 	optional_memory_bank m_datahibank;
 	optional_memory_bank m_biosbank;
-	optional_memory_bank m_cartlobank;
-	optional_memory_bank m_carthibank;
 	required_region_ptr<uint8_t> m_cart_rom;
-
-	required_device<cq90_028_device> m_to7qdd;
-	required_device<thmfc1_device> m_thmfc;
-	output_finder<> m_floppy_led;
-	required_device_array<legacy_floppy_image_device, 4> m_floppy_image;
 
 	output_finder<> m_caps_led;
 
@@ -443,7 +367,6 @@ private:
 	int m_old_cart_bank;
 	int m_old_cart_bank_was_read_only;
 	int m_old_ram_bank;
-	int m_old_floppy_bank;
 	/* buffer storing demodulated bits, only for k7 and with speed hack */
 	uint32_t m_to7_k7_bitsize;
 	uint8_t* m_to7_k7_bits;
@@ -546,15 +469,8 @@ private:
 	bool m_thom_vstate_dirty;
 	bool m_thom_vstate_last_dirty;
 	uint32_t m_thom_mode_point;
-	uint32_t m_thom_floppy_wcount;
-	uint32_t m_thom_floppy_rcount;
 	emu_timer *m_thom_init_timer;
 	void (thomson_state::*m_thom_init_cb)( int init );
-
-	uint8_t m_to7_controller_type;
-	uint8_t m_to7_floppy_bank;
-	uint8_t m_to7_5p14_select;
-	uint8_t m_to7_5p14sd_select;
 
 	int to7_get_cassette();
 	int mo5_get_cassette();
@@ -589,17 +505,8 @@ private:
 	void to8_kbd_set_ack( int data );
 	void to8_kbd_reset();
 	void to8_kbd_init();
-	void to8_update_floppy_bank();
 	void to8_update_ram_bank();
 	void to8_update_cart_bank();
-	void to8_floppy_init();
-	void to8_floppy_reset();
-	void mo6_update_ram_bank();
-	void mo6_update_cart_bank();
-	void mo6_game_init();
-	void mo6_game_reset();
-	void mo5nr_game_init();
-	void mo5nr_game_reset();
 
 	bool update_screen_size();
 	unsigned thom_video_elapsed();
@@ -615,21 +522,90 @@ private:
 	void thom_set_video_mode( unsigned mode );
 	void thom_set_video_page( unsigned page );
 	void thom_set_mode_point( int point );
-	void thom_floppy_active( int write );
 	unsigned to7_lightpen_gpl( int decx, int decy );
 	void thom_configure_palette( double gamma, const uint16_t* pal, palette_device& palette );
+};
 
-	void to7_5p14_reset();
-	void to7_5p14_init();
-	void to7_5p14_index_pulse_callback( int state );
-	void to7_5p14sd_reset();
-	void to7_5p14sd_init();
-	void to7_network_init();
-	void to7_network_reset();
-	void to7_floppy_init();
-	void to7_floppy_reset();
-	void to9_floppy_init(void* int_base);
-	void to9_floppy_reset();
+class mo6_state : public thomson_state
+{
+public:
+	mo6_state(const machine_config &mconfig, device_type type, const char *tag) :
+		thomson_state(mconfig, type, tag),
+		m_cartlobank(*this, MO6_CART_LO),
+		m_carthibank(*this, MO6_CART_HI)
+	{
+	}
+
+	void mo6(machine_config &config);
+	void pro128(machine_config &config);
+
+	DECLARE_MACHINE_RESET( mo6 );
+	DECLARE_MACHINE_START( mo6 );
+
+protected:
+	optional_memory_bank m_cartlobank;
+	optional_memory_bank m_carthibank;
+
+	void mo6_update_ram_bank_postload();
+	void mo6_update_cart_bank_postload();
+	void mo6_cartridge_w(offs_t offset, uint8_t data);
+	uint8_t mo6_cartridge_r(offs_t offset);
+	void mo6_ext_w(uint8_t data);
+	DECLARE_WRITE_LINE_MEMBER( mo6_centronics_busy );
+	void mo6_game_porta_out(uint8_t data);
+	DECLARE_WRITE_LINE_MEMBER( mo6_game_cb2_out );
+	TIMER_CALLBACK_MEMBER( mo6_game_update_cb );
+	uint8_t mo6_sys_porta_in();
+	uint8_t mo6_sys_portb_in();
+	void mo6_sys_porta_out(uint8_t data);
+	DECLARE_WRITE_LINE_MEMBER( mo6_sys_cb2_out );
+	uint8_t mo6_gatearray_r(offs_t offset);
+	void mo6_gatearray_w(offs_t offset, uint8_t data);
+	uint8_t mo6_vreg_r(offs_t offset);
+	void mo6_vreg_w(offs_t offset, uint8_t data);
+	void mo6_vcart_lo_w(offs_t offset, uint8_t data);
+	void mo6_vcart_hi_w(offs_t offset, uint8_t data);
+	void mo6_map(address_map &map);
+	void mo6_update_ram_bank();
+	void mo6_update_cart_bank();
+	void mo6_game_init();
+	void mo6_game_reset();
+};
+
+class mo5nr_state : public mo6_state
+{
+public:
+	mo5nr_state(const machine_config &mconfig, device_type type, const char *tag) :
+		mo6_state(mconfig, type, tag),
+		m_nanoreseau(*this, "nanoreseau"),
+		m_nanoreseau_config(*this, "nanoreseau_config"),
+		m_extension_view(*this, "extension_view")
+	{
+	}
+
+	void mo5nr(machine_config &config);
+
+	DECLARE_MACHINE_RESET( mo5nr );
+	DECLARE_MACHINE_START( mo5nr );
+
+protected:
+	required_device<nanoreseau_device> m_nanoreseau;
+	required_ioport m_nanoreseau_config;
+	memory_view m_extension_view;
+	
+	void mo5nr_map(address_map &map);
+
+	void mo5nr_game_init();
+	void mo5nr_game_reset();
+
+	uint8_t id_r();
+
+	uint8_t mo5nr_net_r(offs_t offset);
+	void mo5nr_net_w(offs_t offset, uint8_t data);
+	uint8_t mo5nr_prn_r();
+	void mo5nr_prn_w(uint8_t data);
+	uint8_t mo5nr_sys_portb_in();
+	void mo5nr_sys_porta_out(uint8_t data);
 };
 
 /*----------- defined in video/thomson.cpp -----------*/
